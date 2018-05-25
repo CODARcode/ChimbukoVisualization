@@ -12,9 +12,9 @@ requests.post(vis_url, json={'type':'foi','value':'void LAMMPS_NS::PairEAM::comp
 
 #simulating update
 all_events = []
-with open("../data/events_2ranks.json", 'r') as f:
+with open("../data/event_list.json", 'r') as f:
 	all_events = json.load(f)
-step = 100
+step = 500
 start = 0
 
 while start < len(all_events):

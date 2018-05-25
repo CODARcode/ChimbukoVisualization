@@ -18,6 +18,7 @@ class Data {
         this.eps = visOptions.clustereps;
         this.outlier_fraction = 0.02;
         this.projectionMethod = 0;
+        this.scatterLayout = [];
     }
 
     streaming(){
@@ -27,6 +28,7 @@ class Data {
             var _json = jQuery.parseJSON(message.data);  
             console.log(_json['pos'].length+" "+_json['percent'])
             me.data = [];
+            me.scatterLayout = _json['layout'];
             _json['pos'].forEach(function(d, i) {
                 me.data.push({
                     "id": i,

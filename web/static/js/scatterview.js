@@ -127,23 +127,40 @@ class ScatterView extends View {
     }
 
     _drawAxis(){
+        var titles = {"entry":"Entry Time", 'value': 'Execution Time', 'comm ranks':"Rank"}
         var me = this;
         this.xAxis
-            .call(d3.axisBottom(me.x).tickFormat(d=>d/1000000+"s"))
+            .call(d3.axisBottom(me.x).tickFormat(function(d){
+                if(me.data.scatterLayout[0] == 'entry'){
+                    return d/1000000+"s";
+                }else if(me.data.scatterLayout[0] == 'value'){
+                    return d/1000+"ms";
+                }else{
+                    return d;
+                }
+            }))
             .append("text")
             .attr("class", "label")
             .attr("x", me.size.width)
             .attr("y", -12)
-            .text("Entry Time")
+            .text(titles[me.data.scatterLayout[0]])
             .attr("text-anchor", "end")
             .attr("fill", "black");
         this.yAxis
-            .call(d3.axisLeft(me.y).tickFormat(d=>d/1000+"ms"))
+            .call(d3.axisLeft(me.y).tickFormat(function(d){
+                if(me.data.scatterLayout[1] == 'entry'){
+                    return d/1000000+"s";
+                }else if(me.data.scatterLayout[1] == 'value'){
+                    return d/1000+"ms";
+                }else{
+                    return d;
+                }
+            }))
             .append("text")
             .attr("class", "label")
             .attr("x", 0)
             .attr("y", 12)
-            .text("Execution Time")
+            .text(titles[me.data.scatterLayout[1]])
             .attr("text-anchor", "start")
             .attr("fill", "black");
     }
@@ -286,6 +303,5 @@ class ScatterView extends View {
         // set the ranges
         me.x.domain([ranges.xMin - ranges.xRange / 15, ranges.xMax + ranges.xRange / 15]);
         me.y.domain([ranges.yMax + ranges.yRange / 50, ranges.yMin - ranges.yRange / 50]);
-
     }
 }

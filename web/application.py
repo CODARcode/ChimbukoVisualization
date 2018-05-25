@@ -16,6 +16,10 @@ class Data(object):
         self.changed = False # if there are new data come in
         self.lineid2functionid = {} # indicates which line in events stream is which function
         self.line_num = 0 # number of events from the very beggining of streaming
+        self.layout = ["entry","value"]#x,y
+        # entry - entry time
+        # value - execution time
+        # comm ranks
 
     def set_functions(self, functions):# set function dictionary
         self.func_dict = functions
@@ -110,7 +114,7 @@ class Data(object):
         count = 0
         for execution in self.executions:
             if execution['name'] == self.foi:
-                if execution["comm ranks"] ==0:
+                if execution["comm ranks"] == 0:
                     count+=1
                 self.lineid2functionid[execution["lineid"]] = len(self.forest)
                 if not "messages" in execution:
@@ -121,6 +125,7 @@ class Data(object):
                         "nodes": [{
                                 "name": self.foi,
                                 "id": 0,
+                                "comm ranks":execution["comm ranks"],
                                 "findex": execution["findex"],
                                 "value": (execution["exit"] - execution["entry"]),
                                 "messages": execution["messages"],
@@ -140,6 +145,7 @@ class Data(object):
                         this_tree['nodes'].append({
                                 'name':child_node['name'],
                                 "id": ctid,
+                                "comm ranks":execution["comm ranks"],
                                 "findex": child_node["findex"],
                                 "value": (child_node["exit"] - child_node["entry"]),
                                 "messages": child_node["messages"],
@@ -162,7 +168,7 @@ class Data(object):
         self.pos = []
         for t in self.forest:
             root = t['nodes'][0]
-            self.pos.append([root['entry'],root['value']])
+            self.pos.append([root[self.layout[0]],root[self.layout[1]]])
         self.changed = False
 
 data = Data()
@@ -195,8 +201,8 @@ def _stream():
         time.sleep(0.1)
     data.generate_forest()
     yield """
-        retry: 10000\ndata:{"pos":%s,"labels":%s}\n\n
-    """ % (json.dumps(data.pos), json.dumps(data.labels))
+        retry: 10000\ndata:{"pos":%s,"layout":%s, "labels":%s}\n\n
+    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.labels))
 
 @web_app.route("/stream")
 def stream():

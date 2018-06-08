@@ -26,7 +26,7 @@ class Data {
         var sse = new EventSource('/stream');
         sse.onmessage = function (message) {
             var _json = jQuery.parseJSON(message.data);  
-            console.log(_json['pos'].length+" "+_json['percent'])
+            console.log(_json['pos'].length); //+" "+_json['percent'])
             me.data = [];
             me.scatterLayout = _json['layout'];
             _json['pos'].forEach(function(d, i) {
@@ -47,6 +47,7 @@ class Data {
             if (_json["percent"] >= 1.0) {
                 sse.close();
                 sse = null;
+                console.log("sse closed");            
             }
         };
     }
@@ -59,6 +60,7 @@ class Data {
                     "Content-Type": "application/json"
                 },
                 credentials: "same-origin"
+
             }).then(response => response.json()
                 .then(json => {
                     if (response.ok) {

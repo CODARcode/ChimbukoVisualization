@@ -3,6 +3,7 @@ import time
 from flask import send_file, Response, jsonify, request
 from web import web_app
 import random
+import numpy as np
 
 class Data(object):
     def __init__(self):
@@ -41,8 +42,8 @@ class Data(object):
             obj = {'prog names': e[0],
                 'comm ranks': e[1],
                 'threads': e[2],
-                'event types': e[7] if(e[3]=='NA') else e[3],
-                'name': 'NA' if(e[4]=='NA') else self.func_dict[int(e[4])],# dictionary
+                'event types': e[7] if(e[3]=='NA' or np.isnan(e[3])) else e[3],
+                'name': 'NA' if(e[4]=='NA' or np.isnan(e[4])) else self.func_dict[int(e[4])],# dictionary
                 'counters': e[5],
                 'counter value': e[6],
                 'Tag': e[8],
@@ -56,6 +57,15 @@ class Data(object):
             self.events[obj['comm ranks']].append(obj)
         self.changed = True
         self.line_num += len(events)
+
+    def reset(self):
+        # when new application launches, everything needs to reset
+        self.events.clear()
+        self.executions = []
+        self.forest = []
+        self.lineid2functionid.clear()
+        self.line_num = 0
+        self.changed = False
 
     def _events2executions(self):
         self.executions = [];
@@ -90,7 +100,11 @@ class Data(object):
                     self.executions.append(stack[-1])
                     stack.pop()
                 else:
-                    print("matching error "+str(i)+"/"+ obj['name']+"/"+stack[-1]['name'])
+                    print(obj)
+                    if len(stack) > 0:
+                        print("matching error "+str(i)+"/"+ obj['name']+"/"+stack[-1]['name'])
+                    else:
+                        print("matching error "+str(i)+"/"+ obj['name'])
 
             elif len(stack)>0:
                 #append to function
@@ -182,6 +196,7 @@ def get_tree():
     if request.json['data'] == 'tree':
         tindex = request.json['value']
         print("select tree #{}".format(tindex))
+        print(data.forest[tindex])
         return jsonify(data.forest[tindex])
 
 @web_app.route('/events', methods=['POST'])
@@ -194,6 +209,8 @@ def receive_events():
         data.set_labels(request.json['value'])
     elif request.json['type'] == 'events':
         data.add_events(request.json['value'])
+    elif request.json['type'] == 'reset':
+        data.reset()
     return jsonify({'received': len(data.forest)})
 
 def _stream():

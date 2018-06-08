@@ -1,0 +1,11 @@
+.DS_Store
+
+.idea/
+
+web/.idea/
+
+web/__pycache__/
+
+data/*.json
+
+data/.DS_Store

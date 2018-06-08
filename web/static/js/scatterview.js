@@ -28,6 +28,8 @@ class ScatterView extends View {
         me.selections.clear();
         me._updateAxis();
         me.svg.selectAll("circle").remove();
+        me.xAxis.selectAll("text.label").remove();
+        me.yAxis.selectAll("text.label").remove();
         me.draw();        
         me.transform = d3.zoomIdentity;
         //move some constructor here

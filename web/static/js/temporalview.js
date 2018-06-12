@@ -196,12 +196,13 @@ class TemporalView extends View {
     }
     _drawContextAxis(){
         this.context
-            .call(d3.axisTop(this.contextX).ticks(8).tickFormat(d=>d/1000+"ms"));
+            .call(d3.axisTop(this.contextX).ticks(8).tickFormat(d=>Number.parseFloat(d/1000).toFixed(2)+"ms"));
         this.bruchSelection.call(this.brushX.move, null)
     }
     _drawXAxis(){
+        this.xAxis.selectAll("text.label").remove();
         this.xAxis
-            .call(d3.axisTop(this.x).ticks(5).tickSizeOuter(0).tickFormat(d=>d/1000+"ms"))
+            .call(d3.axisTop(this.x).ticks(5).tickSizeOuter(0).tickFormat(d=>Number.parseFloat(d/1000).toFixed(2)+"ms"))
             .append("text")
             .attr("class", "label")
             .attr("x", this.size.width)

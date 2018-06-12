@@ -102,10 +102,9 @@ class Data(object):
                 else:
                     print(obj)
                     if len(stack) > 0:
-                        print("matching error "+str(i)+"/"+ obj['name']+"/"+stack[-1]['name'])
+                        print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/"+stack[-1]['name'])
                     else:
-                        print("matching error "+str(i)+"/"+ obj['name'])
-
+                        print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name'])
             elif len(stack)>0:
                 #append to function
                 if not 'messages' in stack[-1]:

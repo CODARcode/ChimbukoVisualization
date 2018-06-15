@@ -14,6 +14,7 @@ class Data(object):
         self.labels = [] # the learned label, for now I simulated
         self.func_dict = [] # all the names of the functions
         self.foi = '' # function of interest
+        self.event_types = {} # set the indices indicating event types in the event list
         self.changed = False # if there are new data come in
         self.lineid2functionid = {} # indicates which line in events stream is which function
         self.line_num = 0 # number of events from the very beggining of streaming
@@ -28,6 +29,10 @@ class Data(object):
     def set_FOI(self, function):
         self.foi = function        
         self.changed = True
+
+    def set_event_types(self, types):
+        for i, e in enumerate(types):
+            self.event_types[e] = i
 
     def set_labels(self, labels):
         for label in labels:# self.labels indicates all the anoamaly lines
@@ -78,7 +83,7 @@ class Data(object):
         stack = [];
         function_index = len(self.executions)
         for i, obj in enumerate(events):
-            if obj['event types'] == 1:#'entry'
+            if obj['event types'] == self.event_types['ENTRY']:#'entry'
                 #push to stack
                 func = {}
                 func['name'] = obj['name']
@@ -94,7 +99,7 @@ class Data(object):
                 func['entry'] = obj['timestamp']
                 function_index+=1
                 stack.append(func)
-            elif obj['event types'] == 0:#'exit'
+            elif obj['event types'] == self.event_types['EXIT']:#'exit'
                 if len(stack) > 0 and obj['name'] == stack[-1]['name']:
                     stack[-1]['exit'] = obj['timestamp']
                     self.executions.append(stack[-1])
@@ -102,15 +107,16 @@ class Data(object):
                 else:
                     print(obj)
                     if len(stack) > 0:
-                        print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/"+stack[-1]['name'])
+                        print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/stack: "+stack[-1]['name'])
+                        print([(e['name'], e['entry']) for e in stack])
                     else:
-                        print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name'])
-            elif len(stack)>0:
+                        print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/empty stack")
+            elif len(stack)>0 and (obj['event types']==self.event_types['SEND'] or obj['event types']==self.event_types['RECV']):
                 #append to function
                 if not 'messages' in stack[-1]:
                     stack[-1]['messages']=[]
                 stack[-1]['messages'].append({
-                        "event-type": "send" if(obj['event types']==2) else "receive",
+                        "event-type": "send" if(obj['event types']==self.event_types['SEND']) else "receive",
                         "source-node-id": obj['comm ranks'] if(obj['event types']==2)else obj['partner'],
                         "destination-node-id": obj['comm ranks'] if(obj['event types']==3) else obj['partner'],
                         "message-size": obj['num bytes'],
@@ -206,6 +212,8 @@ def receive_events():
         data.set_functions(request.json['value'])
     elif request.json['type'] == 'labels':
         data.set_labels(request.json['value'])
+    elif request.json['type'] == 'event_types':
+        data.set_event_types(request.json['value'])
     elif request.json['type'] == 'events':
         data.add_events(request.json['value'])
     elif request.json['type'] == 'reset':

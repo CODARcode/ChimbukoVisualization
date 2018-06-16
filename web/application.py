@@ -80,14 +80,20 @@ class Data(object):
     def _events2executionsByRank(self, rankId):
         # convert event to execution entities
         events = self.events[rankId]
-        stack = [];
         function_index = len(self.executions)
+        stacks = {}; #one stack for one thread under the same rankId
         for i, obj in enumerate(events):
+            # arrange event by threads
+            if not obj['threads'] in stacks:
+                stacks[obj['threads']] = []
+            stack = stacks[obj['threads']]
+            # check event type
             if obj['event types'] == self.event_types['ENTRY']:#'entry'
                 #push to stack
                 func = {}
                 func['name'] = obj['name']
                 func['comm ranks'] = obj['comm ranks']
+                func['threads'] = obj['threads']
                 func['lineid'] = obj['lineid']
                 func['findex'] = function_index
                 if len(stack) > 0:
@@ -104,7 +110,7 @@ class Data(object):
                     stack[-1]['exit'] = obj['timestamp']
                     self.executions.append(stack[-1])
                     stack.pop()
-                else:
+                else: # mismatching
                     print(obj)
                     if len(stack) > 0:
                         print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/stack: "+stack[-1]['name'])
@@ -117,8 +123,9 @@ class Data(object):
                     stack[-1]['messages']=[]
                 stack[-1]['messages'].append({
                         "event-type": "send" if(obj['event types']==self.event_types['SEND']) else "receive",
-                        "source-node-id": obj['comm ranks'] if(obj['event types']==2)else obj['partner'],
-                        "destination-node-id": obj['comm ranks'] if(obj['event types']==3) else obj['partner'],
+                        "source-node-id": obj['comm ranks'] if(obj['event types']==self.event_types['SEND']) else obj['partner'],
+                        "destination-node-id": obj['comm ranks'] if(obj['event types']==self.event_types['RECV']) else obj['partner'],
+                        "thread-id": obj['threads'], #place holder
                         "message-size": obj['num bytes'],
                         "message-tag": obj['Tag'],
                         "time": obj['timestamp']
@@ -133,18 +140,20 @@ class Data(object):
         count = 0
         for execution in self.executions:
             if execution['name'] == self.foi:
-                if execution["comm ranks"] == 0:
+                if execution["comm ranks"] == 0: #no use
                     count+=1
                 self.lineid2functionid[execution["lineid"]] = len(self.forest)
                 if not "messages" in execution:
                     execution["messages"] = []
-                this_tree = {
+                this_tree = { 
                         "node_index": execution["comm ranks"],
+                        "thread_index": execution["threads"],
                         "graph_index": len(self.forest),
-                        "nodes": [{
+                        "nodes": [{ # root of the tree
                                 "name": self.foi,
                                 "id": 0,
-                                "comm ranks":execution["comm ranks"],
+                                "comm ranks": execution["comm ranks"],
+                                "threads": execution["threads"],
                                 "findex": execution["findex"],
                                 "value": (execution["exit"] - execution["entry"]),
                                 "messages": execution["messages"],
@@ -161,10 +170,11 @@ class Data(object):
                         ctid = len(this_tree['nodes'])
                         if not "messages" in child_node:
                             child_node['messages'] = []
-                        this_tree['nodes'].append({
+                        this_tree['nodes'].append({ # children of the tree
                                 'name':child_node['name'],
                                 "id": ctid,
-                                "comm ranks":execution["comm ranks"],
+                                "comm ranks": execution["comm ranks"],
+                                "threads": execution["threads"],
                                 "findex": child_node["findex"],
                                 "value": (child_node["exit"] - child_node["entry"]),
                                 "messages": child_node["messages"],
@@ -201,7 +211,7 @@ def get_tree():
     if request.json['data'] == 'tree':
         tindex = request.json['value']
         print("select tree #{}".format(tindex))
-        print(data.forest[tindex])
+        #print(data.forest[tindex])
         return jsonify(data.forest[tindex])
 
 @web_app.route('/events', methods=['POST'])

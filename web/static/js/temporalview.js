@@ -216,6 +216,7 @@ class TemporalView extends View {
     _drawNodes(){
         var me = this;
         var nodeYDomain = me.timelines.map(d => d);
+
         me.contextsvgs.selectAll("line")
             .data(nodeYDomain)
             .enter()
@@ -229,7 +230,7 @@ class TemporalView extends View {
             .attr("stroke-dasharray","5, 5")
 
         nodeYDomain.unshift(me.graph.node_index);
-
+        
         me.nodetextsvg.selectAll("text")
             .data(nodeYDomain)
             .enter()

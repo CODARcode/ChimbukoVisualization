@@ -238,7 +238,7 @@ class TemporalView extends View {
             .attr('x', 5)
             .attr('y', d => me.nodeY(d)+12)
             .attr("fill", 'black')
-            .text(d => "Node#"+d);
+            .text(d => "Rank#"+d);
     }
 
 

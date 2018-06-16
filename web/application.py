@@ -118,7 +118,11 @@ class Data(object):
                     else:
                         print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/empty stack")
             elif len(stack)>0 and (obj['event types']==self.event_types['SEND'] or obj['event types']==self.event_types['RECV']):
+                #make sure the message is correct to append
+                if obj['name'] != 'NA' and obj['name'] != stack[-1]['name']:
+                    print("message issue: "+obj['name']+":"+stack[-1]['name'])
                 #append to function
+                #assumption: execution never exits until message is received
                 if not 'messages' in stack[-1]:
                     stack[-1]['messages']=[]
                 stack[-1]['messages'].append({
@@ -147,7 +151,7 @@ class Data(object):
                     execution["messages"] = []
                 this_tree = { 
                         "node_index": execution["comm ranks"],
-                        "thread_index": execution["threads"],
+                        "threads": execution["threads"], # place holder
                         "graph_index": len(self.forest),
                         "nodes": [{ # root of the tree
                                 "name": self.foi,

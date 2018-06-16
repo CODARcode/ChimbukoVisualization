@@ -25,14 +25,14 @@ with open(datafile, 'r') as f:
 step = 500
 start = 0
 
-# while start < len(all_events):
-# 	print("send events data")
-# 	#send events data
-# 	res = requests.post(vis_url, json={'type':'events','value':all_events[start:start+step]})
-# 	start += step
-# 	print(res.json())
-# 	time.sleep(0.1)
+while start < len(all_events):
+	print("send events data")
+	#send events data
+	res = requests.post(vis_url, json={'type':'events','value':all_events[start:start+step]})
+	start += step
+	print(res.json())
+	time.sleep(0.1)
 
-print("send events data")
-res = requests.post(vis_url, json={'type':'events','value':all_events})
-print(res.json())
+# print("send events data")
+# res = requests.post(vis_url, json={'type':'events','value':all_events})
+# print(res.json())

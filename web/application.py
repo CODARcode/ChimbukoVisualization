@@ -1,6 +1,6 @@
 import json
 import time
-from flask import send_file, Response, jsonify, request
+from flask import send_file, Response, jsonify, request, redirect, url_for
 from web import web_app
 import random
 import numpy as np
@@ -18,7 +18,8 @@ class Data(object):
         self.changed = False # if there are new data come in
         self.lineid2functionid = {} # indicates which line in events stream is which function
         self.line_num = 0 # number of events from the very beggining of streaming
-        self.layout = ["entry","value"]#x,y
+        self.initial_timestamp = 0;
+        self.layout = ["entry","comm ranks"]#x,y
         # entry - entry time
         # value - execution time
         # comm ranks
@@ -43,7 +44,13 @@ class Data(object):
     def add_events(self, events):
         # convert events to json events
         count = 0
+        irregular = 0
         for e in events:
+            if e[0] != 1 or e[2] != 1: # program 1 or thread 1
+                irregular += 1
+                continue
+            if not self.events: # the initial timestamp
+                self.initial_timestamp = int(e[11])
             obj = {'prog names': e[0],
                 'comm ranks': e[1],
                 'threads': e[2],
@@ -54,12 +61,14 @@ class Data(object):
                 'Tag': e[8],
                 'partner': e[9],
                 'num bytes': e[10],
-                'timestamp': int(e[11]),
+                'timestamp': int(e[11]) - self.initial_timestamp, 
                 'lineid': self.line_num+count}# here line id is start from the beggining of the stream
             count += 1
             if not obj['comm ranks'] in self.events:
                 self.events[obj['comm ranks']] = []
             self.events[obj['comm ranks']].append(obj)
+        print("program 0 vs all: %d, %d" % (irregular, count))
+
         self.changed = True
         self.line_num += len(events)
 
@@ -73,12 +82,14 @@ class Data(object):
         self.changed = False
 
     def _events2executions(self):
+        #print("event 2 executions...")
         self.executions = [];
         for rankId, events in self.events.items():
             self._events2executionsByRank(rankId)
 
     def _events2executionsByRank(self, rankId):
         # convert event to execution entities
+        #print("for rank: ", rankId)
         events = self.events[rankId]
         function_index = len(self.executions)
         stacks = {}; #one stack for one thread under the same rankId
@@ -96,9 +107,11 @@ class Data(object):
                 func['threads'] = obj['threads']
                 func['lineid'] = obj['lineid']
                 func['findex'] = function_index
+                #print(func['name'], func['findex'])
                 if len(stack) > 0:
                     func['parent'] = stack[-1]['findex']
                     stack[-1]['children'].append(function_index)
+                    #print("Children root", stack[-1]['name'], stack[-1]['entry'])
                 else:
                     func['parent'] = -1
                 func['children'] = []
@@ -134,6 +147,11 @@ class Data(object):
                         "message-tag": obj['Tag'],
                         "time": obj['timestamp']
                     })
+        # check if the stack is empty
+        for threadId, stack in stacks.items():
+            if stack: #not empty
+                print("Rank %d stack %d is not empty:" % (rankId, threadId))
+                print([(elem['name'], elem['findex']) for elem in stack])
         # the function index (findex) of i-th execution in the list is i
         self.executions = sorted(self.executions, key= lambda x: x['findex'])
 
@@ -144,7 +162,7 @@ class Data(object):
         count = 0
         for execution in self.executions:
             if execution['name'] == self.foi:
-                if execution["comm ranks"] == 0: #no use
+                if execution["comm ranks"] == 0: #debug
                     count+=1
                 self.lineid2functionid[execution["lineid"]] = len(self.forest)
                 if not "messages" in execution:
@@ -170,6 +188,9 @@ class Data(object):
                     node,ptid = queue[0]
                     queue.pop(0)
                     for child_id in node['children']:
+                        if child_id >= len(self.executions):
+                            print(len(self.executions), child_id)
+                            print(node)
                         child_node = self.executions[child_id]
                         ctid = len(this_tree['nodes'])
                         if not "messages" in child_node:
@@ -238,11 +259,12 @@ def _stream():
     while(not data.changed):
         time.sleep(0.1)
     data.generate_forest()
+    #send back forest data
     yield """
         retry: 10000\ndata:{"pos":%s,"layout":%s, "labels":%s}\n\n
     """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.labels))
 
-@web_app.route("/stream")
+@web_app.route('/stream')
 def stream():
     return Response(
         _stream(),

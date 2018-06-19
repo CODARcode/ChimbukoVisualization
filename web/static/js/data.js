@@ -29,7 +29,7 @@ class Data {
             console.log(_json['pos'].length); //+" "+_json['percent'])
             me.data = [];
             me.scatterLayout = _json['layout'];
-            _json['pos'].forEach(function(d, i) {
+            _json['pos'].forEach(function(d, i) { //load data to front end (scatter plot view)
                 me.data.push({
                     "id": i,
                     "weight": 1,

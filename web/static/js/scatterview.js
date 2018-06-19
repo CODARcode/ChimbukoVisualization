@@ -134,9 +134,9 @@ class ScatterView extends View {
         this.xAxis
             .call(d3.axisBottom(me.x).tickFormat(function(d){
                 if(me.data.scatterLayout[0] == 'entry'){
-                    return d/1000000+"s";
+                    return Number.parseFloat(d/1000000).toFixed(2)+"s";
                 }else if(me.data.scatterLayout[0] == 'value'){
-                    return d/1000+"ms";
+                    return Number.parseFloat(d/1000).toFixed(2)+"ms";
                 }else{
                     return d;
                 }
@@ -151,9 +151,9 @@ class ScatterView extends View {
         this.yAxis
             .call(d3.axisLeft(me.y).tickFormat(function(d){
                 if(me.data.scatterLayout[1] == 'entry'){
-                    return d/1000000+"s";
+                    return Number.parseFloat(d/1000000).toFixed(2)+"s";
                 }else if(me.data.scatterLayout[1] == 'value'){
-                    return d/1000+"ms";
+                    return Number.parseFloat(d/1000).toFixed(2)+"ms";
                 }else{
                     return d;
                 }

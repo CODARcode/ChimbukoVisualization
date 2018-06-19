@@ -22,7 +22,8 @@ class TemporalView extends View {
         me.messages = [];
         me._setGraph({id:-1,nodes:[],edges:[]});
 
-        this.color = me.vis.functionColor;
+        this.color = d3.scaleOrdinal(d3.schemeCategory10); //me.vis.functionColor;
+
         me.traceYSize = (me.size.height-me.margin.top - -me.margin.bottom)/2;
         me.tracesvg = me.svg.append("g")
             .attr("class", "traces")
@@ -195,14 +196,15 @@ class TemporalView extends View {
         this._drawContextAxis();        
     }
     _drawContextAxis(){
+        var me = this;
         this.context
-            .call(d3.axisTop(this.contextX).ticks(8).tickFormat(d=>Number.parseFloat(d/1000).toFixed(2)+"ms"));
+            .call(d3.axisTop(this.contextX).ticks(8).tickFormat(d=>d/1000+'ms'));
         this.bruchSelection.call(this.brushX.move, null)
     }
     _drawXAxis(){
         this.xAxis.selectAll("text.label").remove();
         this.xAxis
-            .call(d3.axisTop(this.x).ticks(5).tickSizeOuter(0).tickFormat(d=>Number.parseFloat(d/1000).toFixed(2)+"ms"))
+            .call(d3.axisTop(this.x).ticks(5).tickSizeOuter(0).tickFormat(d=>d/1000+'ms'))
             .append("text")
             .attr("class", "label")
             .attr("x", this.size.width)

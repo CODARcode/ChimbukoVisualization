@@ -134,6 +134,7 @@ class DynamicGraphView extends GraphView {
     drawLegend(ypos) {
         var me = this;
         me.svg.selectAll(".legend").remove();
+        console.log(this.vis.majorFunctions);
         var legend = me.svg.selectAll(".legend")
             .data(this.vis.majorFunctions)
             .enter()
@@ -154,6 +155,11 @@ class DynamicGraphView extends GraphView {
             .attr("y", 4)
             .attr("dy", ".35em")
             .style("text-anchor", "start")
-            .text(d => me.vis.functionMap[d]);
+            .text(function(d){
+                var prefix = (d+"([").match(/.+?(?=[\[\(])/)[0];
+                var displayName = prefix.match(/(.*::)*(.*)/)[2];
+                return displayName; 
+            });
+            //.text(d => me.vis.functionMap[d]);
     }
 }

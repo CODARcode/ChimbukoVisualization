@@ -149,11 +149,11 @@ class Visualizations {
         });
         vis.majorFunctions = [];
         Object.keys(legendMap).forEach(function(key) {
-            if(legendMap[key]>total/visOptions.colorThreshold||showFunctionColor.has(key)){
-                vis.majorFunctions.push(key);
-            }
+            //if(legendMap[key]>total/visOptions.colorThreshold||showFunctionColor.has(key)){
+            vis.majorFunctions.push(key);
+            //}
         });
-        vis.majorFunctions.push("Others");
+        //vis.majorFunctions.push("Others");
         vis.views.forEach(d => {
             d.selected()
         });

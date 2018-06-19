@@ -270,7 +270,7 @@ class TemporalView extends View {
         me.tracetexts
             .attr("x", d => Math.max(me.x(d.entry), me.x.range()[0])+2)
             .attr("y", d => me.levelY(d.level)+15)
-            .text(d=>this.vis.functionMap[d.name])
+            .text(d=>d.name)//(d=>this.vis.functionMap[d.name])
             .attr("fill", function(d){     
                 if(me.x(d.entry)>=me.x.range()[1]||me.x(d.entry + d.value)<=me.x.range()[0]){
                     return "none";

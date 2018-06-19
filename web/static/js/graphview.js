@@ -70,7 +70,7 @@ class GraphView extends View {
         }
         var nameColor = me._anomalyColor();
         var l = d3.hsl(nameColor).l;
-        me.idText.text("Rank#"+me.graph.node_index+"-Tree#"+me.graph.graph_index)
+        me.idText.text("Prog#"+me.graph.prog_name+"-Rank#"+me.graph.node_index+"-Thread#"+me.graph.threads+"-Tree#"+me.graph.graph_index)
             .attr('fill', (l<0.7)?'white':'black');
         var bbox = me.idText.node().getBBox();
         me.idRect.attr('x',bbox.x-2)

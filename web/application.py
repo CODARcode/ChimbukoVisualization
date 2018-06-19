@@ -44,11 +44,12 @@ class Data(object):
     def add_events(self, events):
         # convert events to json events
         count = 0
-        irregular = 0
-        for e in events:
-            if e[0] != 1 or e[2] != 1: # program 1 or thread 1
-                irregular += 1
-                continue
+        other_prog = 0
+        other_thread = 0
+        for e in events: # program 1
+            # if e[0] != 1:
+            #     other_prog += 1
+            #     continue
             if not self.events: # the initial timestamp
                 self.initial_timestamp = int(e[11])
             obj = {'prog names': e[0],
@@ -67,7 +68,7 @@ class Data(object):
             if not obj['comm ranks'] in self.events:
                 self.events[obj['comm ranks']] = []
             self.events[obj['comm ranks']].append(obj)
-        print("program 0 vs all: %d, %d" % (irregular, count))
+        print("other prog: %d, other thread: %d, focused data: %d" % (other_prog, other_thread, count))
 
         self.changed = True
         self.line_num += len(events)
@@ -92,16 +93,20 @@ class Data(object):
         #print("for rank: ", rankId)
         events = self.events[rankId]
         function_index = len(self.executions)
-        stacks = {}; #one stack for one thread under the same rankId
+        stacks = {}; #one stack for one program under the same rankId
         for i, obj in enumerate(events):
-            # arrange event by threads
-            if not obj['threads'] in stacks:
-                stacks[obj['threads']] = []
-            stack = stacks[obj['threads']]
+            # arrange event by programs first, then threads
+            if not obj['prog names'] in stacks:
+                stacks[obj['prog names']] = {}
+                stacks[obj['prog names']][obj['threads']] = []
+            if not obj['threads'] in stacks[obj['prog names']]:
+                stacks[obj['prog names']][obj['threads']] = []
+            stack = stacks[obj['prog names']][obj['threads']]
             # check event type
             if obj['event types'] == self.event_types['ENTRY']:#'entry'
                 #push to stack
                 func = {}
+                func['prog names'] = obj['prog names']
                 func['name'] = obj['name']
                 func['comm ranks'] = obj['comm ranks']
                 func['threads'] = obj['threads']
@@ -148,10 +153,11 @@ class Data(object):
                         "time": obj['timestamp']
                     })
         # check if the stack is empty
-        for threadId, stack in stacks.items():
-            if stack: #not empty
-                print("Rank %d stack %d is not empty:" % (rankId, threadId))
-                print([(elem['name'], elem['findex']) for elem in stack])
+        for prog_id, prog_stack in stacks.items():
+            for thread_id, stack in prog_stack.items():
+                if stack: #not empty
+                    print("(prog %d, rank %d, thread %d) stack is not empty:" % (prog_id, rankId, thread_id))
+                    print([(elem['name'], elem['findex'], elem['entry']+self.initial_timestamp) for elem in stack])
         # the function index (findex) of i-th execution in the list is i
         self.executions = sorted(self.executions, key= lambda x: x['findex'])
 
@@ -168,8 +174,9 @@ class Data(object):
                 if not "messages" in execution:
                     execution["messages"] = []
                 this_tree = { 
+                        "prog_name": execution["prog names"],
                         "node_index": execution["comm ranks"],
-                        "threads": execution["threads"], # place holder
+                        "threads": execution["threads"],
                         "graph_index": len(self.forest),
                         "nodes": [{ # root of the tree
                                 "name": self.foi,

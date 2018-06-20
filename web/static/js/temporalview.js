@@ -22,7 +22,7 @@ class TemporalView extends View {
         me.messages = [];
         me._setGraph({id:-1,nodes:[],edges:[]});
 
-        this.color = d3.scaleOrdinal(d3.schemeCategory10); //me.vis.functionColor;
+        this.color = d3.scaleOrdinal(d3.schemeCategory20).domain(d3.range(0,19)); //me.vis.functionColor;
 
         me.traceYSize = (me.size.height-me.margin.top - -me.margin.bottom)/2;
         me.tracesvg = me.svg.append("g")
@@ -270,7 +270,11 @@ class TemporalView extends View {
         me.tracetexts
             .attr("x", d => Math.max(me.x(d.entry), me.x.range()[0])+2)
             .attr("y", d => me.levelY(d.level)+15)
-            .text(d=>d.name)//(d=>this.vis.functionMap[d.name])
+            .text(function(d){
+                var prefix = (d.name+"([").match(/.+?(?=[\[\(])/)[0];
+                var displayName = prefix.match(/(.*::)*(.*)/)[2];
+                return displayName; 
+            })//(d=>this.vis.functionMap[d.name])
             .attr("fill", function(d){     
                 if(me.x(d.entry)>=me.x.range()[1]||me.x(d.entry + d.value)<=me.x.range()[0]){
                     return "none";

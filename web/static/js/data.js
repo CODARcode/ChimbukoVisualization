@@ -38,6 +38,7 @@ class Data {
                         'y': d[1]
                     },
                     "anomaly_score": _json['labels'][i],
+                    "prog_name": _json['prog'][i],
                     "cluster_label": -1,
                     "relabel": 0, // manually labeled by the user 0 - unlabeled, 1 positive, -1 negative
                     "tree": null

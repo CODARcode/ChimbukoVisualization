@@ -11,7 +11,7 @@ with open("../data/functions_test.json", 'r') as f:
 requests.post(vis_url, json={'type':'functions', 'value':fun_names})
 #----set function of interest----
 #requests.post(vis_url, json={'type':'foi','value':'void LAMMPS_NS::PairEAM::compute(int, int) [{pair_eam.cpp} {134,1}-{315,1}]'})
-requests.post(vis_url, json={'type':'foi','value':'adios_open'})
+requests.post(vis_url, json={'type':'foi','value':'adios_close'})
 #----set event types, they are not fixed----
 requests.post(vis_url, json={'type':'event_types', 'value':['ENTRY', 'EXIT', 'SEND', 'RECV']})
 #requests.post(vis_url, json={'type':'event_types', 'value':['EXIT', 'ENTRY', 'SEND', 'RECV']})
@@ -22,17 +22,17 @@ all_events = []
 datafile = "../data/events_test.json"
 with open(datafile, 'r') as f:
 	all_events = json.load(f)
-step = 500
+step = 50
 start = 0
 
-# while start < len(all_events):
-# 	print("send events data")
-# 	#send events data
-# 	res = requests.post(vis_url, json={'type':'events','value':all_events[start:start+step]})
-# 	start += step
-# 	print(res.json())
-# 	time.sleep(0.1)
+while start < len(all_events):
+	print("send events data")
+	#send events data
+	res = requests.post(vis_url, json={'type':'events','value':all_events[start:start+step]})
+	start += step
+	print(res.json())
+	time.sleep(1)
 
-print("send events data")
-res = requests.post(vis_url, json={'type':'events','value':all_events})
-print(res.json())
+# print("send events data")
+# res = requests.post(vis_url, json={'type':'events','value':all_events})
+# print(res.json())

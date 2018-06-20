@@ -2,7 +2,7 @@ class GraphView extends View {
     constructor(data, svg, size, margin) {
         super(data, svg, size);
         var me = this;
-        this.color = d3.scaleOrdinal(d3.schemeCategory10); //me.vis.functionColor;
+        this.color = d3.scaleOrdinal(d3.schemeCategory20).domain(d3.range(0,19)); //me.vis.functionColor;
         me.margin = margin;
         me.scale = 1;
         me.sizeCoef = visOptions.graphSizeCoef;

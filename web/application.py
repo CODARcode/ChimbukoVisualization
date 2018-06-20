@@ -8,10 +8,11 @@ import numpy as np
 class Data(object):
     def __init__(self):
         self.events = {} # store the event list by the rank ID {0:[...],1:[...],2:[...] ...}
-        self.executions = [] # the paired function executions from event list
+        self.executions = {} # the paired function executions from event list
         self.forest = [] # the forest of call stack tree, roots are foi
         self.pos = [] # the positions of the call stak tree in the scatter plot
         self.labels = [] # the learned label, for now I simulated
+        self.prog = []; # the program names of the tree in scatter plot
         self.func_dict = [] # all the names of the functions
         self.foi = '' # function of interest
         self.event_types = {} # set the indices indicating event types in the event list
@@ -19,7 +20,8 @@ class Data(object):
         self.lineid2functionid = {} # indicates which line in events stream is which function
         self.line_num = 0 # number of events from the very beggining of streaming
         self.initial_timestamp = 0;
-        self.layout = ["entry","comm ranks"]#x,y
+        self.func_idx = 0; # global function index for each entry function
+        self.layout = ["entry","value"]#x,y
         # entry - entry time
         # value - execution time
         # comm ranks
@@ -44,12 +46,8 @@ class Data(object):
     def add_events(self, events):
         # convert events to json events
         count = 0
-        other_prog = 0
-        other_thread = 0
-        for e in events: # program 1
-            # if e[0] != 1:
-            #     other_prog += 1
-            #     continue
+        prev = None
+        for e in events:
             if not self.events: # the initial timestamp
                 self.initial_timestamp = int(e[11])
             obj = {'prog names': e[0],
@@ -65,10 +63,16 @@ class Data(object):
                 'timestamp': int(e[11]) - self.initial_timestamp, 
                 'lineid': self.line_num+count}# here line id is start from the beggining of the stream
             count += 1
+            # if obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
+            #     print(prev)
+            #     print(obj)
+            #     print('\n')
             if not obj['comm ranks'] in self.events:
                 self.events[obj['comm ranks']] = []
             self.events[obj['comm ranks']].append(obj)
-        print("other prog: %d, other thread: %d, focused data: %d" % (other_prog, other_thread, count))
+            prev = obj
+            # if obj['lineid'] > 300 and obj['lineid'] < 316:
+            #     print(obj)
 
         self.changed = True
         self.line_num += len(events)
@@ -76,7 +80,8 @@ class Data(object):
     def reset(self):
         # when new application launches, everything needs to reset
         self.events.clear()
-        self.executions = []
+        self.executions = {}
+        self.func_idx = 0
         self.forest = []
         self.lineid2functionid.clear()
         self.line_num = 0
@@ -84,7 +89,8 @@ class Data(object):
 
     def _events2executions(self):
         #print("event 2 executions...")
-        self.executions = [];
+        self.executions = {}
+        self.func_idx = 0
         for rankId, events in self.events.items():
             self._events2executionsByRank(rankId)
 
@@ -92,7 +98,7 @@ class Data(object):
         # convert event to execution entities
         #print("for rank: ", rankId)
         events = self.events[rankId]
-        function_index = len(self.executions)
+        #function_index = len(self.executions)
         stacks = {}; #one stack for one program under the same rankId
         for i, obj in enumerate(events):
             # arrange event by programs first, then threads
@@ -111,22 +117,23 @@ class Data(object):
                 func['comm ranks'] = obj['comm ranks']
                 func['threads'] = obj['threads']
                 func['lineid'] = obj['lineid']
-                func['findex'] = function_index
+                func['findex'] = self.func_idx #function_index
                 #print(func['name'], func['findex'])
                 if len(stack) > 0:
                     func['parent'] = stack[-1]['findex']
-                    stack[-1]['children'].append(function_index)
+                    stack[-1]['children'].append(self.func_idx) #(function_index)
                     #print("Children root", stack[-1]['name'], stack[-1]['entry'])
                 else:
                     func['parent'] = -1
                 func['children'] = []
                 func['entry'] = obj['timestamp']
-                function_index+=1
+                self.func_idx += 1 #function_index+=1
                 stack.append(func)
             elif obj['event types'] == self.event_types['EXIT']:#'exit'
                 if len(stack) > 0 and obj['name'] == stack[-1]['name']:
                     stack[-1]['exit'] = obj['timestamp']
-                    self.executions.append(stack[-1])
+                    #self.executions.append(stack[-1])
+                    self.executions[stack[-1]['findex']] = stack[-1]
                     stack.pop()
                 else: # mismatching
                     print(obj)
@@ -135,38 +142,43 @@ class Data(object):
                         print([(e['name'], e['entry']) for e in stack])
                     else:
                         print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/empty stack")
-            elif len(stack)>0 and (obj['event types']==self.event_types['SEND'] or obj['event types']==self.event_types['RECV']):
-                #make sure the message is correct to append
-                if obj['name'] != 'NA' and obj['name'] != stack[-1]['name']:
-                    print("message issue: "+obj['name']+":"+stack[-1]['name'])
-                #append to function
-                #assumption: execution never exits until message is received
-                if not 'messages' in stack[-1]:
-                    stack[-1]['messages']=[]
-                stack[-1]['messages'].append({
-                        "event-type": "send" if(obj['event types']==self.event_types['SEND']) else "receive",
-                        "source-node-id": obj['comm ranks'] if(obj['event types']==self.event_types['SEND']) else obj['partner'],
-                        "destination-node-id": obj['comm ranks'] if(obj['event types']==self.event_types['RECV']) else obj['partner'],
-                        "thread-id": obj['threads'], #place holder
-                        "message-size": obj['num bytes'],
-                        "message-tag": obj['Tag'],
-                        "time": obj['timestamp']
-                    })
+            elif obj['event types']==self.event_types['SEND'] or obj['event types']==self.event_types['RECV']:
+                if len(stack) > 0:
+                    #make sure the message is correct to append
+                    if obj['name'] != 'NA' and obj['name'] != stack[-1]['name']:
+                        print("message issue: "+obj['name']+":"+stack[-1]['name'])
+                    #append to function
+                    #assumption: execution never exits until message is received
+                    if not 'messages' in stack[-1]:
+                        stack[-1]['messages']=[]
+                    stack[-1]['messages'].append({
+                            "event-type": "send" if(obj['event types']==self.event_types['SEND']) else "receive",
+                            "source-node-id": obj['comm ranks'] if(obj['event types']==self.event_types['SEND']) else obj['partner'],
+                            "destination-node-id": obj['comm ranks'] if(obj['event types']==self.event_types['RECV']) else obj['partner'],
+                            "thread-id": obj['threads'], #place holder
+                            "message-size": obj['num bytes'],
+                            "message-tag": obj['Tag'],
+                            "time": obj['timestamp']
+                        })
+                else:
+                    print(obj)
+                    #print(stacks[obj['prog names']])
+                    #print('\n')
         # check if the stack is empty
-        for prog_id, prog_stack in stacks.items():
-            for thread_id, stack in prog_stack.items():
-                if stack: #not empty
-                    print("(prog %d, rank %d, thread %d) stack is not empty:" % (prog_id, rankId, thread_id))
-                    print([(elem['name'], elem['findex'], elem['entry']+self.initial_timestamp) for elem in stack])
+        # for prog_id, prog_stack in stacks.items():
+        #     for thread_id, stack in prog_stack.items():
+        #         if stack: #not empty
+        #             print("(prog %d, rank %d, thread %d) stack is not empty:" % (prog_id, rankId, thread_id))
+        #             print([(elem['name'], elem['findex'], elem['entry']+self.initial_timestamp) for elem in stack])
         # the function index (findex) of i-th execution in the list is i
-        self.executions = sorted(self.executions, key= lambda x: x['findex'])
+        #self.executions = sorted(self.executions, key= lambda x: x['findex'])
 
     def _exections2forest(self):
         # get tree based on foi
         self.forest = []
         self.lineid2functionid = {}
         count = 0
-        for execution in self.executions:
+        for fidx, execution in self.executions.items():
             if execution['name'] == self.foi:
                 if execution["comm ranks"] == 0: #debug
                     count+=1
@@ -182,6 +194,7 @@ class Data(object):
                                 "name": self.foi,
                                 "id": 0,
                                 "comm ranks": execution["comm ranks"],
+                                "prog_name": execution["prog names"],
                                 "threads": execution["threads"],
                                 "findex": execution["findex"],
                                 "value": (execution["exit"] - execution["entry"]),
@@ -195,9 +208,8 @@ class Data(object):
                     node,ptid = queue[0]
                     queue.pop(0)
                     for child_id in node['children']:
-                        if child_id >= len(self.executions):
-                            print(len(self.executions), child_id)
-                            print(node)
+                        if not child_id in self.executions:
+                            print("child not in executions", node)
                         child_node = self.executions[child_id]
                         ctid = len(this_tree['nodes'])
                         if not "messages" in child_node:
@@ -206,6 +218,7 @@ class Data(object):
                                 'name':child_node['name'],
                                 "id": ctid,
                                 "comm ranks": execution["comm ranks"],
+                                "prog_name": execution["prog names"],
                                 "threads": execution["threads"],
                                 "findex": child_node["findex"],
                                 "value": (child_node["exit"] - child_node["entry"]),
@@ -227,9 +240,23 @@ class Data(object):
             else:
                 self.labels.append(-0.8)
         self.pos = []
+        self.prog = []
         for t in self.forest:
             root = t['nodes'][0]
-            self.pos.append([root[self.layout[0]],root[self.layout[1]]])
+            pos_x = 0
+            pos_y = 0
+            # trick to encode thread Id
+            if self.layout[0] == 'comm ranks':
+                pos_x = root['comm ranks'] + root['threads']*0.1
+            else:
+                pos_x = root[self.layout[0]]
+            if self.layout[1] == 'comm ranks':
+                pos_y = root['comm ranks'] + root['threads']*0.1
+            else:
+                pos_y = root[self.layout[1]]    
+            #print(pos_x, pos_y)     
+            self.prog.append(root['prog_name'])      
+            self.pos.append([pos_x, pos_y]) #([root[self.layout[0]],root[self.layout[1]]])
         self.changed = False
 
 data = Data()
@@ -264,12 +291,12 @@ def receive_events():
 
 def _stream():
     while(not data.changed):
-        time.sleep(0.1)
+        time.sleep(1)
     data.generate_forest()
     #send back forest data
     yield """
-        retry: 10000\ndata:{"pos":%s,"layout":%s, "labels":%s}\n\n
-    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.labels))
+        retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s}\n\n
+    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.labels), json.dumps(data.prog))
 
 @web_app.route('/stream')
 def stream():

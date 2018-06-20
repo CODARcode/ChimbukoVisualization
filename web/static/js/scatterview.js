@@ -5,12 +5,12 @@ class ScatterView extends View {
         me.color = me.vis.anomalyColor;
         me.margin = {
             top: 0,
-            right: 0,
+            right: 20,
             bottom: 20,
-            left: 40
+            left: 60
         };
         me.x = d3.scaleLinear().range([me.margin.left, me.size.width - me.margin.right]);
-        me.y = d3.scaleLinear().range([me.margin.top, me.size.height - me.margin.bottom]);
+        me.y = d3.scaleLinear().range([me.margin.top + 5, me.size.height - me.margin.bottom]);
 
         me.selections = new Set();
         me.dot = {};
@@ -37,9 +37,9 @@ class ScatterView extends View {
     }
 
     draw(){
+        this._drawAxis();
         this._drawDots();
         //this._drawPointLabel();
-        this._drawAxis();
     }
 
     relabeled(){
@@ -119,48 +119,80 @@ class ScatterView extends View {
         var dotName = me.svg.selectAll('.dotName')
         	.data(me.data.data);
 
-        me.textlabel = dotName.enter().append("text").attr('class','dotName')
-        	.filter(d => (d.relabel!=0 || d.anomaly_score<=me.data.scoreThreshold))
-            .attr("x", d => me.x(d.pos.x))
-            .attr("y", d => me.y(d.pos.y)+5)
-            .text(d => "#"+Math.floor(d.id/visOptions.invokeNum)+"-"+d.id%visOptions.invokeNum);
+        // me.textlabel = dotName.enter().append("text").attr('class','dotName')
+        // 	.filter(d => (d.relabel!=0 || d.anomaly_score<=me.data.scoreThreshold))
+        //     .attr("x", d => me.x(d.pos.x))
+        //     .attr("y", d => me.y(d.pos.y)+5)
+        //     .text(d => "#"+Math.floor(d.id/visOptions.invokeNum)+"-"+d.id%visOptions.invokeNum);
 
         dotName.exit().remove();
     }
 
     _drawAxis(){
-        var titles = {"entry":"Entry Time", 'value': 'Execution Time', 'comm ranks':"Rank"}
+        var titles = {"entry":"Entry Time", 'value': 'Execution Time', 'comm ranks':"Rank#.Thread#"}
         var me = this;
-        this.xAxis
+
+        var pos_x = []
+        var pos_y = []
+        if(me.data.scatterLayout[0] == 'comm ranks'){
+            me.data.data.forEach(function(d){
+                pos_x.push(d.pos.x);
+            });
+        }
+        if(me.data.scatterLayout[1] == 'comm ranks'){
+            me.data.data.forEach(function(d){
+                pos_y.push(d.pos.y);
+            });
+        }        
+        var set_x = Array.from(new Set(pos_x));
+        var set_y = Array.from(new Set(pos_y));
+
+        var xAxis;
+        if(me.data.scatterLayout[0] == 'comm ranks'){
+            xAxis = this.xAxis
+            .call(d3.axisBottom(me.x)
+                .tickValues(set_x));
+        }else{
+            xAxis = this.xAxis
             .call(d3.axisBottom(me.x).tickFormat(function(d){
                 if(me.data.scatterLayout[0] == 'entry'){
-                    return Number.parseFloat(d/1000000).toFixed(2)+"s";
+                    return parseFloat(d/1000000).toFixed(2)+"s";
                 }else if(me.data.scatterLayout[0] == 'value'){
-                    return Number.parseFloat(d/1000).toFixed(2)+"ms";
+                    return parseFloat(d/1000).toFixed(2)+"ms";
                 }else{
                     return d;
                 }
             }))
-            .append("text")
+        }
+        xAxis.append("text")
             .attr("class", "label")
             .attr("x", me.size.width)
             .attr("y", -12)
             .text(titles[me.data.scatterLayout[0]])
             .attr("text-anchor", "end")
             .attr("fill", "black");
-        this.yAxis
-            .call(d3.axisLeft(me.y).tickFormat(function(d){
-                if(me.data.scatterLayout[1] == 'entry'){
-                    return Number.parseFloat(d/1000000).toFixed(2)+"s";
-                }else if(me.data.scatterLayout[1] == 'value'){
-                    return Number.parseFloat(d/1000).toFixed(2)+"ms";
-                }else{
-                    return d;
-                }
-            }))
-            .append("text")
+
+        var yAxis;
+        if(me.data.scatterLayout[1] == 'comm ranks'){
+            yAxis = this.yAxis
+            .call(d3.axisLeft(me.y)
+                .tickValues(set_y));
+        }else{
+            yAxis = this.yAxis
+            .call(d3.axisLeft(me.y)
+                .tickFormat(function(d){
+                    if(me.data.scatterLayout[1] == 'entry'){
+                        return parseFloat(d/1000000).toFixed(2)+"s";
+                    }else if(me.data.scatterLayout[1] == 'value'){
+                        return parseFloat(d/1000).toFixed(2)+"ms";
+                    }else{
+                        return d;
+                    }
+                }))
+        }
+        yAxis.append("text")
             .attr("class", "label")
-            .attr("x", 0)
+            .attr("x", 2)
             .attr("y", 12)
             .text(titles[me.data.scatterLayout[1]])
             .attr("text-anchor", "start")
@@ -173,7 +205,7 @@ class ScatterView extends View {
         me.dot = me.svg.selectAll("dot")
             .data(me.data.data)
             .enter().append("circle")
-            .attr("r", 3)
+            .attr("r", 4)
             .attr("cx", d => me.x(d.pos.x))
             .attr("cy", d => me.y(d.pos.y))
             .attr("fill", d => me._fillColor(d))
@@ -185,19 +217,25 @@ class ScatterView extends View {
             })
             .append("title")
             .text(function(d, i) {
-                return i;
+                return "prog#"+d.prog_name+"-tree#"+i;
             });
     }
     _fillColor(d){
         var score = (d.relabel!=0)?d.relabel:this.vis.scoreScale(d.anomaly_score);
-        return this.color(score);
+        if(score < 0){ //anomaly
+            return "black";
+        }else{ //regular, show prog color
+            var newcolor = d3.scaleOrdinal(d3.schemeDark2).domain(d3.range(0,7));
+            return newcolor(d.prog_name);
+        }
+        //return this.color(score);
     }
     _clusterColor(d){
         return this.vis.clusterColor(d.cluster_label);
     }
 
     _fillOpacity(d){
-        return (d.relabel==0&&d.anomaly_score>this.data.scoreThreshold) ? 0.5 : 1;
+        return (d.relabel==0&&d.anomaly_score>this.data.scoreThreshold) ? 0.5 : 0.8;
     }
 
     changeColor(){
@@ -247,9 +285,9 @@ class ScatterView extends View {
         me.backgroud.call(d3.zoom()
             .scaleExtent([1, 80])
             .extent([[me.x.domain()[0],me.y.domain()[0]],[me.x.domain()[1],me.y.domain()[1]]])
-            //.on("zoom", function(){
-              //  me._zoom();
-            //})
+            .on("zoom", function(){
+                me._zoom();
+            })
             );
         me.path = me.svg.append("path").attr("fill-opacity", 0.2);
     }
@@ -277,11 +315,12 @@ class ScatterView extends View {
         this.dot
             .attr("cx", d => new_xScale(d.pos.x))
             .attr("cy", d => new_yScale(d.pos.y))
-            .attr('fill-opacity', d => (new_xScale(d.pos.x)>xrange[1]||new_xScale(d.pos.x)<xrange[0])?0:me._fillOpacity(d));
-        this.textlabel
-            .attr("x", d => new_xScale(d.pos.x))
-            .attr("y", d => new_yScale(d.pos.y))
-            .attr('opacity', d => (new_xScale(d.pos.x)>xrange[1]||new_xScale(d.pos.x)<xrange[0])?0:1);
+            .attr('fill-opacity', d => (new_xScale(d.pos.x)>xrange[1]||new_xScale(d.pos.x)<xrange[0])?0:me._fillOpacity(d))
+            .attr('stroke-opacity', d => (new_xScale(d.pos.x)>xrange[1]||new_xScale(d.pos.x)<xrange[0])?0:me._fillOpacity(d));
+        // this.textlabel
+        //     .attr("x", d => new_xScale(d.pos.x))
+        //     .attr("y", d => new_yScale(d.pos.y))
+        //     .attr('opacity', d => (new_xScale(d.pos.x)>xrange[1]||new_xScale(d.pos.x)<xrange[0])?0:1);
         this.path.attr("transform", d3.event.transform);
     }
 

@@ -11,7 +11,8 @@ class Data(object):
         self.executions = {} # the paired function executions from event list
         self.forest = [] # the forest of call stack tree, roots are foi
         self.pos = [] # the positions of the call stak tree in the scatter plot
-        self.labels = [] # the learned label, for now I simulated
+        self.labels = [] # the passed labels of the lineid of functions
+        self.forest_labels = [] # the learned label, for now I simulated
         self.prog = []; # the program names of the tree in scatter plot
         self.func_dict = [] # all the names of the functions
         self.foi = '' # function of interest
@@ -38,9 +39,11 @@ class Data(object):
             self.event_types[e] = i
 
     def set_labels(self, labels):
-        for label in labels:# self.labels indicates all the anoamaly lines
-            if label in self.lineid2functionid:
-                self.labels[self.lineid2functionid[label]] = -1# -1= anomaly and 1 = normal
+        # for label in labels:# self.labels indicates all the anoamaly lines
+        #     if label in self.lineid2functionid:
+        #         self.labels[self.lineid2functionid[label]] = -1# -1= anomaly and 1 = normal
+        self.labels = labels
+        print("received %d anomaly" % len(labels))
         self.changed = True
 
     def add_events(self, events):
@@ -71,8 +74,8 @@ class Data(object):
                 self.events[obj['comm ranks']] = []
             self.events[obj['comm ranks']].append(obj)
             prev = obj
-            # if obj['lineid'] > 300 and obj['lineid'] < 316:
-            #     print(obj)
+            if obj['lineid'] in self.labels:
+                 print(e)
 
         self.changed = True
         self.line_num += len(events)
@@ -160,8 +163,8 @@ class Data(object):
                             "message-tag": obj['Tag'],
                             "time": obj['timestamp']
                         })
-                else:
-                    print(obj)
+                #else:
+                    #print(obj)
                     #print(stacks[obj['prog names']])
                     #print('\n')
         # check if the stack is empty
@@ -234,11 +237,13 @@ class Data(object):
         self._events2executions()
         self._exections2forest()
         # remove this, this is dummy
-        while len(self.labels)<len(self.forest):
-            if(random.randint(0,100)<90):
-                self.labels.append(0.8)
-            else:
-                self.labels.append(-0.8)
+        # while len(self.labels)<len(self.forest):
+        #     if(random.randint(0,100)<90):
+        #         self.labels.append(0.8)
+        #     else:
+        #         self.labels.append(-0.8)
+
+        # the scatterplot positions of the forest
         self.pos = []
         self.prog = []
         for t in self.forest:
@@ -257,6 +262,13 @@ class Data(object):
             #print(pos_x, pos_y)     
             self.prog.append(root['prog_name'])      
             self.pos.append([pos_x, pos_y]) #([root[self.layout[0]],root[self.layout[1]]])
+
+        # the anomaly labels of the forest
+        self.forest_labels = [1]*len(self.forest)
+        for label in self.labels:
+            if label in self.lineid2functionid:
+                self.forest_labels[self.lineid2functionid[label]] = -1# -1= anomaly and 1 = normal
+
         self.changed = False
 
 data = Data()
@@ -296,7 +308,7 @@ def _stream():
     #send back forest data
     yield """
         retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s}\n\n
-    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.labels), json.dumps(data.prog))
+    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.forest_labels), json.dumps(data.prog))
 
 @web_app.route('/stream')
 def stream():

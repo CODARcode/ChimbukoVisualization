@@ -17,12 +17,20 @@ requests.post(vis_url, json={'type':'event_types', 'value':['ENTRY', 'EXIT', 'SE
 #requests.post(vis_url, json={'type':'event_types', 'value':['EXIT', 'ENTRY', 'SEND', 'RECV']})
 #----clean previous events----
 requests.post(vis_url, json={'type':'reset'})
+
+
+#----set labels----
+labels = []
+with open("../data/anomaly.json", 'r') as f:
+	labels = json.load(f)
+requests.post(vis_url, json={'type':'labels', 'value':labels})
+
 #----simulating update----
 all_events = []
 datafile = "../data/events_test.json"
 with open(datafile, 'r') as f:
 	all_events = json.load(f)
-step = 50
+step = 500
 start = 0
 
 while start < len(all_events):

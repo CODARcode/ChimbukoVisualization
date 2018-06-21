@@ -205,7 +205,7 @@ class ScatterView extends View {
         me.dot = me.svg.selectAll("dot")
             .data(me.data.data)
             .enter().append("circle")
-            .attr("r", 4)
+            .attr("r", d => d.anomaly_score<0?6:4)
             .attr("cx", d => me.x(d.pos.x))
             .attr("cy", d => me.y(d.pos.y))
             .attr("fill", d => me._fillColor(d))
@@ -221,14 +221,10 @@ class ScatterView extends View {
             });
     }
     _fillColor(d){
-        var score = (d.relabel!=0)?d.relabel:this.vis.scoreScale(d.anomaly_score);
-        if(score < 0){ //anomaly
-            return "black";
-        }else{ //regular, show prog color
-            var newcolor = d3.scaleOrdinal(d3.schemeDark2).domain(d3.range(0,7));
-            return newcolor(d.prog_name);
-        }
+        //var score = (d.relabel!=0)?d.relabel:this.vis.scoreScale(d.anomaly_score);
         //return this.color(score);
+         var newcolor = d3.scaleOrdinal(d3.schemeDark2).domain(d3.range(0,7));
+        return newcolor(d.prog_name);
     }
     _clusterColor(d){
         return this.vis.clusterColor(d.cluster_label);

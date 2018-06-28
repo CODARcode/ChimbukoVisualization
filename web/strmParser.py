@@ -110,6 +110,8 @@ while True:
 		data_step = data_event
 		# count most common functions
 		int_func = ct(data_event[:, 4]).most_common(int_func_num) # e.g., [(16, 14002), (15, 14000), (13, 6000),...]
+	else:
+		data_step = np.zeros((0, 12), dtype=object)
 
 	vname = "counter_values"
 	if vname in fin.vars:
@@ -138,11 +140,6 @@ while True:
 
 	#send events data
 	res = requests.post(vis_url, json={'type':'events','value':data_step.tolist()})
-
-	if i == 0:
-		data_global = data_step
-	else:
-		data_global = np.concatenate((data_global, data_step), axis=0)
 
 	# lauch anomaly detection
 	anomaly_flag = False

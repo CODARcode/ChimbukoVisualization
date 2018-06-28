@@ -14,8 +14,9 @@ class Data(object):
         self.labels = [] # the passed labels of the lineid of functions
         self.forest_labels = [] # the learned label, for now I simulated
         self.prog = []; # the program names of the tree in scatter plot
+        self.func_names = []; # the function name of interest in scatter plot
         self.func_dict = [] # all the names of the functions
-        self.foi = '' # function of interest
+        self.foi = [] # function of interest
         self.event_types = {} # set the indices indicating event types in the event list
         self.changed = False # if there are new data come in
         self.lineid2functionid = {} # indicates which line in events stream is which function
@@ -31,8 +32,8 @@ class Data(object):
     def set_functions(self, functions):# set function dictionary
         self.func_dict = functions
 
-    def set_FOI(self, function):
-        self.foi = function        
+    def set_FOI(self, functions):
+        self.foi = functions        
         self.changed = True
 
     def set_event_types(self, types):
@@ -198,7 +199,7 @@ class Data(object):
         self.lineid2functionid = {}
         count = 0
         for fidx, execution in self.executions.items():
-            if execution['name'] == self.foi:
+            if execution['name'] in self.foi:
                 if execution["comm ranks"] == 0: #debug
                     count+=1
                 self.lineid2functionid[execution["lineid"]] = len(self.forest)
@@ -210,7 +211,7 @@ class Data(object):
                         "threads": execution["threads"],
                         "graph_index": len(self.forest),
                         "nodes": [{ # root of the tree
-                                "name": self.foi,
+                                "name": execution['name'], # self.foi,
                                 "id": 0,
                                 "comm ranks": execution["comm ranks"],
                                 "prog_name": execution["prog names"],
@@ -256,6 +257,7 @@ class Data(object):
         # the scatterplot positions of the forest
         self.pos = []
         self.prog = []
+        self.func_names = []
         for t in self.forest:
             root = t['nodes'][0]
             pos_x = 0
@@ -270,7 +272,8 @@ class Data(object):
             else:
                 pos_y = root[self.layout[1]]    
             #print(pos_x, pos_y)     
-            self.prog.append(root['prog_name'])      
+            self.prog.append(root['prog_name'])    
+            self.func_names.append(root['name'])  
             self.pos.append([pos_x, pos_y]) #([root[self.layout[0]],root[self.layout[1]]])
 
         # the anomaly labels of the forest
@@ -323,8 +326,8 @@ def _stream():
     data.generate_forest()
     #send back forest data
     yield """
-        retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s}\n\n
-    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.forest_labels), json.dumps(data.prog))
+        retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s}\n\n
+    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.forest_labels), json.dumps(data.prog), json.dumps(data.func_names))
 
 @web_app.route('/stream')
 def stream():

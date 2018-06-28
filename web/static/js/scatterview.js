@@ -132,8 +132,8 @@ class ScatterView extends View {
         var titles = {"entry":"Entry Time", 'value': 'Execution Time', 'comm ranks':"Rank#.Thread#"}
         var me = this;
 
-        var pos_x = []
-        var pos_y = []
+        var pos_x = [];
+        var pos_y = [];
         if(me.data.scatterLayout[0] == 'comm ranks'){
             me.data.data.forEach(function(d){
                 pos_x.push(d.pos.x);
@@ -201,6 +201,17 @@ class ScatterView extends View {
 
     _drawDots() {
         var me = this;
+
+        // compute progname and funcname sets
+        var progname = [];
+        var funcname = [];
+        me.data.data.forEach(d => progname.push(d.prog_name));
+        me.data.data.forEach(d => funcname.push(d.func_name));
+        var set_progname = Array.from(new Set(progname));
+        var set_funcname = Array.from(new Set(funcname));
+        console.log(set_progname);
+        console.log(set_funcname);
+
         // Add the scatterplot
         me.dot = me.svg.selectAll("dot")
             .data(me.data.data)
@@ -208,7 +219,7 @@ class ScatterView extends View {
             .attr("r", d => d.anomaly_score<0?6:4)
             .attr("cx", d => me.x(d.pos.x))
             .attr("cy", d => me.y(d.pos.y))
-            .attr("fill", d => me._fillColor(d))
+            .attr("fill", d => me._fillColor(d, set_progname, set_funcname))
             .attr("fill-opacity", d => me._fillOpacity(d));
 
         me.dot.on("click", function(d, i) {
@@ -217,21 +228,31 @@ class ScatterView extends View {
             })
             .append("title")
             .text(function(d, i) {
-                return "prog#"+d.prog_name+"-tree#"+i;
+                return d.func_name+"-prog#"+d.prog_name+"-tree#"+i;
             });
     }
-    _fillColor(d){
+    _fillColor(d, progname=[], funcname=[]){
         //var score = (d.relabel!=0)?d.relabel:this.vis.scoreScale(d.anomaly_score);
         //return this.color(score);
-         var newcolor = d3.scaleOrdinal(d3.schemeDark2).domain(d3.range(0,7));
-        return newcolor(d.prog_name);
+        var newcolor = d3.scaleOrdinal(d3.schemeDark2).domain(d3.range(0,7));
+        
+        if(progname.length == 0 || funcname.length == 0){
+            return newcolor(d.prog_name);
+        }
+
+        var h = 360/funcname.length;
+        var c = 100/progname.length;
+        var l = 65;
+
+        return d3.hcl(h*funcname.indexOf(d.func_name), c, l*d.prog_name);
     }
     _clusterColor(d){
         return this.vis.clusterColor(d.cluster_label);
     }
 
     _fillOpacity(d){
-        return (d.relabel==0&&d.anomaly_score>this.data.scoreThreshold) ? 0.5 : 0.8;
+        return d.anomaly_score>0?0.5:0.8;
+        //return (d.relabel==0&&d.anomaly_score>this.data.scoreThreshold) ? 0.5 : 0.8;
     }
 
     changeColor(){

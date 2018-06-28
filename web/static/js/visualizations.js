@@ -155,7 +155,7 @@ class Visualizations {
         });
         //vis.majorFunctions.push("Others");
         vis.views.forEach(d => {
-            d.selected()
+            d.selected() //draw all views
         });
     }
     unselected() {

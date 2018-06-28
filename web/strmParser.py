@@ -21,7 +21,7 @@ import requests
 import time
 import json
 import pickle
-import warnings
+import itertools
 import adios as ad
 import numpy as np
 import scipy.io as sio

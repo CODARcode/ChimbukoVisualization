@@ -23,7 +23,7 @@ class Data(object):
         self.initial_timestamp = 0;
         self.msgs = []; # debug only for messages
         self.func_idx = 0; # global function index for each entry function
-        self.layout = ["entry","value"]#x,y
+        self.layout = ["entry","comm ranks"]#x,y
         # entry - entry time
         # value - execution time
         # comm ranks
@@ -67,8 +67,7 @@ class Data(object):
                 'timestamp': int(e[11]) - self.initial_timestamp, 
                 'lineid': self.line_num+count}# here line id is start from the beggining of the stream
             count += 1
-            if obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
-                obj['threads'] = 1 #---!!!!!remove!!!!!
+            #if obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
             #     print(prev)
             #     print(obj)
             #     print('\n')
@@ -180,9 +179,9 @@ class Data(object):
                     self.msgs.append(temp['findex'])
                 else:
                     print("obj:\t", obj)
-                    print("stack 0:\t", stacks[obj['prog names']][0])
-                    print("stack 1:\t", stacks[obj['prog names']][1][-1])
-                    print("stack 2:\t", stacks[obj['prog names']][2][-1])
+                    # print("stack 0:\t", stacks[obj['prog names']][0])
+                    # print("stack 1:\t", stacks[obj['prog names']][1][-1])
+                    # print("stack 2:\t", stacks[obj['prog names']][2][-1])
                     #print('\n')
         # check if the stack is empty
         # for prog_id, prog_stack in stacks.items():

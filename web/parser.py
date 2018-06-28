@@ -6,12 +6,12 @@ vis_url = 'http://127.0.0.1:5000/events'
 
 #----set function dictionary----
 fun_names = []
-with open("../data/functions_test.json", 'r') as f:
+with open("../data/functions_test1.json", 'r') as f:
 	fun_names = json.load(f)
 requests.post(vis_url, json={'type':'functions', 'value':fun_names})
 #----set function of interest----
 #requests.post(vis_url, json={'type':'foi','value':'void LAMMPS_NS::PairEAM::compute(int, int) [{pair_eam.cpp} {134,1}-{315,1}]'})
-requests.post(vis_url, json={'type':'foi','value':'adios_close'})
+requests.post(vis_url, json={'type':'foi','value':'adios_open'})
 #----set event types, they are not fixed----
 requests.post(vis_url, json={'type':'event_types', 'value':['ENTRY', 'EXIT', 'SEND', 'RECV']})
 #requests.post(vis_url, json={'type':'event_types', 'value':['EXIT', 'ENTRY', 'SEND', 'RECV']})
@@ -27,7 +27,7 @@ requests.post(vis_url, json={'type':'labels', 'value':labels})
 
 #----simulating update----
 all_events = []
-datafile = "../data/events_test.json"
+datafile = "../data/events_test1.json"
 with open(datafile, 'r') as f:
 	all_events = json.load(f)
 step = 500

@@ -209,8 +209,8 @@ class ScatterView extends View {
         me.data.data.forEach(d => funcname.push(d.func_name));
         var set_progname = Array.from(new Set(progname));
         var set_funcname = Array.from(new Set(funcname));
-        console.log(set_progname);
-        console.log(set_funcname);
+        //console.log(set_progname);
+        //console.log(set_funcname);
 
         // Add the scatterplot
         me.dot = me.svg.selectAll("dot")
@@ -234,24 +234,26 @@ class ScatterView extends View {
     _fillColor(d, progname=[], funcname=[]){
         //var score = (d.relabel!=0)?d.relabel:this.vis.scoreScale(d.anomaly_score);
         //return this.color(score);
-        var newcolor = d3.scaleOrdinal(d3.schemeDark2).domain(d3.range(0,7));
+
+        // five group, each with four lightness
+        // if more than five functions, color repeats 
+        // if more than four progs, lightness repeats
+        var newcolor = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,19));
         
-        if(progname.length == 0 || funcname.length == 0){
-            return newcolor(d.prog_name);
-        }
+        return newcolor(funcname.indexOf(d.func_name)%5*4+d.prog_name%4);
 
-        var h = 360/funcname.length;
-        var c = 100/progname.length;
-        var l = 65;
+        //var h = 360/funcname.length;
+        //var c = (100-30)/progname.length;
+        //var l = 60; 
 
-        return d3.hcl(h*funcname.indexOf(d.func_name), c, l*d.prog_name);
+        //return d3.hcl(h*funcname.indexOf(d.func_name), 100-c*d.prog_name, l);
     }
     _clusterColor(d){
         return this.vis.clusterColor(d.cluster_label);
     }
 
     _fillOpacity(d){
-        return d.anomaly_score>0?0.5:0.8;
+        return 0.5; //d.anomaly_score>0?0.5:0.8;
         //return (d.relabel==0&&d.anomaly_score>this.data.scoreThreshold) ? 0.5 : 0.8;
     }
 

@@ -24,7 +24,7 @@ class Data(object):
         self.initial_timestamp = 0;
         self.msgs = []; # debug only for messages
         self.func_idx = 0; # global function index for each entry function
-        self.layout = ["entry","comm ranks"]#x,y
+        self.layout = ["entry","value"]#x,y
         # entry - entry time
         # value - execution time
         # comm ranks

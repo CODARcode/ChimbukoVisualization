@@ -1,4 +1,4 @@
-# ChimbukoVisualization
+# Chimbuko Visualization
 
 Visualization for online performance analysis
 

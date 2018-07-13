@@ -220,7 +220,8 @@ class ScatterView extends View {
             .attr("cx", d => me.x(d.pos.x))
             .attr("cy", d => me.y(d.pos.y))
             .attr("fill", d => me._fillColor(d, set_progname, set_funcname))
-            .attr("fill-opacity", d => me._fillOpacity(d));
+            .attr("fill-opacity", d => me._fillOpacity(d))
+            .attr("stroke", d => d.anomaly_score<0?"red":0);
 
         me.dot.on("click", function(d, i) {
             	me.data.clearHight();
@@ -302,7 +303,7 @@ class ScatterView extends View {
                 me.selections.clear();
             }));
         me.backgroud.call(d3.zoom()
-            .scaleExtent([1, 80])
+            .scaleExtent([1, 1000])
             .extent([[me.x.domain()[0],me.y.domain()[0]],[me.x.domain()[1],me.y.domain()[1]]])
             .on("zoom", function(){
                 me._zoom();

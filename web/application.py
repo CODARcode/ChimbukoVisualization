@@ -55,6 +55,7 @@ class Data(object):
         for e in events:
             if not self.events: # the initial timestamp
                 self.initial_timestamp = int(e[11])
+                print("Initial time: ", self.initial_timestamp)
             obj = {'prog names': e[0],
                 'comm ranks': e[1],
                 'threads': e[2],
@@ -76,8 +77,8 @@ class Data(object):
                 self.events[obj['comm ranks']] = []
             self.events[obj['comm ranks']].append(obj)
             prev = obj
-            #if obj['lineid'] in self.labels:
-            #     print(e)
+            if obj['lineid'] in self.labels:
+                print(obj['lineid'], ": ", e)
 
         self.changed = True
         self.line_num += len(events)

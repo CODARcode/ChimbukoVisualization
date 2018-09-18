@@ -24,6 +24,10 @@ class Data(object):
         self.initial_timestamp = 0;
         self.msgs = []; # debug only for messages
         self.func_idx = 0; # global function index for each entry function
+        self.stacks = {}; # one stack for one program under the same rankId
+        self.idx_holder = {
+            "fidx": []
+        };
         self.layout = ["entry","value"]#x,y
         # entry - entry time
         # value - execution time
@@ -75,6 +79,7 @@ class Data(object):
             #     print('\n')
             if not obj['comm ranks'] in self.events:
                 self.events[obj['comm ranks']] = []
+                self.idx_holder[obj['comm ranks']] = 0 # initialize by ranks
             self.events[obj['comm ranks']].append(obj)
             prev = obj
             if obj['lineid'] in self.labels:
@@ -96,8 +101,8 @@ class Data(object):
 
     def _events2executions(self):
         #print("event 2 executions...")
-        self.executions = {}
-        self.func_idx = 0
+        # self.executions = {}
+        # self.func_idx = 0
         for rankId, events in self.events.items():
             self._events2executionsByRank(rankId)
         #check who has messages
@@ -116,15 +121,17 @@ class Data(object):
         #print("for rank: ", rankId)
         events = self.events[rankId]
         #function_index = len(self.executions)
-        stacks = {}; #one stack for one program under the same rankId
-        for i, obj in enumerate(events):
+        # stacks = {}; #one stack for one program under the same rankId
+        # for i, obj in enumerate(events):
+        for i, obj in enumerate(events, start=self.idx_holder[rankId]): 
+            self.idx_holder[rankId] += 1
             # arrange event by programs first, then threads
-            if not obj['prog names'] in stacks:
-                stacks[obj['prog names']] = {}
-                stacks[obj['prog names']][obj['threads']] = []
-            if not obj['threads'] in stacks[obj['prog names']]:
-                stacks[obj['prog names']][obj['threads']] = []
-            stack = stacks[obj['prog names']][obj['threads']]
+            if not obj['prog names'] in self.stacks:
+                self.stacks[obj['prog names']] = {}
+                self.stacks[obj['prog names']][obj['threads']] = []
+            if not obj['threads'] in self.stacks[obj['prog names']]:
+                self.stacks[obj['prog names']][obj['threads']] = []
+            stack = self.stacks[obj['prog names']][obj['threads']]
             # check event type
             if obj['event types'] == self.event_types['ENTRY']:#'entry'
                 #push to stack
@@ -151,6 +158,7 @@ class Data(object):
                     stack[-1]['exit'] = obj['timestamp']
                     #self.executions.append(stack[-1])
                     self.executions[stack[-1]['findex']] = stack[-1]
+                    self.idx_holder['fidx'].append(stack[-1]['findex'])
                     stack.pop()
                 else: # mismatching
                     print(obj)
@@ -196,59 +204,62 @@ class Data(object):
 
     def _exections2forest(self):
         # get tree based on foi
-        self.forest = []
+        # self.forest = []
         self.lineid2functionid = {}
         count = 0
-        for fidx, execution in self.executions.items():
-            if execution['name'] in self.foi:
-                if execution["comm ranks"] == 0: #debug
-                    count+=1
-                self.lineid2functionid[execution["lineid"]] = len(self.forest)
-                if not "messages" in execution:
-                    execution["messages"] = []
-                this_tree = { 
-                        "prog_name": execution["prog names"],
-                        "node_index": execution["comm ranks"],
-                        "threads": execution["threads"],
-                        "graph_index": len(self.forest),
-                        "nodes": [{ # root of the tree
-                                "name": execution['name'], # self.foi,
-                                "id": 0,
-                                "comm ranks": execution["comm ranks"],
-                                "prog_name": execution["prog names"],
-                                "threads": execution["threads"],
-                                "findex": execution["findex"],
-                                "value": (execution["exit"] - execution["entry"]),
-                                "messages": execution["messages"],
-                                "entry": execution["entry"]
-                            }],
-                        "edges": []
-                    }
-                queue = [(execution,0)]
-                while len(queue)>0:
-                    node,ptid = queue[0]
-                    queue.pop(0)
-                    for child_id in node['children']:
-                        if not child_id in self.executions:
-                            print("child not in executions", node)
-                        child_node = self.executions[child_id]
-                        ctid = len(this_tree['nodes'])
-                        if not "messages" in child_node:
-                            child_node['messages'] = []
-                        this_tree['nodes'].append({ # children of the tree
-                                'name':child_node['name'],
-                                "id": ctid,
-                                "comm ranks": execution["comm ranks"],
-                                "prog_name": execution["prog names"],
-                                "threads": execution["threads"],
-                                "findex": child_node["findex"],
-                                "value": (child_node["exit"] - child_node["entry"]),
-                                "messages": child_node["messages"],
-                                "entry": child_node["entry"]
-                            })
-                        this_tree['edges'].append({'source': ptid,'target': ctid})
-                        queue.append((child_node,ctid))
-                self.forest.append(this_tree)
+        while len(self.idx_holder['fidx']) >0:
+            fidx = self.idx_holder['fidx'].pop(0)
+            if fidx in self.executions:
+                execution = self.executions[fidx]
+                if execution['name'] in self.foi:
+                    if execution["comm ranks"] == 0: #debug
+                        count+=1
+                    self.lineid2functionid[execution["lineid"]] = len(self.forest)
+                    if not "messages" in execution:
+                        execution["messages"] = []
+                    this_tree = { 
+                            "prog_name": execution["prog names"],
+                            "node_index": execution["comm ranks"],
+                            "threads": execution["threads"],
+                            "graph_index": len(self.forest),
+                            "nodes": [{ # root of the tree
+                                    "name": execution['name'], # self.foi,
+                                    "id": 0,
+                                    "comm ranks": execution["comm ranks"],
+                                    "prog_name": execution["prog names"],
+                                    "threads": execution["threads"],
+                                    "findex": execution["findex"],
+                                    "value": (execution["exit"] - execution["entry"]),
+                                    "messages": execution["messages"],
+                                    "entry": execution["entry"]
+                                }],
+                            "edges": []
+                        }
+                    queue = [(execution,0)]
+                    while len(queue)>0:
+                        node,ptid = queue[0]
+                        queue.pop(0)
+                        for child_id in node['children']:
+                            if not child_id in self.executions:
+                                print("child not in executions", node)
+                            child_node = self.executions[child_id]
+                            ctid = len(this_tree['nodes'])
+                            if not "messages" in child_node:
+                                child_node['messages'] = []
+                            this_tree['nodes'].append({ # children of the tree
+                                    'name':child_node['name'],
+                                    "id": ctid,
+                                    "comm ranks": execution["comm ranks"],
+                                    "prog_name": execution["prog names"],
+                                    "threads": execution["threads"],
+                                    "findex": child_node["findex"],
+                                    "value": (child_node["exit"] - child_node["entry"]),
+                                    "messages": child_node["messages"],
+                                    "entry": child_node["entry"]
+                                })
+                            this_tree['edges'].append({'source': ptid,'target': ctid})
+                            queue.append((child_node,ctid))
+                    self.forest.append(this_tree)
         print("generate {} trees".format(len(self.forest)))
 
     def generate_forest(self):

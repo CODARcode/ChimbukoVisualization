@@ -21,6 +21,16 @@ class ScatterView extends View {
         me.yAxis = me.svg.append("g")
             .attr("class", "scatter y axis")
             .attr("transform", "translate("+me.margin.left+",0)")
+
+        me.axis = [0, 1];
+        me.sbox_x = d3.select("#sbox_x");
+        me.sbox_y = d3.select("#sbox_y");
+        me.btn = d3.select("#apply")
+            .on("click", function(d) {
+                me.axis[0] = me.sbox_x._groups[0][0].value-0;
+                me.axis[1] = me.sbox_y._groups[0][0].value-0;
+                me.stream_update();
+            });
     }
 
     stream_update(){
@@ -55,11 +65,11 @@ class ScatterView extends View {
         me._updateAxis();
 
         this.dot
-            .attr("cx", d => me.x(d.pos.x))
-            .attr("cy", d => me.y(d.pos.y));
+            .attr("cx", d => me.x(d.pos[me.axis[0]]))
+            .attr("cy", d => me.y(d.pos[me.axis[1]]));
         this.textlabel
-            .attr("x", d => me.x(d.pos.x))
-            .attr("y", d => me.y(d.pos.y));
+            .attr("x", d => me.x(d.pos[me.axis[0]]))
+            .attr("y", d => me.y(d.pos[me.axis[1]]));
         if(this.data.projectionMethod==1){
             me.svg.selectAll('.dotName').remove();
         }else{
@@ -129,35 +139,35 @@ class ScatterView extends View {
     }
 
     _drawAxis(){
-        var titles = {"entry":"Entry Time", 'value': 'Execution Time', 'comm ranks':"Rank#.Thread#"}
+        var titles = {"entry":"Entry Time", 'value': 'Execution Time', 'comm ranks':"Rank#.Thread#", "exit": "Exit Time"}
         var me = this;
 
         var pos_x = [];
         var pos_y = [];
-        if(me.data.scatterLayout[0] == 'comm ranks'){
+        if(me.data.scatterLayout[me.axis[0]] == 'comm ranks'){
             me.data.data.forEach(function(d){
-                pos_x.push(d.pos.x);
+                pos_x.push(d.pos[me.axis[0]]);
             });
         }
-        if(me.data.scatterLayout[1] == 'comm ranks'){
+        if(me.data.scatterLayout[me.axis[1]] == 'comm ranks'){
             me.data.data.forEach(function(d){
-                pos_y.push(d.pos.y);
+                pos_y.push(d.pos[me.axis[1]]);
             });
         }        
         var set_x = Array.from(new Set(pos_x));
         var set_y = Array.from(new Set(pos_y));
 
         var xAxis;
-        if(me.data.scatterLayout[0] == 'comm ranks'){
+        if(me.data.scatterLayout[me.axis[0]] == 'comm ranks'){
             xAxis = this.xAxis
             .call(d3.axisBottom(me.x)
                 .tickValues(set_x));
         }else{
             xAxis = this.xAxis
             .call(d3.axisBottom(me.x).tickFormat(function(d){
-                if(me.data.scatterLayout[0] == 'entry'){
+                if(me.data.scatterLayout[me.axis[0]] == 'entry' || me.data.scatterLayout[me.axis[0]] == 'exit'){
                     return parseFloat(d/1000000).toFixed(2)+"s";
-                }else if(me.data.scatterLayout[0] == 'value'){
+                }else if(me.data.scatterLayout[me.axis[0]] == 'value'){
                     return parseFloat(d/1000).toFixed(2)+"ms";
                 }else{
                     return d;
@@ -168,12 +178,12 @@ class ScatterView extends View {
             .attr("class", "label")
             .attr("x", me.size.width)
             .attr("y", -12)
-            .text(titles[me.data.scatterLayout[0]])
+            .text(titles[me.data.scatterLayout[me.axis[0]]])
             .attr("text-anchor", "end")
             .attr("fill", "black");
 
         var yAxis;
-        if(me.data.scatterLayout[1] == 'comm ranks'){
+        if(me.data.scatterLayout[me.axis[1]] == 'comm ranks'){
             yAxis = this.yAxis
             .call(d3.axisLeft(me.y)
                 .tickValues(set_y));
@@ -181,9 +191,9 @@ class ScatterView extends View {
             yAxis = this.yAxis
             .call(d3.axisLeft(me.y)
                 .tickFormat(function(d){
-                    if(me.data.scatterLayout[1] == 'entry'){
+                    if(me.data.scatterLayout[me.axis[1]] == 'entry' || me.data.scatterLayout[me.axis[1]] == 'exit'){
                         return parseFloat(d/1000000).toFixed(2)+"s";
-                    }else if(me.data.scatterLayout[1] == 'value'){
+                    }else if(me.data.scatterLayout[me.axis[1]] == 'value'){
                         return parseFloat(d/1000).toFixed(2)+"ms";
                     }else{
                         return d;
@@ -194,7 +204,7 @@ class ScatterView extends View {
             .attr("class", "label")
             .attr("x", 2)
             .attr("y", 12)
-            .text(titles[me.data.scatterLayout[1]])
+            .text(titles[me.data.scatterLayout[me.axis[1]]])
             .attr("text-anchor", "start")
             .attr("fill", "black");
     }
@@ -217,8 +227,8 @@ class ScatterView extends View {
             .data(me.data.data)
             .enter().append("circle")
             .attr("r", d => d.anomaly_score<0?6:4)
-            .attr("cx", d => me.x(d.pos.x))
-            .attr("cy", d => me.y(d.pos.y))
+            .attr("cx", d => me.x(d.pos[me.axis[0]]))
+            .attr("cy", d => me.y(d.pos[me.axis[1]]))
             .attr("fill", d => me._fillColor(d, set_progname, set_funcname))
             .attr("fill-opacity", d => me._fillOpacity(d))
             .attr("stroke", d => d.anomaly_score<0?"red":0);
@@ -333,10 +343,10 @@ class ScatterView extends View {
         var new_xScale = d3.event.transform.rescaleX(me.x)
         var new_yScale = d3.event.transform.rescaleY(me.y)
         this.dot
-            .attr("cx", d => new_xScale(d.pos.x))
-            .attr("cy", d => new_yScale(d.pos.y))
-            .attr('fill-opacity', d => (new_xScale(d.pos.x)>xrange[1]||new_xScale(d.pos.x)<xrange[0])?0:me._fillOpacity(d))
-            .attr('stroke-opacity', d => (new_xScale(d.pos.x)>xrange[1]||new_xScale(d.pos.x)<xrange[0])?0:me._fillOpacity(d));
+            .attr("cx", d => new_xScale(d.pos[me.axis[0]]))
+            .attr("cy", d => new_yScale(d.pos[me.axis[1]]))
+            .attr('fill-opacity', d => (new_xScale(d.pos[me.axis[0]])>xrange[1]||new_xScale(d.pos[me.axis[0]])<xrange[0])?0:me._fillOpacity(d))
+            .attr('stroke-opacity', d => (new_xScale(d.pos[me.axis[0]])>xrange[1]||new_xScale(d.pos[me.axis[0]])<xrange[0])?0:me._fillOpacity(d));
         // this.textlabel
         //     .attr("x", d => new_xScale(d.pos.x))
         //     .attr("y", d => new_yScale(d.pos.y))
@@ -347,10 +357,10 @@ class ScatterView extends View {
     _updateAxis(){
         var me = this;
         var xvalues = me.data.data.map(function(elt) {
-            return elt.pos.x;
+            return elt.pos[me.axis[0]];
         });
         var yvalues = me.data.data.map(function(elt) {
-            return elt.pos.y;
+            return elt.pos[me.axis[1]];
         });
         var ranges = {
             "xMax": Math.max.apply(null, xvalues),

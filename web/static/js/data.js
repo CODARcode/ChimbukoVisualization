@@ -33,10 +33,7 @@ class Data {
                 me.data.push({
                     "id": i,
                     "weight": 1,
-                    "pos": {
-                        'x': d[0],
-                        'y': d[1]
-                    },
+                    "pos": d,
                     "anomaly_score": _json['labels'][i],
                     "prog_name": _json['prog'][i],
                     "func_name": _json['func'][i],

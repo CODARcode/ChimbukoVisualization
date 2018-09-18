@@ -24,7 +24,22 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-lg-5 well nopadding" id = "leftpanel">
-                    &nbsp; &nbsp; Projection of Function Executions
+                &nbsp; &nbsp; <b class="title">Projection of Function Executions</b><br/> 
+                &nbsp; &nbsp; x axis:
+                <select id="sbox_x">
+                    <option value="0" selected>Entry</option>
+                    <option value="1">Execution Time</option>
+                    <option value="2">Rank#.Thread#</option>
+                    <option value="3">Exit</option>
+                </select>
+                &nbsp; y axis:
+                <select id="sbox_y">
+                    <option value="0">Entry</option>
+                    <option value="1" selected>Execution Time</option>
+                    <option value="2">Rank#.Thread#</option>
+                    <option value="3">Exit</option>
+                </select>
+                <button id="apply" type="button"> apply </button>
                 <svg id="overview" style = "width: 600px; height: 600px;"></svg>
             </div>
             <div class="col-lg-7 well" id = "rightpanel">

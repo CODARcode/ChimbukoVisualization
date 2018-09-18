@@ -24,10 +24,11 @@ class Data(object):
         self.initial_timestamp = 0;
         self.msgs = []; # debug only for messages
         self.func_idx = 0; # global function index for each entry function
-        self.layout = ["entry","value"]#x,y
+        self.layout = ["entry", "value", "comm ranks", "exit"] # feild no.1, 2, ..
         # entry - entry time
         # value - execution time
         # comm ranks
+        # exit - exit time
 
     def set_functions(self, functions):# set function dictionary
         self.func_dict = functions
@@ -220,7 +221,8 @@ class Data(object):
                                 "findex": execution["findex"],
                                 "value": (execution["exit"] - execution["entry"]),
                                 "messages": execution["messages"],
-                                "entry": execution["entry"]
+                                "entry": execution["entry"],
+                                "exit": execution["exit"],
                             }],
                         "edges": []
                     }
@@ -244,7 +246,8 @@ class Data(object):
                                 "findex": child_node["findex"],
                                 "value": (child_node["exit"] - child_node["entry"]),
                                 "messages": child_node["messages"],
-                                "entry": child_node["entry"]
+                                "entry": child_node["entry"],
+                                "exit": execution["exit"],
                             })
                         this_tree['edges'].append({'source': ptid,'target': ctid})
                         queue.append((child_node,ctid))
@@ -261,22 +264,17 @@ class Data(object):
         self.func_names = []
         for t in self.forest:
             root = t['nodes'][0]
-            pos_x = 0
-            pos_y = 0
-            # trick to encode thread Id
-            if self.layout[0] == 'comm ranks':
-                pos_x = root['comm ranks'] + root['threads']*0.1
-            else:
-                pos_x = root[self.layout[0]]
-            if self.layout[1] == 'comm ranks':
-                pos_y = root['comm ranks'] + root['threads']*0.1
-            else:
-                pos_y = root[self.layout[1]]    
-            #print(pos_x, pos_y)     
+            
+            ent = root[self.layout[0]]
+            val = root[self.layout[1]]
+            rnk_thd = root[self.layout[2]] + root['threads']*0.1
+            ext = root[self.layout[3]]
+
             self.prog.append(root['prog_name'])    
             self.func_names.append(root['name'])  
-            self.pos.append([pos_x, pos_y]) #([root[self.layout[0]],root[self.layout[1]]])
-
+            self.pos.append([
+                ent, val, rnk_thd, ext
+            ])
         # the anomaly labels of the forest
         self.forest_labels = [1]*len(self.forest)
         for label in self.labels:

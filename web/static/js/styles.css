@@ -63,3 +63,39 @@ text {
     background-color: white;
     border: thin rgba(0, 0, 0, .25) solid;
 }
+        
+.title {
+    font-size: 20px;
+}
+.label {
+    font-weight: bold;
+}
+.scatter-legend {
+    display: inline-block; 
+    vertical-align: top; 
+    width: 185px;
+}
+.scatter-legend-item {
+    display: table;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+.scatter-legend-item-circle {
+    border-radius: 50%;
+    behavior: url(PIE.htc);
+    width: 20px;
+    height: 20px;
+    display: table-cell;
+    vertical-align: middle;
+}
+.scatter-legend-item-text {
+    height: 20px;
+    display: table-cell;
+    vertical-align: middle;
+    padding-left: 5px;
+}
+.scatterplot {
+    display: inline-block;  
+    width: 550px; 
+    height: 550px;
+}        

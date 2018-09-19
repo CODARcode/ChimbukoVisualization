@@ -31,6 +31,10 @@ class ScatterView extends View {
                 me.axis[1] = me.sbox_y._groups[0][0].value-0;
                 me.stream_update();
             });
+
+        me.filter = {};
+        me.legend_items = {};
+        me.legend = d3.select("#scatter-legend");
     }
 
     stream_update(){
@@ -49,6 +53,7 @@ class ScatterView extends View {
     draw(){
         this._drawAxis();
         this._drawDots();
+        this._drawLegend()
         //this._drawPointLabel();
     }
 
@@ -90,7 +95,11 @@ class ScatterView extends View {
         this.path.attr("d", "");
     	this.dot.classed("selected", false);
     }
-
+    apply_filter(item) {
+        var me = this;
+        me.filter[item] = !(me.filter[item]);
+        me.stream_update();
+    }
     _dragStart() {
         var selected = new Set();
         var me = this;
@@ -225,13 +234,17 @@ class ScatterView extends View {
         // Add the scatterplot
         me.dot = me.svg.selectAll("dot")
             .data(me.data.data)
-            .enter().append("circle")
-            .attr("r", d => d.anomaly_score<0?6:4)
-            .attr("cx", d => me.x(d.pos[me.axis[0]]))
-            .attr("cy", d => me.y(d.pos[me.axis[1]]))
-            .attr("fill", d => me._fillColor(d, set_progname, set_funcname))
-            .attr("fill-opacity", d => me._fillOpacity(d))
-            .attr("stroke", d => d.anomaly_score<0?"red":0);
+            .enter()
+            .filter(function(d) { 
+                return !(me.filter["prog#"+d.prog_name+"-"+d.func_name]);
+            })
+                .append("circle")
+                .attr("r", d => d.anomaly_score<0?6:4)
+                .attr("cx", d => me.x(d.pos[me.axis[0]]))
+                .attr("cy", d => me.y(d.pos[me.axis[1]]))
+                .attr("fill", d => me._fillColor(d, set_progname, set_funcname))
+                .attr("fill-opacity", d => me._fillOpacity(d))
+                .attr("stroke", d => d.anomaly_score<0?"red":0);
 
         me.dot.on("click", function(d, i) {
             	me.data.clearHight();
@@ -250,8 +263,9 @@ class ScatterView extends View {
         // if more than five functions, color repeats 
         // if more than four progs, lightness repeats
         var newcolor = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,19));
-        
-        return newcolor(funcname.indexOf(d.func_name)%5*4+d.prog_name%4);
+        var _newcolor = newcolor(funcname.indexOf(d.func_name)%5*4+d.prog_name%4);
+        this.legend_items["prog#"+d.prog_name+"-"+d.func_name] =  _newcolor
+        return _newcolor
 
         //var h = 360/funcname.length;
         //var c = (100-30)/progname.length;
@@ -374,5 +388,37 @@ class ScatterView extends View {
         // set the ranges
         me.x.domain([ranges.xMin - ranges.xRange / 15, ranges.xMax + ranges.xRange / 15]);
         me.y.domain([ranges.yMax + ranges.yRange / 50, ranges.yMin - ranges.yRange / 50]);
+    }
+
+    _drawLegend(ypos) {
+        var me = this;
+        me.legend.selectAll(".scatter-legend-item").remove();
+        
+        var legend = me.legend.selectAll(".scatter-legend-item")
+            .data(Object.keys(me.legend_items))
+            .enter()
+            .append("div")
+            .attr("class", "scatter-legend-item")
+            .on("click", function(d) {
+                d3.event.stopPropagation();
+                me.apply_filter(d)
+                this.style.color = me.filter[d]? "gray":"black"
+            });
+            
+        legend.append("div")
+            .attr("class", "scatter-legend-item-circle")
+            .style("background", function(d){
+                return me.legend_items[d]
+            });
+
+        legend.append("text")
+            .attr("class", "scatter-legend-item-text")
+            .style("color", d => me.filter[d]?  "gray" : "black")
+            .text(function(d){
+                var prefix = (d+"([").match(/.+?(?=[\[\(])/)[0];
+                var displayName = prefix.match(/(.*::)*(.*)/)[2];
+                return displayName; 
+            })
+
     }
 }

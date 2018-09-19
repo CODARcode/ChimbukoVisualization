@@ -23,7 +23,7 @@
 <body>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-lg-5 well nopadding" id = "leftpanel">
+            <div class="col-lg-6 well nopadding" id = "leftpanel">
                 &nbsp; &nbsp; <b class="title">Projection of Function Executions</b><br/> 
                 &nbsp; &nbsp; x axis:
                 <select id="sbox_x">
@@ -40,15 +40,18 @@
                     <option value="3">Exit</option>
                 </select>
                 <button id="apply" type="button"> apply </button>
-                <svg id="overview" style = "width: 600px; height: 600px;"></svg>
+                <div class="nopadding" style="width: 750px;">
+                    <svg id="overview" class="scatterplot"></svg>
+                    <div id="scatter-legend" class="scatter-legend nopadding"  ></div>
+                </div>
             </div>
-            <div class="col-lg-7 well" id = "rightpanel">
+            <div class="col-lg-6 well" id = "rightpanel">
                 <div class="row well nopadding">
-                    &nbsp; &nbsp; Selected Call Stack Tree
+                    &nbsp; &nbsp; <b class="title">Selected Call Stack Tree</b>
                     <svg id="treeview" style = "width: 745;"></svg>
                 </div>
                 <div class="row well nopadding" style="overflow-x: none;">
-                    &nbsp; &nbsp; Timeline and Message Visualization
+                    &nbsp; &nbsp; <b class="title">Timeline and Message Visualization</b>
                     <svg id="temporalview" style = "width: 745;"></svg>
                 </div>
             </div>

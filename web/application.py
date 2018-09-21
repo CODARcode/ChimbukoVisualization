@@ -24,9 +24,11 @@ class Data(object):
         self.initial_timestamp = 0;
         self.msgs = []; # debug only for messages
         self.func_idx = 0; # global function index for each entry function
+        self.tree_idx = 0; # global tree index 
         self.stacks = {}; # one stack for one program under the same rankId
         self.idx_holder = {
-            "fidx": []
+            "fidx": [],
+            "tidx": 0
         };
         self.layout = ["entry", "value", "comm ranks", "exit"] # feild no.1, 2, ..
         # entry - entry time
@@ -124,7 +126,7 @@ class Data(object):
         #function_index = len(self.executions)
         # stacks = {}; #one stack for one program under the same rankId
         # for i, obj in enumerate(events):
-        for i, obj in enumerate(events, start=self.idx_holder[rankId]): 
+        for i, obj in enumerate(events[self.idx_holder[rankId]:], start=self.idx_holder[rankId]): 
             self.idx_holder[rankId] += 1
             # arrange event by programs first, then threads
             if not obj['prog names'] in self.stacks:
@@ -215,7 +217,8 @@ class Data(object):
                 if execution['name'] in self.foi:
                     if execution["comm ranks"] == 0: #debug
                         count+=1
-                    self.lineid2functionid[execution["lineid"]] = len(self.forest)
+                    self.lineid2functionid[execution["lineid"]] = self.tree_idx # len(self.forest)
+                    self.tree_idx += 1
                     if not "messages" in execution:
                         execution["messages"] = []
                     this_tree = { 
@@ -235,7 +238,8 @@ class Data(object):
                                     "entry": execution["entry"],
                                     "exit": execution["exit"],
                                 }],
-                            "edges": []
+                            "edges": [],
+                            "anomaly_score": -1 if execution["lineid"] in self.labels else 1
                         }
                     queue = [(execution,0)]
                     while len(queue)>0:
@@ -273,7 +277,9 @@ class Data(object):
         self.pos = []
         self.prog = []
         self.func_names = []
-        for t in self.forest:
+        self.forest_labels = []
+        for t in self.forest[self.idx_holder["tidx"]:]:
+            self.idx_holder["tidx"] += 1
             root = t['nodes'][0]
             
             ent = root[self.layout[0]]
@@ -281,23 +287,12 @@ class Data(object):
             rnk_thd = root[self.layout[2]] + root['threads']*0.1
             ext = root[self.layout[3]]
 
+            self.forest_labels.append(t["anomaly_score"])
             self.prog.append(root['prog_name'])    
             self.func_names.append(root['name'])  
             self.pos.append([
                 ent, val, rnk_thd, ext
             ])
-        # the anomaly labels of the forest
-        self.forest_labels = [1]*len(self.forest)
-        for label in self.labels:
-            if label in self.lineid2functionid:
-                self.forest_labels[self.lineid2functionid[label]] = -1# -1= anomaly and 1 = normal
-        # # remove this, this is dummy
-        # while len(self.forest_labels)<len(self.forest):
-        #     if(random.randint(0,100)<90):
-        #         self.labels.append(0.8)
-        #     else:
-        #         self.labels.append(-0.8)
-
         self.changed = False
 
 data = Data()

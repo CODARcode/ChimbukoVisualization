@@ -30,6 +30,8 @@ class Data(object):
             "fidx": [],
             "tidx": 0
         };
+        self.sampling_rate = 1;
+        self.sampling_strategy = ["uniform"]
         self.layout = ["entry", "value", "comm ranks", "exit"] # feild no.1, 2, ..
         # entry - entry time
         # value - execution time
@@ -278,21 +280,22 @@ class Data(object):
         self.prog = []
         self.func_names = []
         self.forest_labels = []
-        for t in self.forest[self.idx_holder["tidx"]:]:
-            self.idx_holder["tidx"] += 1
-            root = t['nodes'][0]
-            
-            ent = root[self.layout[0]]
-            val = root[self.layout[1]]
-            rnk_thd = root[self.layout[2]] + root['threads']*0.1
-            ext = root[self.layout[3]]
+        for i, t in enumerate(self.forest[self.idx_holder["tidx"]:], start=self.idx_holder["tidx"]):
+            if t['anomaly_score'] == -1 or (i%(100/(self.sampling_rate*100))==0): 
+                self.idx_holder["tidx"] += 1
+                root = t['nodes'][0]
+                
+                ent = root[self.layout[0]]
+                val = root[self.layout[1]]
+                rnk_thd = root[self.layout[2]] + root['threads']*0.1
+                ext = root[self.layout[3]]
 
-            self.forest_labels.append(t["anomaly_score"])
-            self.prog.append(root['prog_name'])    
-            self.func_names.append(root['name'])  
-            self.pos.append([
-                ent, val, rnk_thd, ext
-            ])
+                self.forest_labels.append(t["anomaly_score"])
+                self.prog.append(root['prog_name'])
+                self.func_names.append(root['name'])  
+                self.pos.append([
+                    ent, val, rnk_thd, ext
+                ])
         self.changed = False
 
 data = Data()

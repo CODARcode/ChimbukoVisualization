@@ -342,3 +342,10 @@ def stream():
     return Response(
         _stream(),
         mimetype='text/event-stream')
+
+@web_app.route('/srate', methods=['POST'])
+def set_sampling_rate():
+    if request.json['data'] == 'sampling_rate':
+        data.sampling_rate = float(request.json['value'])
+        print("set sampling_rate #{}".format(data.sampling_rate))
+        return jsonify({'srate': data.sampling_rate})

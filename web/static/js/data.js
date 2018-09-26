@@ -254,4 +254,23 @@ class Data {
         this.eps = parseFloat(eps);
     }
 
+    setSamplingRate(rate) {
+        fetch('/srate', {
+            method: "POST",
+            body: JSON.stringify(rate),
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "same-origin"
+        }).then(response => response.json()
+            .then(json => {
+                if (response.ok) {
+                    return json
+                } else {
+                    return Promise.reject(json)
+                }
+            })
+        )
+        .catch(error => console.log(error));
+    }
 }

@@ -98,4 +98,11 @@ text {
     display: inline-block;  
     width: 550px; 
     height: 550px;
-}        
+}
+.srate_container {
+    display: inline;
+}
+.sampling-rate-slider {
+    width: 100px;
+}
+

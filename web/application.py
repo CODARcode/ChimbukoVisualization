@@ -19,7 +19,7 @@ class Data(object):
         self.foi = [] # function of interest
         self.event_types = {} # set the indices indicating event types in the event list
         self.changed = False # if there are new data come in
-        self.lineid2functionid = {} # indicates which line in events stream is which function
+        self.lineid2treeid = {} # indicates which line in events stream is which function
         self.line_num = 0 # number of events from the very beggining of streaming
         self.initial_timestamp = 0;
         self.msgs = []; # debug only for messages
@@ -30,7 +30,7 @@ class Data(object):
             "fidx": [],
             "tidx": 0
         };
-        self.sampling_rate = 1;
+        self.sampling_rate = 0.01;
         self.sampling_strategy = ["uniform"]
         self.layout = ["entry", "value", "comm ranks", "exit"] # feild no.1, 2, ..
         # entry - entry time
@@ -51,8 +51,8 @@ class Data(object):
 
     def set_labels(self, labels):
         # for label in labels:# self.labels indicates all the anoamaly lines
-        #     if label in self.lineid2functionid:
-        #         self.labels[self.lineid2functionid[label]] = -1# -1= anomaly and 1 = normal
+        #     if label in self.lineid2treeid:
+        #         self.labels[self.lineid2treeid[label]] = -1# -1= anomaly and 1 = normal
         self.labels = labels
         print("received %d anomaly" % len(labels))
         self.changed = True
@@ -99,7 +99,7 @@ class Data(object):
         self.executions = {}
         self.func_idx = 0
         self.forest = []
-        self.lineid2functionid.clear()
+        self.lineid2treeid.clear()
         self.msgs = []
         self.line_num = 0
         self.changed = False
@@ -141,6 +141,7 @@ class Data(object):
             if obj['event types'] == self.event_types['ENTRY']:#'entry'
                 #push to stack
                 func = {}
+                func['open'] = True
                 func['prog names'] = obj['prog names']
                 func['name'] = obj['name']
                 func['comm ranks'] = obj['comm ranks']
@@ -160,18 +161,24 @@ class Data(object):
                 stack.append(func)
             elif obj['event types'] == self.event_types['EXIT']:#'exit'
                 if len(stack) > 0 and obj['name'] == stack[-1]['name']:
+                    stack[-1]['open'] = False
                     stack[-1]['exit'] = obj['timestamp']
                     #self.executions.append(stack[-1])
                     self.executions[stack[-1]['findex']] = stack[-1]
                     self.idx_holder['fidx'].append(stack[-1]['findex'])
                     stack.pop()
                 else: # mismatching
-                    print(obj)
+                    # print(obj)
+                    # if len(stack) > 0:
+                        # print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/stack: "+stack[-1]['name'])
+                        # print([(e['name'], e['entry']) for e in stack])
+                    # else:
+                    #     print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/empty stack")
                     if len(stack) > 0:
-                        print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/stack: "+stack[-1]['name'])
-                        print([(e['name'], e['entry']) for e in stack])
-                    else:
-                        print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/empty stack")
+                        print("Exit arrived before Enter.")
+                    else: 
+                        print("Actual exit arrived... updating...")
+                        # print(self.lineid2treeid[obj['lineid']])
             elif obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
                 if len(stack) > 0:
                     #make sure the message is correct to append
@@ -193,7 +200,8 @@ class Data(object):
                     temp = stack[-1]
                     self.msgs.append(temp['findex'])
                 else:
-                    print("obj:\t", obj)
+                    print("Recv/Send after dummy exit")
+                    # print("obj:\t", obj)
                     # print("stack 0:\t", stacks[obj['prog names']][0])
                     # print("stack 1:\t", stacks[obj['prog names']][1][-1])
                     # print("stack 2:\t", stacks[obj['prog names']][2][-1])
@@ -206,11 +214,19 @@ class Data(object):
         #             print([(elem['name'], elem['findex'], elem['entry']+self.initial_timestamp) for elem in stack])
         # the function index (findex) of i-th execution in the list is i
         #self.executions = sorted(self.executions, key= lambda x: x['findex'])
-
+        dummy_exit = time.time()
+        for prog_stack in self.stacks.values():
+            for stack in prog_stack.values():
+                for execution in stack:
+                    execution['exit'] = dummy_exit
+                    self.executions[execution['findex']] = execution
+                    self.idx_holder['fidx'].append(execution['findex'])
+                stack.clear()
+        
     def _exections2forest(self):
         # get tree based on foi
         # self.forest = []
-        self.lineid2functionid = {}
+        self.lineid2treeid = {}
         count = 0
         while len(self.idx_holder['fidx']) >0:
             fidx = self.idx_holder['fidx'].pop(0)
@@ -219,11 +235,12 @@ class Data(object):
                 if execution['name'] in self.foi:
                     if execution["comm ranks"] == 0: #debug
                         count+=1
-                    self.lineid2functionid[execution["lineid"]] = self.tree_idx # len(self.forest)
+                    self.lineid2treeid[execution["lineid"]] = self.tree_idx # len(self.forest)
                     self.tree_idx += 1
                     if not "messages" in execution:
                         execution["messages"] = []
                     this_tree = { 
+                            "id": self.tree_idx,
                             "prog_name": execution["prog names"],
                             "node_index": execution["comm ranks"],
                             "threads": execution["threads"],

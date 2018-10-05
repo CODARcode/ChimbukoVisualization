@@ -21,7 +21,6 @@ requests.post(vis_url, json={'type':'foi','value':foi})
 et = []
 with open(vis_data+"et.json", 'r') as f:
 	et = json.load(f)
-print(et)
 requests.post(vis_url, json={'type':'event_types','value':et})
 
 #----clean 
@@ -32,13 +31,12 @@ requests.post(vis_url, json={'type':'reset'})
 import glob
 
 event_list = glob.glob(vis_data+"trace.*.json")
-event_list.sort()
+event_list.sort(key=lambda x: int(x.split('.')[-2]))
 
 anomaly_list = glob.glob(vis_data+"anomaly.*.json")
-anomaly_list.sort()
+anomaly_list.sort(key=lambda x: int(x.split('.')[-2]))
 
 for i in range(len(event_list)):
-		
 	labels = []
 	with open(anomaly_list[i], 'r') as f:
 		labels = json.load(f)
@@ -55,4 +53,6 @@ for i in range(len(event_list)):
 	res = requests.post(vis_url, json={'type':'events','value':all_events})
 	print(res.json())
 	time.sleep(1)
-	
+
+# requests.post('http://127.0.0.1:5000/log', json={'type':'log'})
+

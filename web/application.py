@@ -32,7 +32,7 @@ class Data(object):
             "fidx": [],
             "tidx": 0
         };
-        self.sampling_rate = 0.001;
+        self.sampling_rate = 1;
         self.sampling_strategy = ["uniform"]
         self.layout = ["entry", "value", "comm ranks", "exit"] # feild no.1, 2, ..
         self.log = []

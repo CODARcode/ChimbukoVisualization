@@ -168,27 +168,20 @@ class Data(object):
                 self.func_idx += 1 #function_index+=1
                 stack.append(func)
             elif obj['event types'] == self.event_types['EXIT']:#'exit'
-                if len(stack) > 0 and obj['name'] == stack[-1]['name']:
+                if len(stack) > 0 and obj['name'] == stack[-1]['name'] and obj['comm ranks'] == stack[-1]['comm ranks'] and obj['prog names'] == stack[-1]['prog names'] and obj['threads'] == stack[-1]['threads']:
                     stack[-1]['exit'] = obj['timestamp']
                     #self.executions.append(stack[-1])
                     self.executions[stack[-1]['findex']] = stack[-1]
                     self.idx_holder['fidx'].append(stack[-1]['findex'])
                     stack.pop()
                 else: # mismatching
+                    print("Exit before Entry")
                     # print(obj)
                     # if len(stack) > 0:
                         # print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/stack: "+stack[-1]['name'])
                         # print([(e['name'], e['entry']) for e in stack])
                     # else:
                     #     print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/empty stack")
-                    if len(stack) > 0:
-                        # print("Exit arrived before Enter.")
-                        # self.log.append([rankId, obj['prog names'], obj['threads'], obj['name'], obj['lineid']])
-                        pass
-                    else: 
-                        # print("Actual exit arrived... updating...")
-                        # print(self.lineid2treeid[obj['lineid']])
-                        pass
             elif obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
                 if len(stack) > 0:
                     #make sure the message is correct to append
@@ -211,7 +204,6 @@ class Data(object):
                     self.msgs.append(temp['findex'])
                 else:
                     pass
-                    # print("Recv/Send after dummy exit")
                     # print("obj:\t", obj)
                     # print("stack 0:\t", stacks[obj['prog names']][0])
                     # print("stack 1:\t", stacks[obj['prog names']][1][-1])
@@ -263,6 +255,15 @@ class Data(object):
                             "edges": [],
                             "anomaly_score": -1 if execution["lineid"] in self.labels else 1
                         }
+                    if (execution["exit"]-execution["entry"]) < 0:
+                        print('negative run time detected.')
+                        # self.log.append([ 
+                        #     execution['comm ranks'], 
+                        #     execution['prog names'], 
+                        #     execution['threads'], 
+                        #     self.func_dict.index(execution['name']), 
+                        #     execution['entry']+self.initial_timestamp , 
+                        #     execution['exit']+self.initial_timestamp])
                     queue = [(execution,0)]
                     while len(queue)>0:
                         node,ptid = queue[0]

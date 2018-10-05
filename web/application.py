@@ -150,7 +150,6 @@ class Data(object):
             if obj['event types'] == self.event_types['ENTRY']:#'entry'
                 #push to stack
                 func = {}
-                func['open'] = True
                 func['prog names'] = obj['prog names']
                 func['name'] = obj['name']
                 func['comm ranks'] = obj['comm ranks']
@@ -170,7 +169,6 @@ class Data(object):
                 stack.append(func)
             elif obj['event types'] == self.event_types['EXIT']:#'exit'
                 if len(stack) > 0 and obj['name'] == stack[-1]['name']:
-                    stack[-1]['open'] = False
                     stack[-1]['exit'] = obj['timestamp']
                     #self.executions.append(stack[-1])
                     self.executions[stack[-1]['findex']] = stack[-1]
@@ -227,15 +225,6 @@ class Data(object):
         #             print([(elem['name'], elem['findex'], elem['entry']+self.initial_timestamp) for elem in stack])
         # the function index (findex) of i-th execution in the list is i
         #self.executions = sorted(self.executions, key= lambda x: x['findex'])
-        # dummy_exit = time.time()
-        # for prog_stack in self.stacks.values():
-        #     for stack in prog_stack.values():
-        #         while len(stack)>0:
-        #             execution = stack.pop()
-        #             execution['exit'] = dummy_exit
-        #             self.executions[execution['findex']] = execution
-        #             self.idx_holder['fidx'].append(execution['findex'])
-        #         stack.clear()
         
     def _exections2forest(self):
         # get tree based on foi

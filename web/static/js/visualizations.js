@@ -135,7 +135,7 @@ class Visualizations {
     selected(data, options) {
         var vis = this.views;
         var graph = this.getSelectedTree();
-        console.log(graph);
+        //console.log(graph);
         var me = this;
         var total = -graph.nodes[0].value;
         var legendMap = {};

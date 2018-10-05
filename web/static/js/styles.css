@@ -84,8 +84,8 @@ text {
     border-radius: 50%;
     behavior: url(PIE.htc);
     width: 20px;
-    height: 20px;
-    display: table-cell;
+    height: 20px !important;
+    display: inline-block;
     vertical-align: middle;
 }
 .scatter-legend-item-text {

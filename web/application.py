@@ -4,6 +4,8 @@ from flask import send_file, Response, jsonify, request, redirect, url_for
 from web import web_app
 import random
 import numpy as np
+import csv
+from threading import Lock
 
 class Data(object):
     def __init__(self):
@@ -30,9 +32,12 @@ class Data(object):
             "fidx": [],
             "tidx": 0
         };
-        self.sampling_rate = 0.01;
+        self.sampling_rate = 0.001;
         self.sampling_strategy = ["uniform"]
         self.layout = ["entry", "value", "comm ranks", "exit"] # feild no.1, 2, ..
+        self.log = []
+        self.lock = Lock()
+
         # entry - entry time
         # value - execution time
         # comm ranks
@@ -43,7 +48,8 @@ class Data(object):
 
     def set_FOI(self, functions):
         self.foi = functions        
-        self.changed = True
+        with self.lock:
+            self.changed = True
 
     def set_event_types(self, types):
         for i, e in enumerate(types):
@@ -53,9 +59,10 @@ class Data(object):
         # for label in labels:# self.labels indicates all the anoamaly lines
         #     if label in self.lineid2treeid:
         #         self.labels[self.lineid2treeid[label]] = -1# -1= anomaly and 1 = normal
-        self.labels = labels
+        self.labels = self.labels + labels
         print("received %d anomaly" % len(labels))
-        self.changed = True
+        with self.lock:
+            self.changed = True
 
     def add_events(self, events):
         # convert events to json events
@@ -90,7 +97,8 @@ class Data(object):
             if obj['lineid'] in self.labels:
                 print(obj['lineid'], ": ", e)
 
-        self.changed = True
+        with self.lock:
+            self.changed = True
         self.line_num += len(events)
 
     def reset(self):
@@ -102,7 +110,8 @@ class Data(object):
         self.lineid2treeid.clear()
         self.msgs = []
         self.line_num = 0
-        self.changed = False
+        with self.lock:
+            self.changed = False
 
     def _events2executions(self):
         #print("event 2 executions...")
@@ -175,10 +184,13 @@ class Data(object):
                     # else:
                     #     print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/empty stack")
                     if len(stack) > 0:
-                        print("Exit arrived before Enter.")
+                        # print("Exit arrived before Enter.")
+                        # self.log.append([rankId, obj['prog names'], obj['threads'], obj['name'], obj['lineid']])
+                        pass
                     else: 
-                        print("Actual exit arrived... updating...")
+                        # print("Actual exit arrived... updating...")
                         # print(self.lineid2treeid[obj['lineid']])
+                        pass
             elif obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
                 if len(stack) > 0:
                     #make sure the message is correct to append
@@ -200,7 +212,8 @@ class Data(object):
                     temp = stack[-1]
                     self.msgs.append(temp['findex'])
                 else:
-                    print("Recv/Send after dummy exit")
+                    pass
+                    # print("Recv/Send after dummy exit")
                     # print("obj:\t", obj)
                     # print("stack 0:\t", stacks[obj['prog names']][0])
                     # print("stack 1:\t", stacks[obj['prog names']][1][-1])
@@ -214,14 +227,15 @@ class Data(object):
         #             print([(elem['name'], elem['findex'], elem['entry']+self.initial_timestamp) for elem in stack])
         # the function index (findex) of i-th execution in the list is i
         #self.executions = sorted(self.executions, key= lambda x: x['findex'])
-        dummy_exit = time.time()
-        for prog_stack in self.stacks.values():
-            for stack in prog_stack.values():
-                for execution in stack:
-                    execution['exit'] = dummy_exit
-                    self.executions[execution['findex']] = execution
-                    self.idx_holder['fidx'].append(execution['findex'])
-                stack.clear()
+        # dummy_exit = time.time()
+        # for prog_stack in self.stacks.values():
+        #     for stack in prog_stack.values():
+        #         while len(stack)>0:
+        #             execution = stack.pop()
+        #             execution['exit'] = dummy_exit
+        #             self.executions[execution['findex']] = execution
+        #             self.idx_holder['fidx'].append(execution['findex'])
+        #         stack.clear()
         
     def _exections2forest(self):
         # get tree based on foi
@@ -298,7 +312,7 @@ class Data(object):
         self.func_names = []
         self.forest_labels = []
         for i, t in enumerate(self.forest[self.idx_holder["tidx"]:], start=self.idx_holder["tidx"]):
-            if t['anomaly_score'] == -1 or (i%(100/(self.sampling_rate*100))==0): 
+            if t['anomaly_score'] == -1 or (i%(1000/(self.sampling_rate*1000))==0): 
                 self.idx_holder["tidx"] += 1
                 root = t['nodes'][0]
                 
@@ -313,7 +327,8 @@ class Data(object):
                 self.pos.append([
                     ent, val, rnk_thd, ext
                 ])
-        self.changed = False
+        with self.lock:
+            self.changed = False
 
 data = Data()
 
@@ -366,3 +381,12 @@ def set_sampling_rate():
         data.sampling_rate = float(request.json['value'])
         print("set sampling_rate #{}".format(data.sampling_rate))
         return jsonify({'srate': data.sampling_rate})
+
+@web_app.route('/log', methods=['POST'])
+def write_log():
+    print('write_log')
+    with open('exit-before-enter.csv', 'w') as output:
+        wr = csv.writer(output, quoting=csv.QUOTE_ALL)
+        wr.writerows(data.log)
+    return jsonify({'write': True})
+

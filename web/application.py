@@ -66,40 +66,40 @@ class Data(object):
 
     def add_events(self, events):
         # convert events to json events
-        count = 0
-        prev = None
-        for e in events:
-            if not self.events: # the initial timestamp
-                self.initial_timestamp = int(e[11])
-                print("Initial time: ", self.initial_timestamp)
-            obj = {'prog names': e[0],
-                'comm ranks': e[1],
-                'threads': e[2],
-                'event types': e[7] if(e[3]=='NA' or np.isnan(e[3])) else e[3],
-                'name': 'NA' if(e[4]=='NA' or np.isnan(e[4])) else self.func_dict[int(e[4])],# dictionary
-                'counters': e[5],
-                'counter value': e[6],
-                'Tag': e[8],
-                'partner': e[9],
-                'num bytes': e[10],
-                'timestamp': int(e[11]) - self.initial_timestamp, 
-                'lineid': self.line_num+count}# here line id is start from the beggining of the stream
-            count += 1
-            #if obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
-            #     print(prev)
-            #     print(obj)
-            #     print('\n')
-            if not obj['comm ranks'] in self.events:
-                self.events[obj['comm ranks']] = []
-                self.idx_holder[obj['comm ranks']] = 0 # initialize by ranks
-            self.events[obj['comm ranks']].append(obj)
-            prev = obj
-            if obj['lineid'] in self.labels:
-                print(obj['lineid'], ": ", e)
-
         with self.lock:
+            count = 0
+            prev = None
+            for e in events:
+                if not self.events: # the initial timestamp
+                    self.initial_timestamp = int(e[11])
+                    print("Initial time: ", self.initial_timestamp)
+                obj = {'prog names': e[0],
+                    'comm ranks': e[1],
+                    'threads': e[2],
+                    'event types': e[7] if(e[3]=='NA' or np.isnan(e[3])) else e[3],
+                    'name': 'NA' if(e[4]=='NA' or np.isnan(e[4])) else self.func_dict[int(e[4])],# dictionary
+                    'counters': e[5],
+                    'counter value': e[6],
+                    'Tag': e[8],
+                    'partner': e[9],
+                    'num bytes': e[10],
+                    'timestamp': int(e[11]) - self.initial_timestamp, 
+                    'lineid': self.line_num+count}# here line id is start from the beggining of the stream
+                count += 1
+                #if obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
+                #     print(prev)
+                #     print(obj)
+                #     print('\n')
+                if not obj['comm ranks'] in self.events:
+                    self.events[obj['comm ranks']] = []
+                    self.idx_holder[obj['comm ranks']] = 0 # initialize by ranks
+                self.events[obj['comm ranks']].append(obj)
+                prev = obj
+                if obj['lineid'] in self.labels:
+                    print(obj['lineid'], ": ", e)
+
             self.changed = True
-        self.line_num += len(events)
+            self.line_num += len(events)
 
     def reset(self):
         # when new application launches, everything needs to reset
@@ -140,12 +140,17 @@ class Data(object):
         for i, obj in enumerate(events[self.idx_holder[rankId]:], start=self.idx_holder[rankId]): 
             self.idx_holder[rankId] += 1
             # arrange event by programs first, then threads
-            if not obj['prog names'] in self.stacks:
-                self.stacks[obj['prog names']] = {}
-                self.stacks[obj['prog names']][obj['threads']] = []
-            if not obj['threads'] in self.stacks[obj['prog names']]:
-                self.stacks[obj['prog names']][obj['threads']] = []
-            stack = self.stacks[obj['prog names']][obj['threads']]
+            if not obj['comm ranks'] in self.stacks:
+                self.stacks[obj['comm ranks']] = {}
+                
+            if not obj['prog names'] in self.stacks[obj['comm ranks']]:
+                self.stacks[obj['comm ranks']][obj['prog names']] = {}
+            
+            if not obj['threads'] in self.stacks[obj['comm ranks']][obj['prog names']]:
+                self.stacks[obj['comm ranks']][obj['prog names']][obj['threads']] = []
+
+            stack = self.stacks[obj['comm ranks']][obj['prog names']][obj['threads']]
+
             # check event type
             if obj['event types'] == self.event_types['ENTRY']:#'entry'
                 #push to stack
@@ -167,15 +172,16 @@ class Data(object):
                 func['entry'] = obj['timestamp']
                 self.func_idx += 1 #function_index+=1
                 stack.append(func)
-            elif obj['event types'] == self.event_types['EXIT']:#'exit'
-                if len(stack) > 0 and obj['name'] == stack[-1]['name'] and obj['comm ranks'] == stack[-1]['comm ranks'] and obj['prog names'] == stack[-1]['prog names'] and obj['threads'] == stack[-1]['threads']:
+            elif obj['event types'] == self.event_types['EXIT']: #'exit'
+                if len(stack) > 0 and obj['name']:
+                    
                     stack[-1]['exit'] = obj['timestamp']
                     #self.executions.append(stack[-1])
                     self.executions[stack[-1]['findex']] = stack[-1]
                     self.idx_holder['fidx'].append(stack[-1]['findex'])
                     stack.pop()
                 else: # mismatching
-                    print("Exit before Entry")
+                    print("Exit before Entry", obj['comm ranks'], obj['prog names'], obj['threads'], obj['name'])
                     # print(obj)
                     # if len(stack) > 0:
                         # print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/stack: "+stack[-1]['name'])
@@ -203,8 +209,7 @@ class Data(object):
                     temp = stack[-1]
                     self.msgs.append(temp['findex'])
                 else:
-                    pass
-                    # print("obj:\t", obj)
+                    print("Send/Recv mismatched", obj['comm ranks'], obj['prog names'], obj['threads'], obj['name'])
                     # print("stack 0:\t", stacks[obj['prog names']][0])
                     # print("stack 1:\t", stacks[obj['prog names']][1][-1])
                     # print("stack 2:\t", stacks[obj['prog names']][2][-1])
@@ -293,31 +298,31 @@ class Data(object):
         print("generate {} trees".format(len(self.forest)))
 
     def generate_forest(self):
-        self._events2executions()
-        self._exections2forest()
-
-        # the scatterplot positions of the forest
-        self.pos = []
-        self.prog = []
-        self.func_names = []
-        self.forest_labels = []
-        for i, t in enumerate(self.forest[self.idx_holder["tidx"]:], start=self.idx_holder["tidx"]):
-            if t['anomaly_score'] == -1 or (i%(1000/(self.sampling_rate*1000))==0): 
-                self.idx_holder["tidx"] += 1
-                root = t['nodes'][0]
-                
-                ent = root[self.layout[0]]
-                val = root[self.layout[1]]
-                rnk_thd = root[self.layout[2]] + root['threads']*0.1
-                ext = root[self.layout[3]]
-
-                self.forest_labels.append(t["anomaly_score"])
-                self.prog.append(root['prog_name'])
-                self.func_names.append(root['name'])  
-                self.pos.append([
-                    ent, val, rnk_thd, ext
-                ])
         with self.lock:
+            self._events2executions()
+            self._exections2forest()
+
+            # the scatterplot positions of the forest
+            self.pos = []
+            self.prog = []
+            self.func_names = []
+            self.forest_labels = []
+            for i, t in enumerate(self.forest[self.idx_holder["tidx"]:], start=self.idx_holder["tidx"]):
+                if t['anomaly_score'] == -1 or (i%(1000/(self.sampling_rate*1000))==0): 
+                    self.idx_holder["tidx"] += 1
+                    root = t['nodes'][0]
+                    
+                    ent = root[self.layout[0]]
+                    val = root[self.layout[1]]
+                    rnk_thd = root[self.layout[2]] + root['threads']*0.1
+                    ext = root[self.layout[3]]
+
+                    self.forest_labels.append(t["anomaly_score"])
+                    self.prog.append(root['prog_name'])
+                    self.func_names.append(root['name'])  
+                    self.pos.append([
+                        ent, val, rnk_thd, ext
+                    ])
             self.changed = False
 
 data = Data()

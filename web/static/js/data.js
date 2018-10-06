@@ -27,7 +27,6 @@ class Data {
         sse.onmessage = function (message) {
             var _json = jQuery.parseJSON(message.data);  
             console.log(_json['pos'].length); //+" "+_json['percent'])
-            me.data = [];
             me.scatterLayout = _json['layout'];
             _json['pos'].forEach(function(d, i) { //load data to front end (scatter plot view)
                 me.data.push({

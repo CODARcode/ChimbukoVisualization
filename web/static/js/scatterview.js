@@ -25,11 +25,19 @@ class ScatterView extends View {
         me.axis = [0, 1];
         me.sbox_x = d3.select("#sbox_x");
         me.sbox_y = d3.select("#sbox_y");
+        me.sval = d3.select("#srate_val");
+        me.srate = d3.select("#srate").on("input", function(){
+            me.sval.node().innerText = me.srate.node().value;
+        });
         me.btn = d3.select("#apply")
             .on("click", function(d) {
-                me.axis[0] = me.sbox_x._groups[0][0].value-0;
-                me.axis[1] = me.sbox_y._groups[0][0].value-0;
+                me.axis[0] = me.sbox_x.node().value-0;
+                me.axis[1] = me.sbox_y.node().value-0;
                 me.stream_update();
+                me.data.setSamplingRate({
+                    'data': 'sampling_rate',
+                    'value': me.srate.node().value
+                });
             });
 
         me.filter = {};

@@ -26,7 +26,7 @@ class Data {
         var sse = new EventSource('/stream');
         sse.onmessage = function (message) {
             var _json = jQuery.parseJSON(message.data);  
-            console.log(_json['pos'].length); //+" "+_json['percent'])
+            //console.log(_json['pos'].length); //+" "+_json['percent'])
             me.scatterLayout = _json['layout'];
             _json['pos'].forEach(function(d, i) { //load data to front end (scatter plot view)
                 me.data.push({
@@ -254,4 +254,23 @@ class Data {
         this.eps = parseFloat(eps);
     }
 
+    setSamplingRate(rate) {
+        fetch('/srate', {
+            method: "POST",
+            body: JSON.stringify(rate),
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "same-origin"
+        }).then(response => response.json()
+            .then(json => {
+                if (response.ok) {
+                    return json
+                } else {
+                    return Promise.reject(json)
+                }
+            })
+        )
+        .catch(error => console.log(error));
+    }
 }

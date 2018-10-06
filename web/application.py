@@ -4,6 +4,8 @@ from flask import send_file, Response, jsonify, request, redirect, url_for
 from web import web_app
 import random
 import numpy as np
+import csv
+from threading import Lock
 
 class Data(object):
     def __init__(self):
@@ -19,7 +21,7 @@ class Data(object):
         self.foi = [] # function of interest
         self.event_types = {} # set the indices indicating event types in the event list
         self.changed = False # if there are new data come in
-        self.lineid2functionid = {} # indicates which line in events stream is which function
+        self.lineid2treeid = {} # indicates which line in events stream is which function
         self.line_num = 0 # number of events from the very beggining of streaming
         self.initial_timestamp = 0;
         self.msgs = []; # debug only for messages
@@ -30,7 +32,12 @@ class Data(object):
             "fidx": [],
             "tidx": 0
         };
+        self.sampling_rate = 1;
+        self.sampling_strategy = ["uniform"]
         self.layout = ["entry", "value", "comm ranks", "exit"] # feild no.1, 2, ..
+        self.log = []
+        self.lock = Lock()
+
         # entry - entry time
         # value - execution time
         # comm ranks
@@ -41,7 +48,8 @@ class Data(object):
 
     def set_FOI(self, functions):
         self.foi = functions        
-        self.changed = True
+        with self.lock:
+            self.changed = True
 
     def set_event_types(self, types):
         for i, e in enumerate(types):
@@ -49,47 +57,49 @@ class Data(object):
 
     def set_labels(self, labels):
         # for label in labels:# self.labels indicates all the anoamaly lines
-        #     if label in self.lineid2functionid:
-        #         self.labels[self.lineid2functionid[label]] = -1# -1= anomaly and 1 = normal
-        self.labels = labels
+        #     if label in self.lineid2treeid:
+        #         self.labels[self.lineid2treeid[label]] = -1# -1= anomaly and 1 = normal
+        self.labels = self.labels + labels
         print("received %d anomaly" % len(labels))
-        self.changed = True
+        with self.lock:
+            self.changed = True
 
     def add_events(self, events):
         # convert events to json events
-        count = 0
-        prev = None
-        for e in events:
-            if not self.events: # the initial timestamp
-                self.initial_timestamp = int(e[11])
-                print("Initial time: ", self.initial_timestamp)
-            obj = {'prog names': e[0],
-                'comm ranks': e[1],
-                'threads': e[2],
-                'event types': e[7] if(e[3]=='NA' or np.isnan(e[3])) else e[3],
-                'name': 'NA' if(e[4]=='NA' or np.isnan(e[4])) else self.func_dict[int(e[4])],# dictionary
-                'counters': e[5],
-                'counter value': e[6],
-                'Tag': e[8],
-                'partner': e[9],
-                'num bytes': e[10],
-                'timestamp': int(e[11]) - self.initial_timestamp, 
-                'lineid': self.line_num+count}# here line id is start from the beggining of the stream
-            count += 1
-            #if obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
-            #     print(prev)
-            #     print(obj)
-            #     print('\n')
-            if not obj['comm ranks'] in self.events:
-                self.events[obj['comm ranks']] = []
-                self.idx_holder[obj['comm ranks']] = 0 # initialize by ranks
-            self.events[obj['comm ranks']].append(obj)
-            prev = obj
-            if obj['lineid'] in self.labels:
-                print(obj['lineid'], ": ", e)
+        with self.lock:
+            count = 0
+            prev = None
+            for e in events:
+                if not self.events: # the initial timestamp
+                    self.initial_timestamp = int(e[11])
+                    print("Initial time: ", self.initial_timestamp)
+                obj = {'prog names': e[0],
+                    'comm ranks': e[1],
+                    'threads': e[2],
+                    'event types': e[7] if(e[3]=='NA' or np.isnan(e[3])) else e[3],
+                    'name': 'NA' if(e[4]=='NA' or np.isnan(e[4])) else self.func_dict[int(e[4])],# dictionary
+                    'counters': e[5],
+                    'counter value': e[6],
+                    'Tag': e[8],
+                    'partner': e[9],
+                    'num bytes': e[10],
+                    'timestamp': int(e[11]) - self.initial_timestamp, 
+                    'lineid': self.line_num+count}# here line id is start from the beggining of the stream
+                count += 1
+                #if obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
+                #     print(prev)
+                #     print(obj)
+                #     print('\n')
+                if not obj['comm ranks'] in self.events:
+                    self.events[obj['comm ranks']] = []
+                    self.idx_holder[obj['comm ranks']] = 0 # initialize by ranks
+                self.events[obj['comm ranks']].append(obj)
+                prev = obj
+                if obj['lineid'] in self.labels:
+                    print(obj['lineid'], ": ", e)
 
-        self.changed = True
-        self.line_num += len(events)
+            self.changed = True
+            self.line_num += len(events)
 
     def reset(self):
         # when new application launches, everything needs to reset
@@ -97,10 +107,11 @@ class Data(object):
         self.executions = {}
         self.func_idx = 0
         self.forest = []
-        self.lineid2functionid.clear()
+        self.lineid2treeid.clear()
         self.msgs = []
         self.line_num = 0
-        self.changed = False
+        with self.lock:
+            self.changed = False
 
     def _events2executions(self):
         #print("event 2 executions...")
@@ -129,12 +140,17 @@ class Data(object):
         for i, obj in enumerate(events[self.idx_holder[rankId]:], start=self.idx_holder[rankId]): 
             self.idx_holder[rankId] += 1
             # arrange event by programs first, then threads
-            if not obj['prog names'] in self.stacks:
-                self.stacks[obj['prog names']] = {}
-                self.stacks[obj['prog names']][obj['threads']] = []
-            if not obj['threads'] in self.stacks[obj['prog names']]:
-                self.stacks[obj['prog names']][obj['threads']] = []
-            stack = self.stacks[obj['prog names']][obj['threads']]
+            if not obj['comm ranks'] in self.stacks:
+                self.stacks[obj['comm ranks']] = {}
+                
+            if not obj['prog names'] in self.stacks[obj['comm ranks']]:
+                self.stacks[obj['comm ranks']][obj['prog names']] = {}
+            
+            if not obj['threads'] in self.stacks[obj['comm ranks']][obj['prog names']]:
+                self.stacks[obj['comm ranks']][obj['prog names']][obj['threads']] = []
+
+            stack = self.stacks[obj['comm ranks']][obj['prog names']][obj['threads']]
+
             # check event type
             if obj['event types'] == self.event_types['ENTRY']:#'entry'
                 #push to stack
@@ -156,20 +172,22 @@ class Data(object):
                 func['entry'] = obj['timestamp']
                 self.func_idx += 1 #function_index+=1
                 stack.append(func)
-            elif obj['event types'] == self.event_types['EXIT']:#'exit'
-                if len(stack) > 0 and obj['name'] == stack[-1]['name']:
+            elif obj['event types'] == self.event_types['EXIT']: #'exit'
+                if len(stack) > 0 and obj['name']:
+                    
                     stack[-1]['exit'] = obj['timestamp']
                     #self.executions.append(stack[-1])
                     self.executions[stack[-1]['findex']] = stack[-1]
                     self.idx_holder['fidx'].append(stack[-1]['findex'])
                     stack.pop()
                 else: # mismatching
-                    print(obj)
-                    if len(stack) > 0:
-                        print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/stack: "+stack[-1]['name'])
-                        print([(e['name'], e['entry']) for e in stack])
-                    else:
-                        print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/empty stack")
+                    print("Exit before Entry", obj['comm ranks'], obj['prog names'], obj['threads'], obj['name'])
+                    # print(obj)
+                    # if len(stack) > 0:
+                        # print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/stack: "+stack[-1]['name'])
+                        # print([(e['name'], e['entry']) for e in stack])
+                    # else:
+                    #     print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/empty stack")
             elif obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
                 if len(stack) > 0:
                     #make sure the message is correct to append
@@ -191,7 +209,7 @@ class Data(object):
                     temp = stack[-1]
                     self.msgs.append(temp['findex'])
                 else:
-                    print("obj:\t", obj)
+                    print("Send/Recv mismatched", obj['comm ranks'], obj['prog names'], obj['threads'], obj['name'])
                     # print("stack 0:\t", stacks[obj['prog names']][0])
                     # print("stack 1:\t", stacks[obj['prog names']][1][-1])
                     # print("stack 2:\t", stacks[obj['prog names']][2][-1])
@@ -204,11 +222,11 @@ class Data(object):
         #             print([(elem['name'], elem['findex'], elem['entry']+self.initial_timestamp) for elem in stack])
         # the function index (findex) of i-th execution in the list is i
         #self.executions = sorted(self.executions, key= lambda x: x['findex'])
-
+        
     def _exections2forest(self):
         # get tree based on foi
         # self.forest = []
-        self.lineid2functionid = {}
+        self.lineid2treeid = {}
         count = 0
         while len(self.idx_holder['fidx']) >0:
             fidx = self.idx_holder['fidx'].pop(0)
@@ -217,11 +235,12 @@ class Data(object):
                 if execution['name'] in self.foi:
                     if execution["comm ranks"] == 0: #debug
                         count+=1
-                    self.lineid2functionid[execution["lineid"]] = self.tree_idx # len(self.forest)
+                    self.lineid2treeid[execution["lineid"]] = self.tree_idx # len(self.forest)
                     self.tree_idx += 1
                     if not "messages" in execution:
                         execution["messages"] = []
                     this_tree = { 
+                            "id": self.tree_idx,
                             "prog_name": execution["prog names"],
                             "node_index": execution["comm ranks"],
                             "threads": execution["threads"],
@@ -241,6 +260,15 @@ class Data(object):
                             "edges": [],
                             "anomaly_score": -1 if execution["lineid"] in self.labels else 1
                         }
+                    if (execution["exit"]-execution["entry"]) < 0:
+                        print('negative run time detected.')
+                        # self.log.append([ 
+                        #     execution['comm ranks'], 
+                        #     execution['prog names'], 
+                        #     execution['threads'], 
+                        #     self.func_dict.index(execution['name']), 
+                        #     execution['entry']+self.initial_timestamp , 
+                        #     execution['exit']+self.initial_timestamp])
                     queue = [(execution,0)]
                     while len(queue)>0:
                         node,ptid = queue[0]
@@ -270,30 +298,32 @@ class Data(object):
         print("generate {} trees".format(len(self.forest)))
 
     def generate_forest(self):
-        self._events2executions()
-        self._exections2forest()
+        with self.lock:
+            self._events2executions()
+            self._exections2forest()
 
-        # the scatterplot positions of the forest
-        self.pos = []
-        self.prog = []
-        self.func_names = []
-        self.forest_labels = []
-        for t in self.forest[self.idx_holder["tidx"]:]:
-            self.idx_holder["tidx"] += 1
-            root = t['nodes'][0]
-            
-            ent = root[self.layout[0]]
-            val = root[self.layout[1]]
-            rnk_thd = root[self.layout[2]] + root['threads']*0.1
-            ext = root[self.layout[3]]
+            # the scatterplot positions of the forest
+            self.pos = []
+            self.prog = []
+            self.func_names = []
+            self.forest_labels = []
+            for i, t in enumerate(self.forest[self.idx_holder["tidx"]:], start=self.idx_holder["tidx"]):
+                if t['anomaly_score'] == -1 or (i%(1000/(self.sampling_rate*1000))==0): 
+                    self.idx_holder["tidx"] += 1
+                    root = t['nodes'][0]
+                    
+                    ent = root[self.layout[0]]
+                    val = root[self.layout[1]]
+                    rnk_thd = root[self.layout[2]] + root['threads']*0.1
+                    ext = root[self.layout[3]]
 
-            self.forest_labels.append(t["anomaly_score"])
-            self.prog.append(root['prog_name'])    
-            self.func_names.append(root['name'])  
-            self.pos.append([
-                ent, val, rnk_thd, ext
-            ])
-        self.changed = False
+                    self.forest_labels.append(t["anomaly_score"])
+                    self.prog.append(root['prog_name'])
+                    self.func_names.append(root['name'])  
+                    self.pos.append([
+                        ent, val, rnk_thd, ext
+                    ])
+            self.changed = False
 
 data = Data()
 
@@ -339,3 +369,19 @@ def stream():
     return Response(
         _stream(),
         mimetype='text/event-stream')
+
+@web_app.route('/srate', methods=['POST'])
+def set_sampling_rate():
+    if request.json['data'] == 'sampling_rate':
+        data.sampling_rate = float(request.json['value'])
+        print("set sampling_rate #{}".format(data.sampling_rate))
+        return jsonify({'srate': data.sampling_rate})
+
+@web_app.route('/log', methods=['POST'])
+def write_log():
+    print('write_log')
+    with open('exit-before-enter.csv', 'w') as output:
+        wr = csv.writer(output, quoting=csv.QUOTE_ALL)
+        wr.writerows(data.log)
+    return jsonify({'write': True})
+

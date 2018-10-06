@@ -24,6 +24,7 @@ class GraphView extends View {
             .attr("x", 2)
             .attr("y", 11);
         me.graph = null;
+        me.maxLevel = 6;
         this.defs = me.svg.append("defs");
         this.defs.append("marker")
             .attr("id", "arrowhead")
@@ -93,7 +94,11 @@ class GraphView extends View {
         me.node = me.nodesvg
             .selectAll("circle")
             .data(me.graph.nodes)
-            .enter().append("circle")
+            .enter()
+            .append("circle")
+            .filter(function(d) { 
+                return d.level < me.maxLevel;
+            })
             .attr("r", d => d.r/me.scale)
             .attr("fill", d => me.getColor(d.name))
             .attr('stroke', '#fff')

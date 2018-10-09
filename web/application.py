@@ -209,7 +209,8 @@ class Data(object):
                     self.msgs.append(temp['findex'])
                 else:
                     print("Send/Recv mismatched", obj['comm ranks'], obj['prog names'], obj['threads'], obj['name'])
-        events = []
+        # events = []
+        self.events[rankId] = []
 
     def _exections2forest(self):
         # get tree based on foi

@@ -210,7 +210,7 @@ class Data(object):
                 else:
                     print("Send/Recv mismatched", obj['comm ranks'], obj['prog names'], obj['threads'], obj['name'])
         # events = []
-        self.events[rankId] = []
+        del self.events[rankId][:]
 
     def _exections2forest(self):
         # get tree based on foi

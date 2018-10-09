@@ -22,7 +22,7 @@ class Data(object):
         self.event_types = {} # set the indices indicating event types in the event list
         self.changed = False # if there are new data come in
         self.lineid2treeid = {} # indicates which line in events stream is which function
-        self.line_num = 0 # number of events from the very beggining of streaming
+        # self.line_num = 0 # number of events from the very beggining of streaming
         self.initial_timestamp = -1;
         self.msgs = []; # debug only for messages
         self.func_idx = 0; # global function index for each entry function
@@ -83,7 +83,7 @@ class Data(object):
                     'partner': e[9],
                     'num bytes': e[10],
                     'timestamp': int(e[11]) - self.initial_timestamp, 
-                    'lineid': self.line_num+count}# here line id is start from the beggining of the stream
+                    'lineid': e[12]}# here line id is start from the beggining of the stream
                 count += 1
                 #if obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
                 #     print(prev)
@@ -98,7 +98,7 @@ class Data(object):
                     print(obj['lineid'], ": ", e)
 
             self.changed = True
-            self.line_num += len(events)
+            # self.line_num += len(events)
 
     def reset(self):
         # when new application launches, everything needs to reset
@@ -108,7 +108,7 @@ class Data(object):
         self.forest = []
         self.lineid2treeid.clear()
         self.msgs = []
-        self.line_num = 0
+        # self.line_num = 0
         with self.lock:
             self.changed = False
 
@@ -246,17 +246,14 @@ class Data(object):
                                     "exit": execution["exit"],
                                 }],
                             "edges": [],
-                            "anomaly_score": -1 if execution["lineid"] in self.labels else 1
+                            "anomaly_score": -1 if str(int(execution["lineid"])) in self.labels else 1
                         }
+                    
+                    # if str(int(execution["lineid"])) in self.labels:
+                        # print('lineid matched')
                     if (execution["exit"]-execution["entry"]) < 0:
                         print('negative run time detected.')
-                        # self.log.append([ 
-                        #     execution['comm ranks'], 
-                        #     execution['prog names'], 
-                        #     execution['threads'], 
-                        #     self.func_dict.index(execution['name']), 
-                        #     execution['entry']+self.initial_timestamp , 
-                        #     execution['exit']+self.initial_timestamp])
+                        
                     queue = [(execution,0)]
                     while len(queue)>0:
                         node,ptid = queue[0]

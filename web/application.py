@@ -47,8 +47,8 @@ class Data(object):
         self.func_dict = functions
 
     def set_FOI(self, functions):
-        self.foi = functions        
         with self.lock:
+            self.foi = functions        
             self.changed = True
 
     def set_event_types(self, types):
@@ -59,9 +59,9 @@ class Data(object):
         # for label in labels:# self.labels indicates all the anoamaly lines
         #     if label in self.lineid2treeid:
         #         self.labels[self.lineid2treeid[label]] = -1# -1= anomaly and 1 = normal
-        self.labels = self.labels + labels
-        print("received %d anomaly" % len(labels))
         with self.lock:
+            self.labels = self.labels + labels
+            print("received %d anomaly" % len(labels))
             self.changed = True
 
     def add_events(self, events):
@@ -351,6 +351,11 @@ def receive_events():
         data.set_event_types(request.json['value'])
     elif request.json['type'] == 'events':
         data.add_events(request.json['value'])
+    elif request.json['type'] == 'info':
+        d = request.json['value']
+        data.set_FOI(d['foi'])
+        data.set_labels(d['labels'])
+        data.add_events(d['events'])
     elif request.json['type'] == 'reset':
         data.reset()
     return jsonify({'received': len(data.forest)})

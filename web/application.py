@@ -26,7 +26,6 @@ class Data(object):
         self.initial_timestamp = 0;
         self.msgs = []; # debug only for messages
         self.func_idx = 0; # global function index for each entry function
-        self.tree_idx = 0; # global tree index 
         self.stacks = {}; # one stack for one program under the same rankId
         self.idx_holder = {
             "fidx": [],
@@ -235,12 +234,11 @@ class Data(object):
                 if execution['name'] in self.foi:
                     if execution["comm ranks"] == 0: #debug
                         count+=1
-                    self.lineid2treeid[execution["lineid"]] = self.tree_idx # len(self.forest)
-                    self.tree_idx += 1
+                    self.lineid2treeid[execution["lineid"]] = len(self.forest)
                     if not "messages" in execution:
                         execution["messages"] = []
                     this_tree = { 
-                            "id": self.tree_idx,
+                            "id": len(self.forest),
                             "prog_name": execution["prog names"],
                             "node_index": execution["comm ranks"],
                             "threads": execution["threads"],
@@ -307,6 +305,7 @@ class Data(object):
             self.prog = []
             self.func_names = []
             self.forest_labels = []
+            self.tidx = []
             for i, t in enumerate(self.forest[self.idx_holder["tidx"]:], start=self.idx_holder["tidx"]):
                 if t['anomaly_score'] == -1 or (i%(1000/(self.sampling_rate*1000))==0): 
                     self.idx_holder["tidx"] += 1
@@ -317,6 +316,7 @@ class Data(object):
                     rnk_thd = root[self.layout[2]] + root['threads']*0.1
                     ext = root[self.layout[3]]
 
+                    self.tidx.append(t["id"])
                     self.forest_labels.append(t["anomaly_score"])
                     self.prog.append(root['prog_name'])
                     self.func_names.append(root['name'])  
@@ -366,8 +366,8 @@ def _stream():
     data.generate_forest()
     #send back forest data
     yield """
-        retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s}\n\n
-    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.forest_labels), json.dumps(data.prog), json.dumps(data.func_names))
+        retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s}\n\n
+    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.forest_labels), json.dumps(data.prog), json.dumps(data.func_names), json.dumps(data.tidx))
 
 @web_app.route('/stream')
 def stream():

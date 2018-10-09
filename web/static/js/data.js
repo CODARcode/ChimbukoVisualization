@@ -30,7 +30,7 @@ class Data {
             me.scatterLayout = _json['layout'];
             _json['pos'].forEach(function(d, i) { //load data to front end (scatter plot view)
                 me.data.push({
-                    "id": i,
+                    "id": _json['tidx'][i],
                     "weight": 1,
                     "pos": d,
                     "anomaly_score": _json['labels'][i],

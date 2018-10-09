@@ -249,8 +249,8 @@ class Data(object):
                             "anomaly_score": -1 if str(int(execution["lineid"])) in self.labels else 1
                         }
                     
-                    if str(int(execution["lineid"])) in self.labels:
-                        print('lineid matched')
+                    # if str(int(execution["lineid"])) in self.labels:
+                        # print('lineid matched')
                     if (execution["exit"]-execution["entry"]) < 0:
                         print('negative run time detected.')
                         

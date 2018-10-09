@@ -255,8 +255,8 @@ class ScatterView extends View {
                 .attr("stroke", d => d.anomaly_score<0?"red":0);
 
         me.dot.on("click", function(d, i) {
-            	me.data.clearHight();
-                me.data.setSelections([i]);
+                me.data.clearHight();
+                me.data.setSelections([d['id']]);
             })
             .append("title")
             .text(function(d, i) {

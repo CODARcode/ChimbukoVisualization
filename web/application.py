@@ -36,7 +36,7 @@ class Data(object):
         self.layout = ["entry", "value", "comm ranks", "exit"] # feild no.1, 2, ..
         self.log = []
         self.lock = Lock()
-        self.time_window = 10000000# 10 second #3600000000 # one hour
+        self.time_window = 3600000000 # one hour
         self.window_start = 0
         self.clean_count = 0
 
@@ -118,7 +118,9 @@ class Data(object):
             del self.executions[findex]
 
     def remove_old_tree(self): # will implement later
-        pass
+        for i, t in enumerate(self.forest):
+            if('nodes' in t and t['nodes'][0]['exit'] < self.window_start):
+                self.forest[i] = {}
 
     def reset(self):
         # when new application launches, everything needs to reset
@@ -331,6 +333,7 @@ class Data(object):
                     self.pos.append([
                         ent, val, rnk_thd, ext
                     ])
+            self.remove_old_tree()
             self.changed = False
 
 data = Data()

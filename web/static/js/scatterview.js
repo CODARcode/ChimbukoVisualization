@@ -43,6 +43,12 @@ class ScatterView extends View {
         me.filter = {};
         me.legend_items = {};
         me.legend = d3.select("#scatter-legend");
+
+        me.anomaly_only = false;
+        me.cbox = d3.select("#scatter-cbox").on("click", function(d) {
+            me.anomaly_only = me.cbox.node().checked;
+            me.stream_update();
+        });
     }
 
     stream_update(){
@@ -244,7 +250,11 @@ class ScatterView extends View {
             .data(me.data.data)
             .enter()
             .filter(function(d) { 
-                return !(me.filter["prog#"+d.prog_name+"-"+d.func_name]);
+                if (me.anomaly_only) {
+                    return (d.anomaly_score<0);
+                } else {
+                    return !(me.filter["prog#"+d.prog_name+"-"+d.func_name])
+                }
             })
                 .append("circle")
                 .attr("r", d => d.anomaly_score<0?6:4)

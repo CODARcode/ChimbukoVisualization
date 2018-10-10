@@ -104,7 +104,7 @@ class Data(object):
             self.changed = True
             # self.line_num += len(events)
 
-    def remove_old_exe(self):
+    def remove_old_data(self):
         # clean executions every time_window
         if self.window_start // self.time_window < self.clean_count:
             return
@@ -116,8 +116,7 @@ class Data(object):
                 remove_list.append(findex)
         for findex in remove_list:
             del self.executions[findex]
-
-    def remove_old_tree(self): # will implement later
+        
         for i, t in enumerate(self.forest):
             if('nodes' in t and t['nodes'][0]['exit'] < self.window_start):
                 self.forest[i] = {}
@@ -307,7 +306,7 @@ class Data(object):
     def generate_forest(self):
         with self.lock:
             self._events2executions()
-            self.remove_old_exe()
+            self.remove_old_data()
             self._exections2forest()
 
             # the scatterplot positions of the forest
@@ -333,7 +332,6 @@ class Data(object):
                     self.pos.append([
                         ent, val, rnk_thd, ext
                     ])
-            self.remove_old_tree()
             self.changed = False
 
 data = Data()

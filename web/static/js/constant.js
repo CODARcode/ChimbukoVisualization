@@ -1,5 +1,5 @@
 var lammps_options = {
-	'graphSizeCoef':12,
+	'graphSizeCoef':36,
 	'graphRepelCoef':-12,
     'valueCoef':1,
     'dynamicRepelCoef':-12,

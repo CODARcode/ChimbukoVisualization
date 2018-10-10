@@ -36,6 +36,9 @@ class Data(object):
         self.layout = ["entry", "value", "comm ranks", "exit"] # feild no.1, 2, ..
         self.log = []
         self.lock = Lock()
+        self.time_window = 10000000# 10 second #3600000000 # one hour
+        self.window_start = 0
+        self.clean_count = 0
 
         # entry - entry time
         # value - execution time
@@ -72,6 +75,7 @@ class Data(object):
                 if self.initial_timestamp == -1: # the initial timestamp
                     self.initial_timestamp = int(e[11])
                     print("Initial time: ", self.initial_timestamp)
+                self.window_start = max(0, int(e[11]) - self.time_window - self.initial_timestamp)
                 obj = {'prog names': e[0],
                     'comm ranks': e[1],
                     'threads': e[2],
@@ -99,6 +103,22 @@ class Data(object):
 
             self.changed = True
             # self.line_num += len(events)
+
+    def remove_old_exe(self):
+        # clean executions every time_window
+        if self.window_start // self.time_window < self.clean_count:
+            return
+        self.clean_count += 1
+        print("clean old executions before {}".format(self.window_start))
+        remove_list = []
+        for findex, exe in self.executions.items():
+            if(exe['exit']<self.window_start):
+                remove_list.append(findex)
+        for findex in remove_list:
+            del self.executions[findex]
+
+    def remove_old_tree(self): # will implement later
+        pass
 
     def reset(self):
         # when new application launches, everything needs to reset
@@ -285,6 +305,7 @@ class Data(object):
     def generate_forest(self):
         with self.lock:
             self._events2executions()
+            self.remove_old_exe()
             self._exections2forest()
 
             # the scatterplot positions of the forest

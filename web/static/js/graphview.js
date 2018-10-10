@@ -24,7 +24,7 @@ class GraphView extends View {
             .attr("x", 2)
             .attr("y", 11);
         me.graph = null;
-        me.maxLevel = 6;
+        me.maxLevel = 4;
         this.defs = me.svg.append("defs");
         this.defs.append("marker")
             .attr("id", "arrowhead")

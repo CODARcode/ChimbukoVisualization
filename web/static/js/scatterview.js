@@ -250,10 +250,22 @@ class ScatterView extends View {
             .data(me.data.data)
             .enter()
             .filter(function(d) { 
-                if (me.anomaly_only) {
-                    return (d.anomaly_score<0);
+                var lkey = "prog#"+d.prog_name+"-"+d.func_name;
+                if (!me.legend_items[lkey]) {
+                    me.legend_items[lkey] = {
+                        'anomal': 0,
+                        'normal': 0
+                    }
+                }
+                if (d.anomaly_score<0) {
+                    me.legend_items[lkey]['anomal'] += 1
                 } else {
-                    return !(me.filter["prog#"+d.prog_name+"-"+d.func_name])
+                    me.legend_items[lkey]['normal'] += 1
+                }
+                if (me.anomaly_only) {
+                    return !(me.filter[lkey]) && (d.anomaly_score<0);
+                } else {
+                    return !(me.filter[lkey])
                 }
             })
                 .append("circle")
@@ -270,7 +282,7 @@ class ScatterView extends View {
             })
             .append("title")
             .text(function(d, i) {
-                return d.func_name+"-prog#"+d.prog_name+"-tree#"+i;
+                return d.func_name+"-prog#"+d.prog_name+"-tree#"+d['id'];
             });
     }
     _fillColor(d, progname=[], funcname=[]){
@@ -282,9 +294,7 @@ class ScatterView extends View {
         // if more than four progs, lightness repeats
         var newcolor = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,19));
         var _newcolor = newcolor(funcname.indexOf(d.func_name)%5*4+d.prog_name%4);
-        this.legend_items["prog#"+d.prog_name+"-"+d.func_name] =  {
-            'color': _newcolor
-        }
+        this.legend_items["prog#"+d.prog_name+"-"+d.func_name]['color'] =  _newcolor;
         return _newcolor
 
         //var h = 360/funcname.length;
@@ -437,7 +447,15 @@ class ScatterView extends View {
             .text(function(d){
                 var prefix = (d+"([").match(/.+?(?=[\[\(])/)[0];
                 var displayName = prefix.match(/(.*::)*(.*)/)[2];
-                return displayName; 
+                var info = me.legend_items[d]
+                var anomal = info['anomal']
+                var normal = info['normal']
+                var prcnt = 0
+                if (normal>0 || anomal>0) {
+                    prcnt = ((anomal/(normal+anomal))*100).toFixed(2) + " %"
+                }
+                // return d.func_name+"-prog#"+d.prog_name+"-tree#"+d['id']+ ": "+percent+"%";
+                return displayName+": "+prcnt; 
             })
 
     }

@@ -282,7 +282,9 @@ class ScatterView extends View {
         // if more than four progs, lightness repeats
         var newcolor = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,19));
         var _newcolor = newcolor(funcname.indexOf(d.func_name)%5*4+d.prog_name%4);
-        this.legend_items["prog#"+d.prog_name+"-"+d.func_name] =  _newcolor
+        this.legend_items["prog#"+d.prog_name+"-"+d.func_name] =  {
+            'color': _newcolor
+        }
         return _newcolor
 
         //var h = 360/funcname.length;
@@ -426,7 +428,7 @@ class ScatterView extends View {
         legend.append("div")
             .attr("class", "scatter-legend-item-circle")
             .style("background", function(d){
-                return me.legend_items[d]
+                return me.legend_items[d]['color']
             });
 
         legend.append("text")

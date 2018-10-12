@@ -39,7 +39,7 @@ class Data(object):
         self.time_window = 10000000# 10 second #3600000000 # one hour
         self.window_start = 0
         self.clean_count = 0
-
+        self.stat = {}
         # entry - entry time
         # value - execution time
         # comm ranks
@@ -101,8 +101,22 @@ class Data(object):
                 if obj['lineid'] in self.labels:
                     print(obj['lineid'], ": ", e)
 
+                fname = str(obj["name"]) 
+                if not fname in self.stat:
+                    self.stat[fname] = {
+                        'anomal': 0,
+                        'normal': 0,
+                        'percent': 0
+                    }
+                s = self.stat[fname]
+                if str(int(obj["lineid"])) in self.labels:
+                    s['anomal'] = s['anomal'] + 1
+                else:
+                    s['normal'] = s['normal'] + 1
+                if s['normal']>0:
+                    s['percent'] = (s['anomal']/(s['normal']+s['anomal']))*100
+                
             self.changed = True
-            # self.line_num += len(events)
 
     def remove_old_exe(self):
         # clean executions every time_window
@@ -374,8 +388,9 @@ def _stream():
     data.generate_forest()
     #send back forest data
     yield """
-        retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s}\n\n
-    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.forest_labels), json.dumps(data.prog), json.dumps(data.func_names), json.dumps(data.tidx))
+        retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s, "stat":%s}\n\n
+    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.forest_labels), json.dumps(data.prog), 
+    json.dumps(data.func_names), json.dumps(data.tidx), json.dumps(data.stat) )
 
 @web_app.route('/stream')
 def stream():

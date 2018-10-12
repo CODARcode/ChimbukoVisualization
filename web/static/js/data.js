@@ -19,6 +19,7 @@ class Data {
         this.outlier_fraction = 0.02;
         this.projectionMethod = 0;
         this.scatterLayout = [];
+        this.stat = [];
     }
 
     streaming(){
@@ -27,6 +28,7 @@ class Data {
         sse.onmessage = function (message) {
             var _json = jQuery.parseJSON(message.data);  
             //console.log(_json['pos'].length); //+" "+_json['percent'])
+            me.stat = _json['stat']
             me.scatterLayout = _json['layout'];
             _json['pos'].forEach(function(d, i) { //load data to front end (scatter plot view)
                 me.data.push({

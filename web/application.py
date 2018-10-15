@@ -62,7 +62,7 @@ class Data(object):
         #     if label in self.lineid2treeid:
         #         self.labels[self.lineid2treeid[label]] = -1# -1= anomaly and 1 = normal
         with self.lock:
-            self.labels = self.labels + labels
+            self.labels = labels
             print("received %d anomaly" % len(labels))
             self.changed = True
 

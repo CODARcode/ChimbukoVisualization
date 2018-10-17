@@ -42,22 +42,6 @@ class DynamicGraphView extends GraphView {
         me._drawTreeId();
     }
 
-    clickNode(node, index){
-    	var me = this;
-        me.node.classed('selected',false);
-        d3.select(node).classed("selected", true);
-        me.nodeSelection = index;
-    }
-
-    rightClick() {
-        var me = this;
-        d3.event.preventDefault();
-        me.node.each(function(d, i) {
-            d3.select(this).classed("selected", false);
-        });
-        me.nodeSelection = -1;
-    }
-
     _showNode(node){
         return (node.r > 4*this.scale);
     }
@@ -94,13 +78,6 @@ class DynamicGraphView extends GraphView {
             });
     }
 
-    relabeled(indices){
-        var me = this;
-        if(indices.indexOf(me.graphId)!=-1){
-            me._drawTreeId();
-        }
-    }
-
     selected(){
         var me = this;
     	me._setGraph(me.data.getSelectedTree());
@@ -109,10 +86,6 @@ class DynamicGraphView extends GraphView {
         me.drawLegend(20);
     	me.draw();
         me._drawTreeId();        
-    }
-
-    trained(){
-        this._drawTreeId();
     }
 
     _simulate(){

@@ -49,8 +49,8 @@ class Data {
             //pop data
             while(me.data.length>0&&latest_time-time_window>me.data[0]['pos'][3]){//#
                 me.data.shift();
-                me.idx_offset += 1;
-            }            
+            }
+            me.idx_offset = me.data.length==0?0:me.data[0]['id'];
             console.log("refresh scatter plot, remove points exit before "+(latest_time-time_window)+", num of points: "+me.data.length);
 
             me.views.stream_update();

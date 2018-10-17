@@ -252,15 +252,7 @@ class ScatterView extends View {
             .filter(function(d) { 
                 var lkey = "prog#"+d.prog_name+"-"+d.func_name;
                 if (!me.legend_items[lkey]) {
-                    me.legend_items[lkey] = {
-                        'anomal': 0,
-                        'normal': 0
-                    }
-                }
-                if (d.anomaly_score<0) {
-                    me.legend_items[lkey]['anomal'] += 1
-                } else {
-                    me.legend_items[lkey]['normal'] += 1
+                    me.legend_items[lkey] = {}
                 }
                 if (me.anomaly_only) {
                     return !(me.filter[lkey]) && (d.anomaly_score<0);
@@ -424,8 +416,14 @@ class ScatterView extends View {
         var me = this;
         me.legend.selectAll(".scatter-legend-item").remove();
         
+        var names = Object.keys(me.legend_items)
+        names.sort(function(x, y) {
+            x = x.replace(/ *\prog#[0-9]-*\ */g, "");
+            y = y.replace(/ *\prog#[0-9]-*\ */g, "");
+            return d3.ascending(me.data.stat[y]['percent'], me.data.stat[x]['percent']);
+        })
         var legend = me.legend.selectAll(".scatter-legend-item")
-            .data(Object.keys(me.legend_items))
+            .data(names)
             .enter()
             .append("div")
             .attr("class", "scatter-legend-item")
@@ -447,15 +445,8 @@ class ScatterView extends View {
             .text(function(d){
                 var prefix = (d+"([").match(/.+?(?=[\[\(])/)[0];
                 var displayName = prefix.match(/(.*::)*(.*)/)[2];
-                var info = me.legend_items[d]
-                var anomal = info['anomal']
-                var normal = info['normal']
-                var prcnt = 0
-                if (normal>0 || anomal>0) {
-                    prcnt = ((anomal/(normal+anomal))*100).toFixed(2) + " %"
-                }
-                // return d.func_name+"-prog#"+d.prog_name+"-tree#"+d['id']+ ": "+percent+"%";
-                return displayName+": "+prcnt; 
+                var pct = me.data.stat[d.replace(/ *\prog#[0-9]-*\ */g, "")]['percent'].toFixed(2) + " %"
+                return displayName+": "+pct
             })
 
     }

@@ -25,9 +25,6 @@
         <div class="row">
             <div class="col-lg-6 well nopadding" id = "leftpanel">
                 &nbsp; &nbsp; <b class="title">Projection of Function Executions</b><br/> 
-                <div>
-                    &nbsp; &nbsp; <input type="checkbox" id="scatter-cbox"> only anomaly
-                </div>
                 &nbsp; &nbsp; x axis:
                 <select id="sbox_x">
                     <option value="0" selected>Entry</option>
@@ -48,6 +45,7 @@
                     <span id="srate_val">1</span>
                 </div>
                 <button id="apply" type="button"> apply </button>
+                &nbsp; &nbsp; <input type="checkbox" id="scatter-cbox"> anomaly
                 <div class="nopadding" style="width: 1000px;">
                     <svg id="overview" class="scatterplot"></svg>
                     <div id="scatter-legend" class="scatter-legend nopadding" style=" width: 400px; height: 600px; overflow-y:auto;"></div>

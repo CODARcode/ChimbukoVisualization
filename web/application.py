@@ -39,7 +39,7 @@ class Data(object):
         self.time_window = 3600000000 # one hour
         self.window_start = 0
         self.clean_count = 0
-
+        self.stat = {}
         # entry - entry time
         # value - execution time
         # comm ranks
@@ -62,7 +62,7 @@ class Data(object):
         #     if label in self.lineid2treeid:
         #         self.labels[self.lineid2treeid[label]] = -1# -1= anomaly and 1 = normal
         with self.lock:
-            self.labels = self.labels + labels
+            self.labels = labels
             print("received %d anomaly" % len(labels))
             self.changed = True
 
@@ -100,9 +100,26 @@ class Data(object):
                 prev = obj
                 if obj['lineid'] in self.labels:
                     print(obj['lineid'], ": ", e)
-
+                
+                if obj['event types'] == self.event_types['ENTRY']:
+                    fname = obj["name"]
+                    if not fname in self.stat:
+                        self.stat[fname] = {
+                            'anomal': 0,
+                            'normal': 0,
+                            'percent': 0
+                        }
+                    s = self.stat[fname]
+                    if str(int(obj["lineid"])) in self.labels:
+                        obj['anomaly_score'] = -1
+                        s['anomal'] = s['anomal'] + 1
+                    else:
+                        obj['anomaly_score'] = 1
+                        s['normal'] = s['normal'] + 1
+                    if s['normal']>0 or s['anomal']>0:
+                        s['percent'] = (s['anomal']/(s['normal']+s['anomal']))*100
+                
             self.changed = True
-            # self.line_num += len(events)
 
     def remove_old_data(self):
         # clean executions every time_window
@@ -181,6 +198,7 @@ class Data(object):
                 func['threads'] = obj['threads']
                 func['lineid'] = obj['lineid']
                 func['findex'] = self.func_idx #function_index
+                func['anomaly_score'] = obj['anomaly_score']
                 #print(func['name'], func['findex'])
                 if len(stack) > 0:
                     func['parent'] = stack[-1]['findex']
@@ -267,7 +285,7 @@ class Data(object):
                                     "exit": execution["exit"],
                                 }],
                             "edges": [],
-                            "anomaly_score": -1 if str(int(execution["lineid"])) in self.labels else 1
+                            "anomaly_score": execution['anomaly_score'] #-1 if str(int(execution["lineid"])) in self.labels else 1
                         }
                     
                     # if str(int(execution["lineid"])) in self.labels:
@@ -375,8 +393,9 @@ def _stream():
     data.generate_forest()
     #send back forest data
     yield """
-        retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s}\n\n
-    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.forest_labels), json.dumps(data.prog), json.dumps(data.func_names), json.dumps(data.tidx))
+        retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s, "stat":%s}\n\n
+    """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.forest_labels), json.dumps(data.prog), 
+    json.dumps(data.func_names), json.dumps(data.tidx), json.dumps(data.stat) )
 
 @web_app.route('/stream')
 def stream():

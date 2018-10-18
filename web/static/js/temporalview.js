@@ -181,14 +181,6 @@ class TemporalView extends View {
         this.draw();
     }
 
-    rightClick() {
-        d3.event.preventDefault();
-        this.traces.each(function(d, i) {
-            d3.select(this).classed("selected", false);
-        });
-        this.nodeSelection = -1;
-    }
-
     draw(){
         this._drawXAxis()
         this._drawNodes();

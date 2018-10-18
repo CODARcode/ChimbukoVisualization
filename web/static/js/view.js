@@ -27,10 +27,6 @@ class View {
     
     unselected(){}
     
-    relabeled(indices){}
-    
-    trained(){}
-    
     projectionChanged(){}
 
     rightClick(){}
@@ -65,8 +61,6 @@ class View {
                 .attr('fill','white');
         }
     }
-
-    relabel(label){}
 
     getColor(name){
         return (this.vis.majorFunctions.indexOf(name) > -1)?this.color(name):this.color("Others");

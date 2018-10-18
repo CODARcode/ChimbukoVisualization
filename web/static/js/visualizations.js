@@ -21,11 +21,6 @@ class Visualizations {
         this.anomalyColor = d3.scaleSequential(d3.interpolateRdBu).domain([-1.3, 1.3]);
         this.clusterColor = d3.scaleOrdinal(this.category7).domain([-1, 0, 1, 2, 3, 4, 5]);
         this.colorScheme = 0; //0 = anomaly, 1 = cluster
-
-        this.scatterLabeling = new View(data, d3.select("#manuallabeling"), {
-            'width': 120,
-            'height': 40
-        });
         this.scatterLegend = new View(data, d3.select("#scatterlegend"), {
             'width': 190,
             'height': 60
@@ -35,9 +30,6 @@ class Visualizations {
 
     init(data) {
         var me = this;
-        this.scatterLabeling.relabel = function(label) {
-            data.relabel(label, data.selectedIds)
-        };
         this.scatterLegend.drawScatterLegend = function(type) {
             this.svg.selectAll("rect").remove();
             this.svg.selectAll("text").remove();
@@ -90,14 +82,6 @@ class Visualizations {
                     .attr('fill', "black");
             }
         };
-        this.scatterLabeling.drawLabels({
-            x: 0,
-            y: 5
-        }, {
-            width: 50,
-            height: 22,
-            margin: 10
-        }, true);
         this.scatterLegend.drawScatterLegend(0);
     }
 
@@ -163,29 +147,10 @@ class Visualizations {
             d.unselected()
         });
     }
-    relabeled(indices) {
-        this.views.forEach(d => {
-            d.relabeled(indices)
-        });
-        //set one of them to null
-
-        this.views.forEach(function(d) {
-            if (!d.svg) {
-                console.log(d.graphId);
-            }
-        });
-        this.views = this.views.filter(d => d.svg);
-    }
 
     stream_update(){
         this.views.forEach(d => {
             d.stream_update()
-        });
-    }
-    
-    trained() {
-        this.views.forEach(d => {
-            d.trained()
         });
     }
     projectionChanged() {

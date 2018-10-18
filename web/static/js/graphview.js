@@ -39,8 +39,6 @@ class GraphView extends View {
             .style("fill", "#999");
     }
 
-    clickNode(node, index){}
-
     _radius(value){
         return Math.sqrt(value/visOptions.valueCoef) / this.sizeCoef + 1.5;
     }
@@ -59,8 +57,7 @@ class GraphView extends View {
     }
 
     _anomalyColor(){
-        var relabel = this.data.getRelabelByIndex(this.graphId);
-        var score = (relabel!=0)?relabel:this.vis.scoreScale(this.data.getScoreByIndex(this.graphId));
+        var score = this.vis.scoreScale(this.data.getScoreByIndex(this.graphId));
         return this.vis.anomalyColor(score);
     }
 
@@ -90,6 +87,24 @@ class GraphView extends View {
             .append("line")
             .attr("stroke-width", 1)
             .attr("stroke", "#999");
+        var levelCount = []
+        me.graph.nodes.forEach(function(d){
+            while(levelCount.length<=d.level){
+                levelCount.push(0);
+            }
+            levelCount[d.level]++;
+        });
+        me.maxLevel = levelCount.length;
+        var nodeSum = 0;
+        var nodeLimit = 20;
+        for(var i = 0; i<levelCount.length; i++){
+            nodeSum += levelCount[i];
+            if(nodeSum>nodeLimit){
+                me.maxLevel = i;
+                break;
+            }
+        }
+        console.log("max depth for the selected tree visualization: "+me.maxLevel);
 
         me.node = me.nodesvg
             .selectAll("circle")
@@ -104,11 +119,6 @@ class GraphView extends View {
             .attr('stroke', '#fff')
             .attr('stroke-width', '0.5px')
             .call(me.drag);
-
-        /*me.node.on("click", function(d, i) {
-            me.clickNode(this, i);
-        });*/
-
         me.node.append("title").text(d => d.name);
     }
 

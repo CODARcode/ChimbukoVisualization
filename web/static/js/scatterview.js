@@ -71,12 +71,6 @@ class ScatterView extends View {
         //this._drawPointLabel();
     }
 
-    relabeled(){
-        this._resetDotLabel();
-    }
-    trained(){
-        this._resetDotLabel();
-    }
     projectionChanged(){
         var me = this;
         me.transform = d3.zoomIdentity;    
@@ -114,35 +108,6 @@ class ScatterView extends View {
         me.filter[item] = !(me.filter[item]);
         me.stream_update();
     }
-    _dragStart() {
-        var selected = new Set();
-        var me = this;
-  		var t = me.transform;
-        var coords = d3.event.subject,
-            x0 = t.invertX(d3.event.x),
-            y0 = t.invertY(d3.event.y);
-        coords[0] = [t.invertX(coords[0][0]),t.invertY(coords[0][1])];
-
-        me.path.datum(coords);
-        var line = d3.line().curve(d3.curveBasis);
-        d3.event.on("drag", function() {
-            var x1 = t.invertX(d3.event.x),
-                y1 = t.invertY(d3.event.y),
-                dx = t.applyX(x1) - t.applyX(x0),
-                dy = t.applyY(y1) - t.applyY(y0);
-
-            if (dx * dx + dy * dy > 100) coords.push([x0 = x1, y0 = y1]);
-            else coords[coords.length - 1] = [x1, y1];
-            me.path.attr("d", line);
-            me.dot.each(function(d, i) {
-                var point = [t.invertX(d3.select(this).attr("cx")), t.invertY(d3.select(this).attr("cy"))];
-                if(d3.polygonContains(coords, point)){
-                	d3.select(this).classed('selected',true);
-	                me.selections.add(i);
-                }
-            })
-        });
-    }
 
     _drawPointLabel() {
         var me = this;
@@ -151,13 +116,6 @@ class ScatterView extends View {
 
         var dotName = me.svg.selectAll('.dotName')
         	.data(me.data.data);
-
-        // me.textlabel = dotName.enter().append("text").attr('class','dotName')
-        // 	.filter(d => (d.relabel!=0 || d.anomaly_score<=me.data.scoreThreshold))
-        //     .attr("x", d => me.x(d.pos.x))
-        //     .attr("y", d => me.y(d.pos.y)+5)
-        //     .text(d => "#"+Math.floor(d.id/visOptions.invokeNum)+"-"+d.id%visOptions.invokeNum);
-
         dotName.exit().remove();
     }
 
@@ -269,6 +227,7 @@ class ScatterView extends View {
                 .attr("stroke", d => d.anomaly_score<0?"red":0);
 
         me.dot.on("click", function(d, i) {
+            console.log("clicked "+i+"th tree, id:"+d['id']);
                 me.data.clearHight();
                 me.data.setSelections([d['id']]);
             })
@@ -278,9 +237,6 @@ class ScatterView extends View {
             });
     }
     _fillColor(d, progname=[], funcname=[]){
-        //var score = (d.relabel!=0)?d.relabel:this.vis.scoreScale(d.anomaly_score);
-        //return this.color(score);
-
         // five group, each with four lightness
         // if more than five functions, color repeats 
         // if more than four progs, lightness repeats
@@ -301,7 +257,6 @@ class ScatterView extends View {
 
     _fillOpacity(d){
         return 0.5; //d.anomaly_score>0?0.5:0.8;
-        //return (d.relabel==0&&d.anomaly_score>this.data.scoreThreshold) ? 0.5 : 0.8;
     }
 
     changeColor(){
@@ -332,22 +287,6 @@ class ScatterView extends View {
             .attr('stroke', '#000')
             .attr('stroke-width', 0)
             .style("fill", "white");
-        me.backgroud.call(d3.drag()
-            .container(function(d) {
-                return this;
-            })
-            .subject(function(d) {
-                var p = [d3.event.x, d3.event.y];
-                return [p, p];
-            })
-            .on("start", function() {
-                me.data.clearHight();
-                me._dragStart();
-            })
-            .on("end", function(){
-                me.data.setSelections(Array.from(me.selections));
-                me.selections.clear();
-            }));
         me.backgroud.call(d3.zoom()
             .scaleExtent([1, 1000])
             .extent([[me.x.domain()[0],me.y.domain()[0]],[me.x.domain()[1],me.y.domain()[1]]])

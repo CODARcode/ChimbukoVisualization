@@ -59,9 +59,9 @@ class ScatterView extends View {
         me.xAxis.selectAll("text.label").remove();
         me.yAxis.selectAll("text.label").remove();
         me.draw();        
-        me.transform = d3.zoomIdentity;
+        me._zoom();
+        // me.transform = d3.zoomIdentity;
         //move some constructor here
-        
     }
 
     draw(){
@@ -299,11 +299,15 @@ class ScatterView extends View {
 
     _zoom(){
         var me = this;
-        me.transform = d3.event.transform;
-
+        if (d3.event && d3.event.transform) {
+            me.transform = d3.event.transform
+        } 
+        if (!me.transform){
+            return
+        } 
         var xrange = me.x.range();
         var yrange = me.y.range();
-        var t = d3.event.transform;
+        var t = me.transform;
         if (t.applyX(xrange[0]) > xrange[0]){
             t.x =xrange[0] -xrange[0] * t.k;
         }else if(t.applyX(xrange[1]) < xrange[1]){
@@ -315,18 +319,18 @@ class ScatterView extends View {
             t.y = yrange[1] - yrange[1] * t.k;
 
         }
-        var new_xScale = d3.event.transform.rescaleX(me.x)
-        var new_yScale = d3.event.transform.rescaleY(me.y)
+        me.xScale = t.rescaleX(me.x)
+        me.yScale = t.rescaleY(me.y)
         this.dot
-            .attr("cx", d => new_xScale(d.pos[me.axis[0]]))
-            .attr("cy", d => new_yScale(d.pos[me.axis[1]]))
-            .attr('fill-opacity', d => (new_xScale(d.pos[me.axis[0]])>xrange[1]||new_xScale(d.pos[me.axis[0]])<xrange[0])?0:me._fillOpacity(d))
-            .attr('stroke-opacity', d => (new_xScale(d.pos[me.axis[0]])>xrange[1]||new_xScale(d.pos[me.axis[0]])<xrange[0])?0:me._fillOpacity(d));
+            .attr("cx", d => me.xScale(d.pos[me.axis[0]]))
+            .attr("cy", d => me.yScale(d.pos[me.axis[1]]))
+            .attr('fill-opacity', d => (me.xScale(d.pos[me.axis[0]])>xrange[1]||me.xScale(d.pos[me.axis[0]])<xrange[0])?0:me._fillOpacity(d))
+            .attr('stroke-opacity', d => (me.xScale(d.pos[me.axis[0]])>xrange[1]||me.xScale(d.pos[me.axis[0]])<xrange[0])?0:me._fillOpacity(d));
         // this.textlabel
         //     .attr("x", d => new_xScale(d.pos.x))
         //     .attr("y", d => new_yScale(d.pos.y))
         //     .attr('opacity', d => (new_xScale(d.pos.x)>xrange[1]||new_xScale(d.pos.x)<xrange[0])?0:1);
-        this.path.attr("transform", d3.event.transform);
+        this.path.attr("transform", t);
     }
 
     _updateAxis(){

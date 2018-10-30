@@ -49,10 +49,19 @@ class ScatterView extends View {
             me.anomaly_only = me.cbox.node().checked;
             me.stream_update();
         });
+        
+        me.filter_cbox = d3.select("#scatter-legend-filter").on("click", function(d) {
+            me.filter_all = me.filter_cbox.node().checked;
+            if(!me.filter_all) {
+                me.filter = {}
+            }
+            me.stream_update();
+        });
     }
 
     stream_update(){
         var me = this;
+        me.legend_items = {}
         me.selections.clear();
         me._updateAxis();
         me.svg.selectAll("circle").remove();
@@ -211,7 +220,11 @@ class ScatterView extends View {
                 var lkey = "prog#"+d.prog_name+"-"+d.func_name;
                 if (!me.legend_items[lkey]) {
                     me.legend_items[lkey] = {}
+                    me._fillColor(d, set_progname, set_funcname)
                 }
+                if (me.filter_all) {
+                    me.filter[lkey] = true;
+                } 
                 if (me.anomaly_only) {
                     return !(me.filter[lkey]) && (d.anomaly_score<0);
                 } else {
@@ -372,6 +385,10 @@ class ScatterView extends View {
             .attr("class", "scatter-legend-item")
             .on("click", function(d) {
                 d3.event.stopPropagation();
+                if(me.filter_all) {
+                    me.filter_all = undefined
+                    me.filter_cbox.node().checked = false
+                }
                 me.apply_filter(d)
                 this.style.color = me.filter[d]? "gray":"black"
             });
@@ -384,13 +401,19 @@ class ScatterView extends View {
 
         legend.append("text")
             .attr("class", "scatter-legend-item-text")
-            .style("color", d => me.filter[d]?  "gray" : "black")
+            .style("color", function(d) {
+                if (me.filter_all) {
+                    return "gray";
+                } else {
+                    return me.filter[d]?  "gray" : "black";
+                }
+            })
             .text(function(d){
                 var prefix = (d+"([").match(/.+?(?=[\[\(])/)[0];
                 var displayName = prefix.match(/(.*::)*(.*)/)[2];
                 var pct = me.data.stat[d.replace(/ *\prog#[0-9]-*\ */g, "")]['percent'].toFixed(2) + " %"
                 return displayName+": "+pct
             })
-
+        me.filter_all = (me.filter_all === false)? undefined : me.filter_all;
     }
 }

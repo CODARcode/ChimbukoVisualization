@@ -140,14 +140,26 @@ class Data(object):
 
     def reset(self):
         # when new application launches, everything needs to reset
-        self.events.clear()
-        self.executions = {}
-        self.func_idx = 0
-        self.forest = []
-        self.lineid2treeid.clear()
-        self.msgs = []
-        # self.line_num = 0
-        with self.lock:
+        with self.lock: 
+            self.func_idx = 0
+            self.clean_count = 0
+            self.window_start = 0
+            self.initial_timestamp = -1;
+            self.idx_holder = {
+                "fidx": [],
+                "tidx": 0
+            };
+            self.stat = {};
+            self.events.clear()
+            self.executions.clear()
+            self.forest.clear()
+            self.lineid2treeid.clear()
+            self.msgs.clear()
+            self.forest.clear() 
+            self.func_dict.clear()
+            self.event_types.clear()
+            self.stacks.clear()
+            self.log.clear()
             self.changed = False
 
     def _events2executions(self):

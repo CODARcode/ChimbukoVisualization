@@ -5,6 +5,9 @@ import json
 vis_url = 'http://0.0.0.0:5000/events'
 vis_data = "../data/StreamingNWChem/"
 
+res = requests.post(vis_url, json={'type':'reset'})
+print(res.json())
+
 #----set function dictionary----
 fun_names = []
 with open(vis_data+"function.json", 'r') as f:
@@ -17,9 +20,6 @@ with open(vis_data+"et.json", 'r') as f:
 	et = json.load(f)
 requests.post(vis_url, json={'type':'event_types','value':et})
 
-#----clean 
-# previous events----
-requests.post(vis_url, json={'type':'reset'})
 
 #----simulating update----
 import glob

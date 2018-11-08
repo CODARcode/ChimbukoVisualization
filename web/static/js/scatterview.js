@@ -57,6 +57,8 @@ class ScatterView extends View {
             }
             me.stream_update();
         });
+        
+        me.colorScale = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,19));
     }
 
     stream_update(){
@@ -203,10 +205,8 @@ class ScatterView extends View {
         var me = this;
 
         // compute progname and funcname sets
-        var progname = [];
-        var funcname = [];
-        me.data.data.forEach(d => progname.push(d.prog_name));
-        me.data.data.forEach(d => funcname.push(d.func_name));
+        var progname = me.data.prog_names;
+        var funcname = me.data.func_names;
         var set_progname = Array.from(new Set(progname));
         var set_funcname = Array.from(new Set(funcname));
         //console.log(set_progname);
@@ -253,10 +253,9 @@ class ScatterView extends View {
         // five group, each with four lightness
         // if more than five functions, color repeats 
         // if more than four progs, lightness repeats
-        var newcolor = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,19));
-        var _newcolor = newcolor(funcname.indexOf(d.func_name)%5*4+d.prog_name%4);
-        this.legend_items["prog#"+d.prog_name+"-"+d.func_name]['color'] =  _newcolor;
-        return _newcolor
+        var c = this.colorScale(funcname.indexOf(d.func_name)%5*4+d.prog_name%4);
+        this.legend_items["prog#"+d.prog_name+"-"+d.func_name]['color'] = c;
+        return c;
 
         //var h = 360/funcname.length;
         //var c = (100-30)/progname.length;

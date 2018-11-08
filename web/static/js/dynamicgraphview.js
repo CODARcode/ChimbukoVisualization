@@ -48,7 +48,7 @@ class DynamicGraphView extends GraphView {
     ticking(){
         var me = this;
         me.link.filter(function(d) {
-                return d.source.level<me.maxLevel&&d.target.level<me.maxLevel;
+                return (d.source.level<me.maxLevel||!d.source.hide)&&(d.target.level<me.maxLevel|| !d.target.hide);
             })
             .attr("x1", d => d.source.x)
             .attr("y1", d => d.source.y)
@@ -66,7 +66,7 @@ class DynamicGraphView extends GraphView {
             .attr('stroke-opacity', d => (me._showNode(d.target)&&me._showNode(d.source))?0.8:0.2);
         me.node
             .filter(function(d) { 
-                return d.level < me.maxLevel;
+                return d.level < me.maxLevel || !d.hide;
             })
             .attr("cx", function(d){
                 d.x = Math.max(d.r + me.margin.left, Math.min(me.size.width - me.margin.right - d.r, d.x));

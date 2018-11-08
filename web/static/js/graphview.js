@@ -112,7 +112,7 @@ class GraphView extends View {
             .enter()
             .append("circle")
             .filter(function(d) { 
-                return d.level < me.maxLevel;
+                return d.level < me.maxLevel || !d.hide;
             })
             .attr("r", d => d.r/me.scale)
             .attr("fill", d => me.getColor(d.name))

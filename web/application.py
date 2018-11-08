@@ -318,7 +318,7 @@ class Data(object):
                     })
                 this_tree['edges'].append({'source': ptid,'target': ctid})
                 queue.append((child_node,ctid))
-        print(json.dumps(this_tree))
+        #print(json.dumps(this_tree))
 
     def _exections2forest(self):
         # get tree based on foi

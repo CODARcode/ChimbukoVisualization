@@ -156,9 +156,9 @@ class ScatterView extends View {
             xAxis = this.xAxis
             .call(d3.axisBottom(me.x).tickFormat(function(d){
                 if(me.data.scatterLayout[me.axis[0]] == 'entry' || me.data.scatterLayout[me.axis[0]] == 'exit'){
-                    return parseFloat(d/1000000).toFixed(2)+"s";
+                    return parseFloat(d/1000000).toFixed(1)+"s";
                 }else if(me.data.scatterLayout[me.axis[0]] == 'value'){
-                    return parseFloat(d/1000).toFixed(2)+"ms";
+                    return parseFloat(d/1000).toFixed(1)+"ms";
                 }else{
                     return d;
                 }
@@ -182,9 +182,9 @@ class ScatterView extends View {
             .call(d3.axisLeft(me.y)
                 .tickFormat(function(d){
                     if(me.data.scatterLayout[me.axis[1]] == 'entry' || me.data.scatterLayout[me.axis[1]] == 'exit'){
-                        return parseFloat(d/1000000).toFixed(2)+"s";
+                        return parseFloat(d/1000000).toFixed(1)+"s";
                     }else if(me.data.scatterLayout[me.axis[1]] == 'value'){
-                        return parseFloat(d/1000).toFixed(2)+"ms";
+                        return parseFloat(d/1000).toFixed(1)+"ms";
                     }else{
                         return d;
                     }
@@ -232,12 +232,12 @@ class ScatterView extends View {
                 }
             })
                 .append("circle")
-                .attr("r", d => d.anomaly_score<0?6:4)
+                .attr("r", d => d.anomaly_score<0?5:4)
                 .attr("cx", d => me.x(d.pos[me.axis[0]]))
                 .attr("cy", d => me.y(d.pos[me.axis[1]]))
                 .attr("fill", d => me._fillColor(d, set_progname, set_funcname))
                 .attr("fill-opacity", d => me._fillOpacity(d))
-                .attr("stroke", d => d.anomaly_score<0?"red":0);
+                .attr("stroke", d => d.anomaly_score<0?"black":0);
 
         me.dot.on("click", function(d, i) {
             console.log("clicked "+i+"th tree, id:"+d['id']);

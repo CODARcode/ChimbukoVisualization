@@ -76,7 +76,7 @@ class DynamicGraphView extends GraphView {
                 d.y = Math.max(d.r, Math.min(me.size.height - d.r, d.y));
                 return d.y;
             })
-            .attr('stroke', d => d.hide?'#000':'#f00');
+            .attr('stroke', d => d.hide?me.getColor(d.name):'#000');
     }
 
     selected(){

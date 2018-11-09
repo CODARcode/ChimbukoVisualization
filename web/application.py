@@ -259,11 +259,12 @@ class Data(object):
         # events = []
         del self.events[rankId][:]
 
-    def generate_tree_recursive_helper(self, this_tree, execution, node, ptid):
-        this_tree['nodes'][ptid]['hide'] = False if node['anomaly_score'] == -1 else True
-        for child_id in node['children']:
+    def generate_tree_recursive(self, this_tree, pexecution, ptid):
+        pnode = this_tree['nodes'][ptid]
+        pnode['hide'] = False if pexecution['anomaly_score'] == -1 else True
+        for child_id in pexecution['children']:
             if not child_id in self.executions:
-                print("child not in executions", node)
+                print("child not in executions", pexecution)
             child_node = self.executions[child_id]
             ctid = len(this_tree['nodes'])
             if not "messages" in child_node:
@@ -271,54 +272,25 @@ class Data(object):
             this_tree['nodes'].append({ # children of the tree
                     'name':child_node['name'],
                     "id": ctid,
-                    "comm ranks": execution["comm ranks"],
-                    "prog_name": execution["prog names"],
-                    "threads": execution["threads"],
+                    "comm ranks": pnode["comm ranks"],
+                    "prog_name": pnode["prog_name"],
+                    "threads": pnode["threads"],
                     "findex": child_node["findex"],
                     "value": (child_node["exit"] - child_node["entry"]),
                     "messages": child_node["messages"],
                     "entry": child_node["entry"],
-                    "exit": execution["exit"],
+                    "exit": pnode["exit"],
+                    "anomaly_score": child_node["anomaly_score"]
                 })
             this_tree['edges'].append({'source': ptid,'target': ctid})
-            if not self.generate_tree_recursive_helper(this_tree, execution, child_node, ctid):
+            if not self.generate_tree_recursive(this_tree, child_node, ctid):
                 this_tree['nodes'][ptid]['hide'] = False
         return this_tree['nodes'][ptid]['hide']
-
-    def generate_tree_recursive(self, treeid):
-        this_tree = self.forest[treeid]
-        execution = self.executions[this_tree['eid']]
-        self.generate_tree_recursive_helper(this_tree, execution, execution, 0)
 
     def generate_tree(self, treeid):
         this_tree = self.forest[treeid]
         execution = self.executions[this_tree['eid']]
-        queue = [(execution,0)]
-        while len(queue)>0:
-            node,ptid = queue[0]
-            queue.pop(0)
-            for child_id in node['children']:
-                if not child_id in self.executions:
-                    print("child not in executions", node)
-                child_node = self.executions[child_id]
-                ctid = len(this_tree['nodes'])
-                if not "messages" in child_node:
-                    child_node['messages'] = []
-                this_tree['nodes'].append({ # children of the tree
-                        'name':child_node['name'],
-                        "id": ctid,
-                        "comm ranks": execution["comm ranks"],
-                        "prog_name": execution["prog names"],
-                        "threads": execution["threads"],
-                        "findex": child_node["findex"],
-                        "value": (child_node["exit"] - child_node["entry"]),
-                        "messages": child_node["messages"],
-                        "entry": child_node["entry"],
-                        "exit": execution["exit"],
-                    })
-                this_tree['edges'].append({'source': ptid,'target': ctid})
-                queue.append((child_node,ctid))
-        #print(json.dumps(this_tree))
+        self.generate_tree_recursive(this_tree, execution, 0)
 
     def _exections2forest(self):
         # get tree based on foi
@@ -355,6 +327,7 @@ class Data(object):
                                 "messages": execution["messages"],
                                 "entry": execution["entry"],
                                 "exit": execution["exit"],
+                                "anomaly_score": execution["anomaly_score"]
                             }],
                         "edges": [],
                         "anomaly_score": execution['anomaly_score'] #-1 if str(int(execution["lineid"])) in self.labels else 1
@@ -409,7 +382,7 @@ def get_tree():
         tindex = request.json['value']
         print("select tree #{}".format(tindex))
         if len(data.forest[tindex]['nodes']) == 1: # first request
-            data.generate_tree_recursive(tindex)
+            data.generate_tree(tindex)
         return jsonify(data.forest[tindex])
 
 @web_app.route('/events', methods=['POST'])

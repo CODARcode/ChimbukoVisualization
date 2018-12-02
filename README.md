@@ -4,35 +4,35 @@
 
 ![Overview](./data/images/overview.png)
 
-This is a visualization framework for online performance analysis. This framework mainly focuses on visualizing real-time anomalous behaviors in HPC environment so that some hidden patterns of anomaly that users might not have recognized can be effectively detected in online visual analytics manner. 
+This is a visualization framework for online performance analysis. This framework mainly focuses on visualizing real-time anomalous behaviors in a High Performance Computing application so that any patterns of anomalies that users might not have recognized can be effectively detected through online visual analytics. 
 
-This framework provides four major information:
+This framework provides four major features:
 
-* Current function executions
-* Call stack tree structures of a specific function
-* Message communications of a particular function
-* Timeline of a selected function execution
-* Overall events flow and density by rank (to be added)
+* Streaming data reduction and aggregation
+* Sliding time window of workflow overview for regular and anomaly function executions
+* Selected function execution in a reduced call stack tree structure
+* Selected function execution and message passing details in zoomable timelines
+* Overall events distribution by rank
 
-To visualize that information, the following four components are provided:
+The following four visualization components are provided:
 
-* Projection of executions in real time
-* Call stack tree representation
-* Timeline and message visualization
-* Heat Map visualization for events flows (to be added)
+* Projection of Function Execution
+* Selected Call Stack Tree
+* Timeline and Message Visualization
+* Execution Distribution by Rank 
 
 
 ## Software Dependency
 
-This framework is a web application of which the back-end built with `Python3.x` and `Flask` and the front-end developed with `Javascript` and `D3.js`. 
+This framework is a web application for which the back-end was built with `Python3.x` and `Flask` and the front-end was developed with `Javascript` and `D3.js`. 
 
 
 ## Installation
 
-Please be advised that this framework is containerized as a single `docker` image so that there is no need to spend time on any issue with the software dependency.
+Please be advised that this framework is containerized as a single `docker` image so that there is no need to spend time on any issues with the software dependency.
 
 ### Using docker
-The `docker` repo is currently private. The access information will be announced soon.
+The `docker` repository is currently private. The access information will be added soon.
 
 ### Manual install
 In order to manually install this framework, make sure that `Python3.x` and `pip3` are installed on your machine.
@@ -71,7 +71,7 @@ If the visualization server runs, by default, `localhost:5000` will work.
 
 ### Rest APIs Supported
 
-The visualization server accepts `POST` method requests to `localhost:5000/events` with data in the `json` header. Please send following requests in the following order.
+The visualization server accepts `POST` method requests to `localhost:5000/events` with data in the `json` header. Please send the following requests in the following order.
 
 - Reset/initialize the server:
 
@@ -106,8 +106,8 @@ The visualization server accepts `POST` method requests to `localhost:5000/event
     "type":"info",
     "value":{
         "events": [],
-        "foi": [], # a list of indices based on function names 
-        "labels": [] # a list of lineid
+        "foi": [], // a list of indices based on function names 
+        "labels": [] // a list of lineid
     }
 }
 ```
@@ -125,30 +125,32 @@ $ python3 parserNWChem.py
 ## Interface Description
 
 ### Projection of Function Executions
-Trace events are visualized on a scatter plot in streaming fashion. If some events were detected as an anomaly, they will be highlighted by making the size bigger than normal executions. 
+Trace events are visualized on a scatter plot in a streaming fashion. If some events were detected as an anomaly, they will be highlighted by making the size bigger than normal executions. 
 
 ![Projection](./data/images/projection.png)
 
-The various filtering is provided so that only anomaly data or particular functions can be observed easily.
-
-![Projection](./data/images/filter.gif)
-
-The more visual patterns can be recognized by adjusting the axis, for example, rank vs. execution time, entry time vs. exit time, etc.
+More visual patterns can be recognized by adjusting the axis. For example: Rank vs. Execution time, Entry time vs. Exit time, etc.
 
 ![Projection](./data/images/projection_2.png)
 
 ![Projection](./data/images/projection_3.png)
 
+The various filtering is also provided so that particular functions or only anomaly data can be easily observed.
+
+![Projection](./data/images/filter.gif)
+
 
 ### Selected Call Stack Tree 
-For particular function execution, detailed call stack information will be shown by clicking the specific data point on the scatter plot.
+For a particular function execution, clicking the specific data point on the scatter plot will show detailed call stack information.
 
 ![Projection](./data/images/tree.png)
 
 ### Timeline and Message Visualization
-The detailed timeline and message communication of specific function will also be visualized. A particular interval can be focused by dragging the timeline.
+The detailed timeline and message communication of a specific function can also be visualized. Dragging the timeline will focus on a particular interval.
 
-![Projection](./data/images/timeline.png)
+![Projection](./data/images/timeline.gif)
 
-### Heat Map Visualization
-To be added soon.
+### Visualization for Events Distribtuion by Rank 
+The overall distribution of executions can also be identified. Moreover, domain scientists can easily identify which processor was problematic at which moment by visualizaing the amount of anomalies per processor.
+
+![Projection](./data/images/heatmap.gif)

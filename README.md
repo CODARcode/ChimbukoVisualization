@@ -75,7 +75,7 @@ The visualization server accepts `POST` method requests to `localhost:5000/event
 
 - Reset/initialize the server:
 
-```json
+```javascript
 { 
     "type":"reset"
 }
@@ -83,7 +83,7 @@ The visualization server accepts `POST` method requests to `localhost:5000/event
 
 - Provide function names in order
 
-```json
+```javascript
 { 
     "type":"functions", 
     "value": ["function", "names", "in", "string", "type"]
@@ -92,7 +92,7 @@ The visualization server accepts `POST` method requests to `localhost:5000/event
 
 - Provide events types in order
 
-```json
+```javascript
 { 
     "type":"event_types", 
     "value": ["event", "types", "in", "string", "type"]
@@ -101,7 +101,7 @@ The visualization server accepts `POST` method requests to `localhost:5000/event
 
 - Provide trace information with the function of interest `foi` and anomaly functions `labels`:
 
-```json
+```javascript
 { 
     "type":"info",
     "value":{
@@ -144,6 +144,7 @@ The various filtering is also provided so that particular functions or only anom
 For a particular function execution, clicking the specific data point on the scatter plot will show detailed call stack information.
 
 ![Projection](./data/images/tree.png)
+![Projection](./data/images/cstrees.png)
 
 ### Timeline and Message Visualization
 The detailed timeline and message communication of a specific function can also be visualized. Dragging the timeline will focus on a particular interval.

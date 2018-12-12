@@ -155,3 +155,27 @@ The detailed timeline and message communication of a specific function can also 
 The overall distribution of executions can also be identified. Moreover, domain scientists can easily identify which processor was problematic at which moment by visualizaing the amount of anomalies per processor.
 
 ![Projection](./data/images/heatmap.gif)
+
+
+## Unit Test
+We support the automated unit-test to make sure that the basic functionalities are correctly working as we expect. Please try the following commands to build an automated script first:
+
+```console
+$ cd [PATH/TO/ROOT/OF/PROJECT]
+$ make 
+```
+
+After creating the script, the unit-test can be run by:
+
+```console
+$ make test
+```
+
+Report of the test cases will be printed:
+
+```console
+----------------------------------------------------------------------
+Ran 4 tests in 14.663s
+
+OK
+```

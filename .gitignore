@@ -9,4 +9,4 @@ web/__pycache__/
 data/*.json
 
 data/.DS_Store
-*.json
+

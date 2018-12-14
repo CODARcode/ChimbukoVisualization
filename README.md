@@ -1,6 +1,6 @@
 # Chimbuko Performance Visualization 
 
-[![Build Status](https://travis-ci.org/CODARcode/PerformanceAnalysis.svg?branch=master)](https://travis-ci.org/CODARcode/PerformanceAnalysis)
+[![Build Status](https://travis-ci.org/CODARcode/ChimbukoVisualization.svg?branch=master)](https://travis-ci.org/CODARcode/ChimbukoVisualization)
 
 ## Overview 
 

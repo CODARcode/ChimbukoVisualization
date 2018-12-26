@@ -39,6 +39,7 @@ class Data(object):
         self.window_start = 0
         self.clean_count = 0
         self.stat = {}
+        self.anomaly_cnt = 0
         # entry - entry time
         # value - execution time
         # comm ranks
@@ -99,7 +100,7 @@ class Data(object):
                 #if obj['lineid'] in self.labels:
                 #    print(obj['lineid'], ": ", e)
 
-                if obj['event types'] == self.event_types['ENTRY']:
+                if obj['event types'] == self.event_types['EXIT']:
                     fname = obj["name"]
                     if not fname in self.stat:
                         self.stat[fname] = {
@@ -109,6 +110,7 @@ class Data(object):
                         }
                     s = self.stat[fname]
                     if str(int(obj["lineid"])) in self.labels:
+                        self.anomaly_cnt += 1
                         obj['anomaly_score'] = -1
                         s['anomal'] = s['anomal'] + 1
                     else:
@@ -116,6 +118,8 @@ class Data(object):
                         s['normal'] = s['normal'] + 1
                     if s['normal']>0 or s['anomal']>0:
                         s['percent'] = (s['anomal']/(s['normal']+s['anomal']))*100 
+
+            print('processed', self.anomaly_cnt, 'anomalies.')
             #self.changed = True
 
     def remove_old_data(self):
@@ -141,6 +145,7 @@ class Data(object):
             self.func_idx = 0
             self.clean_count = 0
             self.window_start = 0
+            self.anomaly_cnt = 0
             self.initial_timestamp = -1;
             self.idx_holder = {
                 "fidx": [],
@@ -206,7 +211,7 @@ class Data(object):
                 func['threads'] = obj['threads']
                 func['lineid'] = obj['lineid']
                 func['findex'] = self.func_idx #function_index
-                func['anomaly_score'] = obj['anomaly_score']
+                
                 #print(func['name'], func['findex'])
                 if len(stack) > 0:
                     func['parent'] = stack[-1]['findex']
@@ -220,7 +225,7 @@ class Data(object):
                 stack.append(func)
             elif obj['event types'] == self.event_types['EXIT']: #'exit'
                 if len(stack) > 0 and obj['name']:
-                    
+                    stack[-1]['anomaly_score'] = obj['anomaly_score']
                     stack[-1]['exit'] = obj['timestamp']
                     #self.executions.append(stack[-1])
                     self.executions[stack[-1]['findex']] = stack[-1]

@@ -69,3 +69,10 @@ def set_sampling_rate():
         return jsonify({'srate': data.sampling_rate})
 
 
+@web_app.route('/executions', methods=['POST'])
+def receive_executions():
+    data.set_FOI(request.json['foi'])
+    data.add_executions(request.json['executions'])
+    return jsonify({'received': len(data.executions)})
+
+

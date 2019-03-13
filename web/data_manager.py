@@ -15,6 +15,7 @@ class Data(object):
         self.forest_labels = [] # the learned label, for now I simulated
         self.prog = []; # the program names of the tree in scatter plot
         self.tidx = [];
+        self.eidx = [];
         self.func_names = []; # the function name of interest in scatter plot
         self.func_dict = [] # all the names of the functions
         self.foi = [] # function of interest
@@ -28,7 +29,8 @@ class Data(object):
         self.stacks = {}; # one stack for one program under the same rankId
         self.idx_holder = {
             "fidx": [],
-            "tidx": 0
+            "tidx": 0,
+            "eidx": 0
         };
         self.sampling_rate = 1;
         self.sampling_strategy = ["uniform"]
@@ -40,6 +42,7 @@ class Data(object):
         self.clean_count = 0
         self.stat = {}
         self.anomaly_cnt = 0
+        self.filecnt = 0
         # entry - entry time
         # value - execution time
         # comm ranks
@@ -149,7 +152,8 @@ class Data(object):
             self.initial_timestamp = -1;
             self.idx_holder = {
                 "fidx": [],
-                "tidx": 0
+                "tidx": 0,
+                "eidx": 0
             };
             self.stat = {};
             self.events.clear()
@@ -162,6 +166,8 @@ class Data(object):
             self.stacks.clear()
             self.log.clear()
             self.changed = False
+            self.eidx = []
+            self.tidx = []
 
     def _events2executions(self):
         #print("event 2 executions...")
@@ -343,6 +349,7 @@ class Data(object):
         with self.lock:
             self._events2executions()
             self.remove_old_data()
+            # self.write_file()
             self._exections2forest()
 
             # the scatterplot positions of the forest
@@ -372,5 +379,45 @@ class Data(object):
         self.func_names = []
         self.forest_labels = []
         self.tidx = []
+        self.eidx = []
         print("reset forest data")
         self.changed = False
+        
+
+    def write_file(self):
+        self.filecnt += 1
+        execs = {}
+        for fidx in self.idx_holder['fidx']:
+            execs[fidx] = self.executions[fidx]
+
+        j = json.dumps(execs)
+        f = open('execution.'+str(self.filecnt)+'.json','w')
+        f.write(j)
+        f.close()
+
+    def add_executions(self, executions):
+        with self.lock:
+            self.calculate_layout(executions)
+            self.executions.update(executions)
+            self.remove_old_data()
+
+    def calculate_layout(self, executions):
+        for i, (eidx, execution) in enumerate(executions.items()):
+            if execution['name'] in self.foi: # foi
+                if execution['anomaly_score'] == -1 or i%int(1/self.sampling_rate)==0: # Sampling
+                    
+                    execution['value'] = (execution["exit"] - execution["entry"])
+                    
+                    self.eidx.append(eidx)
+                    self.forest_labels.append(execution["anomaly_score"])
+                    self.prog.append(execution['prog names'])
+                    self.func_names.append(execution['name'])  
+                    self.pos.append([
+                        execution[self.layout[0]], # entry 
+                        execution[self.layout[1]], # value (execution time)
+                        (execution[self.layout[2]] + execution['threads']*0.1), # rank and thread
+                        execution[self.layout[3]] # exit
+                    ])
+        
+        print("added {} positions".format(len(self.pos)))
+        self.changed = True

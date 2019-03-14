@@ -275,7 +275,10 @@ class Data(object):
         pnode['hide'] = False if pexecution['anomaly_score'] == -1 else True
         for child_id in pexecution['children']:
             if not child_id in self.executions:
-                print("child not in executions", pexecution)
+                if str(child_id) in self.executions:
+                    child_id = str(child_id)
+                else:
+                    print("child not in executions", pexecution)
             child_node = self.executions[child_id]
             ctid = len(this_tree['nodes'])
             if not "messages" in child_node:
@@ -302,6 +305,39 @@ class Data(object):
         this_tree = self.forest[treeid]
         execution = self.executions[this_tree['eid']]
         self.generate_tree_recursive(this_tree, execution, 0)
+
+    def generate_tree_by_eid(self, tid, eid):
+        execution = self.executions[eid]
+        this_tree = self.create_tree_by_execution(tid, execution)
+        self.generate_tree_recursive(this_tree, execution, 0)
+        return this_tree
+
+    def create_tree_by_execution(self, tid, execution):
+        if not "messages" in execution:
+            execution["messages"] = []
+        return {
+            "id": tid,
+            "eid": execution['findex'],
+            "prog_name": execution["prog names"],
+            "node_index": execution["comm ranks"],
+            "threads": execution["threads"],
+            "graph_index": execution['findex'],
+            "nodes": [{ # root of the tree
+                    "name": execution['name'], # self.foi,
+                    "id": 0, # parent
+                    "comm ranks": execution["comm ranks"],
+                    "prog_name": execution["prog names"],
+                    "threads": execution["threads"],
+                    "findex": execution["findex"],
+                    "value": (execution["exit"] - execution["entry"]),
+                    "messages": execution["messages"],
+                    "entry": execution["entry"],
+                    "exit": execution["exit"],
+                    "anomaly_score": execution["anomaly_score"]
+                }],
+            "edges": [],
+            "anomaly_score": execution['anomaly_score']
+        }
 
     def _exections2forest(self):
         # get tree based on foi
@@ -409,6 +445,9 @@ class Data(object):
                     execution['value'] = (execution["exit"] - execution["entry"])
                     
                     self.eidx.append(eidx)
+                    self.tidx.append(self.idx_holder['tidx'])
+                    self.idx_holder['tidx'] += 1
+
                     self.forest_labels.append(execution["anomaly_score"])
                     self.prog.append(execution['prog names'])
                     self.func_names.append(execution['name'])  

@@ -242,7 +242,7 @@ class ScatterView extends View {
         me.dot.on("click", function(d, i) {
             console.log("clicked "+i+"th tree, id:"+d['id']);
                 me.data.clearHight();
-                me.data.setSelections([d['id']]);
+                me.data.setSelections([d['id'], d['eid']]);
             })
             .append("title")
             .text(function(d, i) {

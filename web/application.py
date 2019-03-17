@@ -14,13 +14,13 @@ def home():
 def get_tree():
     if request.json['data'] == 'tree':
         tindex = request.json['value']
-        eindex = request.json['eid']
         print("select tree #{}".format(tindex))
         if len(data.forest) > 0:
             if len(data.forest[tindex]['nodes']) == 1: # first request
                 data.generate_tree(tindex)
             return jsonify(data.forest[tindex])
         else:
+            eindex = request.json['eid']
             if data.executions[eindex] is not None: # first request
                 return jsonify(data.generate_tree_by_eid(tindex, eindex))
 

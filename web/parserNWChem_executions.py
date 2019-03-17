@@ -17,6 +17,9 @@ execution_list.sort(key=lambda x: int(x.split('.')[-2]))
 foi_list = glob.glob(vis_data+"foi.*.json")
 foi_list.sort(key=lambda x: int(x.split('.')[-2]))
 
+stat_list = glob.glob(vis_data+"stat.*.json")
+stat_list.sort(key=lambda x: int(x.split('.')[-2]))
+
 execs = 0
 dustart = time.time()
 
@@ -28,14 +31,20 @@ for i in range(len(execution_list)):
 	with open(execution_list[i], 'r') as f:
 		executions = json.load(f)
 	foi = []
+	print(i, foi_list[i])
 	with open(foi_list[i], 'r') as f:
 		foi = json.load(f)
+	stat = []
+	print(i, stat_list[i])
+	with open(stat_list[i], 'r') as f:
+		stat = json.load(f)
 	
 	execs += len(executions)
 	print('send', len(executions), 'executions.')
 	res = requests.post(vis_url+'executions', json={
 		'executions': executions,
-		'foi': foi
+		'foi': foi,
+		'stat': stat
 	})
 	end = time.time()
 	restimes.append(end-start)

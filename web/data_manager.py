@@ -42,7 +42,7 @@ class Data(object):
         self.clean_count = 0
         self.stat = {}
         self.anomaly_cnt = 0
-        self.filecnt = 0
+        self.filecnt = -1
         # entry - entry time
         # value - execution time
         # comm ranks
@@ -103,24 +103,24 @@ class Data(object):
                 #if obj['lineid'] in self.labels:
                 #    print(obj['lineid'], ": ", e)
 
-                if obj['event types'] == self.event_types['EXIT']:
+                if obj['event types'] == self.event_types['ENTRY']:
                     fname = obj["name"]
                     if not fname in self.stat:
                         self.stat[fname] = {
-                            'anomal': 0,
-                            'normal': 0,
-                            'percent': 0
+                            'abnormal': 0,
+                            'regular': 0,
+                            'ratio': 0
                         }
                     s = self.stat[fname]
                     if str(int(obj["lineid"])) in self.labels:
                         self.anomaly_cnt += 1
                         obj['anomaly_score'] = -1
-                        s['anomal'] = s['anomal'] + 1
+                        s['abnormal'] = s['abnormal'] + 1
                     else:
                         obj['anomaly_score'] = 1
-                        s['normal'] = s['normal'] + 1
-                    if s['normal']>0 or s['anomal']>0:
-                        s['percent'] = (s['anomal']/(s['normal']+s['anomal']))*100 
+                        s['regular'] = s['regular'] + 1
+                    if s['regular']>0 or s['abnormal']>0:
+                        s['ratio'] = (s['abnormal']/(s['regular']+s['abnormal']))*100 
 
             print('processed', self.anomaly_cnt, 'anomalies.')
             #self.changed = True
@@ -217,7 +217,7 @@ class Data(object):
                 func['threads'] = obj['threads']
                 func['lineid'] = obj['lineid']
                 func['findex'] = self.func_idx #function_index
-                
+                func['anomaly_score'] = obj['anomaly_score']
                 #print(func['name'], func['findex'])
                 if len(stack) > 0:
                     func['parent'] = stack[-1]['findex']
@@ -231,7 +231,7 @@ class Data(object):
                 stack.append(func)
             elif obj['event types'] == self.event_types['EXIT']: #'exit'
                 if len(stack) > 0 and obj['name']:
-                    stack[-1]['anomaly_score'] = obj['anomaly_score']
+                    # stack[-1]['anomaly_score'] = obj['anomaly_score']
                     stack[-1]['exit'] = obj['timestamp']
                     #self.executions.append(stack[-1])
                     self.executions[stack[-1]['findex']] = stack[-1]
@@ -431,6 +431,11 @@ class Data(object):
         f.write(j)
         f.close()
 
+        j = json.dumps(self.stat)
+        f = open('stat.'+str(self.filecnt)+'.json','w')
+        f.write(j)
+        f.close()
+
     def add_executions(self, executions):
         with self.lock:
             self.calculate_layout(executions)
@@ -460,3 +465,7 @@ class Data(object):
         
         print("added {} positions".format(len(self.pos)))
         self.changed = True
+
+    def set_statistics(self, stat):
+        with self.lock:
+            self.stat = stat

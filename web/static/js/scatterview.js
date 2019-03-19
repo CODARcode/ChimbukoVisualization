@@ -242,7 +242,7 @@ class ScatterView extends View {
         me.dot.on("click", function(d, i) {
             console.log("clicked "+i+"th tree, id:"+d['id']);
                 me.data.clearHight();
-                me.data.setSelections([d['id']]);
+                me.data.setSelections([d['id'], d['eid']]);
             })
             .append("title")
             .text(function(d, i) {
@@ -375,7 +375,7 @@ class ScatterView extends View {
         names.sort(function(x, y) {
             x = x.replace(/ *\prog#[0-9]-*\ */g, "");
             y = y.replace(/ *\prog#[0-9]-*\ */g, "");
-            return d3.ascending(me.data.stat[y]['percent'], me.data.stat[x]['percent']);
+            return d3.ascending(me.data.stat[y]['ratio'], me.data.stat[x]['ratio']);
         })
         var legend = me.legend.selectAll(".scatter-legend-item")
             .data(names)
@@ -410,7 +410,7 @@ class ScatterView extends View {
             .text(function(d){
                 var prefix = (d+"([").match(/.+?(?=[\[\(])/)[0];
                 var displayName = prefix.match(/(.*::)*(.*)/)[2];
-                var pct = me.data.stat[d.replace(/ *\prog#[0-9]-*\ */g, "")]['percent'].toFixed(2) + " %"
+                var pct = me.data.stat[d.replace(/ *\prog#[0-9]-*\ */g, "")]['ratio'].toFixed(2) + " %"
                 return displayName+": "+pct
             })
         me.filter_all = (me.filter_all === false)? undefined : me.filter_all;

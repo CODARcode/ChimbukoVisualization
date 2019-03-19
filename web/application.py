@@ -15,9 +15,14 @@ def get_tree():
     if request.json['data'] == 'tree':
         tindex = request.json['value']
         print("select tree #{}".format(tindex))
-        if len(data.forest[tindex]['nodes']) == 1: # first request
-            data.generate_tree(tindex)
-        return jsonify(data.forest[tindex])
+        if len(data.forest) > 0:
+            if len(data.forest[tindex]['nodes']) == 1: # first request
+                data.generate_tree(tindex)
+            return jsonify(data.forest[tindex])
+        else:
+            eindex = request.json['eid']
+            if data.executions[eindex] is not None: # first request
+                return jsonify(data.generate_tree_by_eid(tindex, eindex))
 
 @web_app.route('/events', methods=['POST'])
 def receive_events():
@@ -50,9 +55,9 @@ def _stream():
         with data.lock: 
             print("send {} data to front".format(len(data.pos)))
             yield """
-                retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s, "stat":%s}\n\n
+                retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s, "eidx":%s, "stat":%s}\n\n
             """ % (json.dumps(data.pos), json.dumps(data.layout), json.dumps(data.forest_labels), json.dumps(data.prog), 
-            json.dumps(data.func_names), json.dumps(data.tidx), json.dumps(data.stat) )
+            json.dumps(data.func_names), json.dumps(data.tidx), json.dumps(data.eidx), json.dumps(data.stat) )
             data.reset_forest()
 
 @web_app.route('/stream')
@@ -67,5 +72,13 @@ def set_sampling_rate():
         data.sampling_rate = float(request.json['value'])
         print("set sampling_rate #{}".format(data.sampling_rate))
         return jsonify({'srate': data.sampling_rate})
+
+
+@web_app.route('/executions', methods=['POST'])
+def receive_executions():
+    data.set_FOI(request.json['foi'])
+    data.set_statistics(request.json['stat'])
+    data.add_executions(request.json['executions'])
+    return jsonify({'received': len(request.json['executions'])})
 
 

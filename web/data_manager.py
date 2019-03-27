@@ -483,4 +483,11 @@ class Data(object):
 
     def set_statistics(self, stat):
         with self.lock:
-            self.stat.update(stat)
+            for func, temp in stat.items():
+                if func in self.stat:
+                    func_stat = self.stat[func]
+                    func_stat['regular'] = temp['regular'] if temp['regular']>func_stat['regular'] else func_stat['regular']
+                    func_stat['abnormal'] = temp['abnormal'] if temp['abnormal']>func_stat['abnormal'] else func_stat['abnormal']
+                    func_stat['ratio'] = temp['ratio'] if temp['ratio']>func_stat['ratio'] else func_stat['ratio']
+                else:
+                    self.stat[func] = temp

@@ -478,6 +478,7 @@ class Data(object):
         new_children = []
         for cid in execution['children']:
             new_children.append(prefix+str(cid))
+        execution['children'] = new_children
         return execution
 
     def set_statistics(self, stat):

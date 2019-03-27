@@ -441,33 +441,44 @@ class Data(object):
 
     def add_executions(self, executions):
         with self.lock:
-            self.calculate_layout(executions)
-            self.executions.update(executions)
+            _executions = self.calculate_layout(executions)
+            self.executions.update(_executions)
             self.remove_old_data()
 
     def calculate_layout(self, executions):
+        new_executions = {}
         for i, (eidx, execution) in enumerate(executions.items()):
-            if execution['name'] in self.foi: # foi
-                if execution['anomaly_score'] == -1 or i%int(1/self.sampling_rate)==0: # Sampling
-                    
-                    execution['value'] = (execution["exit"] - execution["entry"])
-                    
-                    self.eidx.append(eidx)
-                    self.tidx.append(self.idx_holder['tidx'])
-                    self.idx_holder['tidx'] += 1
-
-                    self.forest_labels.append(execution["anomaly_score"])
-                    self.prog.append(execution['prog names'])
-                    self.func_names.append(execution['name'])  
-                    self.pos.append([
-                        execution[self.layout[0]], # entry 
-                        execution[self.layout[1]], # value (execution time)
-                        (execution[self.layout[2]] + execution['threads']*0.1), # rank and thread
-                        execution[self.layout[3]] # exit
-                    ])
-        
+            execution = self.update_id(execution)
+            execution['entry'] = int(execution['entry'])
+            execution['exit'] = int(execution['exit'])
+            execution['anomaly_score'] = int(execution['anomaly_score'])
+            if execution['anomaly_score'] == -1 or i%int(1/self.sampling_rate)==0: # Sampling
+                execution['value'] = (execution["exit"] - execution["entry"])
+                self.eidx.append(execution['findex'])
+                self.tidx.append(self.idx_holder['tidx'])
+                self.idx_holder['tidx'] += 1
+                self.forest_labels.append(execution["anomaly_score"])
+                self.prog.append(execution['prog names'])
+                self.func_names.append(execution['name'])  
+                self.pos.append([
+                    execution[self.layout[0]], # entry 
+                    execution[self.layout[1]], # value (execution time)
+                    (execution[self.layout[2]] + execution['threads']*0.1), # rank and thread
+                    execution[self.layout[3]] # exit
+                ])
+            new_executions[execution['findex']] = execution
         print("added {} positions".format(len(self.pos)))
         self.changed = True
+        return new_executions
+
+    def update_id(self, execution):
+        prefix = str(execution['comm ranks']) + '&'
+        execution['findex'] = prefix+str(execution['findex'])
+        execution['parent'] = prefix+str(execution['parent'])
+        new_children = []
+        for cid in execution['children']:
+            new_children.append(prefix+str(cid))
+        return execution
 
     def set_statistics(self, stat):
         with self.lock:

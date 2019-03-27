@@ -17,7 +17,7 @@ class Data(object):
         self.tidx = [];
         self.eidx = [];
         self.func_names = []; # the function name of interest in scatter plot
-        self.func_dict = [] # all the names of the functions
+        self.func_dict = {} # all the names of the functions
         self.foi = [] # function of interest
         self.event_types = {} # set the indices indicating event types in the event list
         self.changed = False # if there are new data come in
@@ -49,7 +49,8 @@ class Data(object):
         # exit - exit time
 
     def set_functions(self, functions):# set function dictionary
-        self.func_dict = functions
+        with self.lock:
+            self.func_dict = functions
 
     def set_FOI(self, functions):
         with self.lock:
@@ -57,8 +58,9 @@ class Data(object):
             #self.changed = True
 
     def set_event_types(self, types):
-        for i, e in enumerate(types):
-            self.event_types[e] = i
+        with self.lock:
+            for i, e in enumerate(types):
+                self.event_types[e] = i
 
     def set_labels(self, labels):
         with self.lock:

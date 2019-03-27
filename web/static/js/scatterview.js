@@ -59,6 +59,7 @@ class ScatterView extends View {
         });
         
         me.colorScale = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,19));
+        me.formatSuffix = d3.format(".2s")
     }
 
     stream_update(){
@@ -410,8 +411,11 @@ class ScatterView extends View {
             .text(function(d){
                 var prefix = (d+"([").match(/.+?(?=[\[\(])/)[0];
                 var displayName = prefix.match(/(.*::)*(.*)/)[2];
-                var pct = me.data.stat[d.replace(/ *\prog#[0-9]-*\ */g, "")]['ratio'].toFixed(2) + " %"
-                return displayName+": "+pct
+                var stat = me.data.stat[d.replace(/ *\prog#[0-9]-*\ */g, "")];
+                var ratio = stat['ratio'].toFixed(2) + " %";
+                var anomaly = me.formatSuffix(stat['abnormal']);
+                var regular = me.formatSuffix(stat['regular']).replace('G', 'B') ;
+                return displayName+": "+ratio+ " ("+anomaly+"/"+regular+")";
             })
         me.filter_all = (me.filter_all === false)? undefined : me.filter_all;
     }

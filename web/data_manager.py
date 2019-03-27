@@ -82,7 +82,7 @@ class Data(object):
                     'comm ranks': e[1],
                     'threads': e[2],
                     'event types': e[7] if(e[3]=='NA' or np.isnan(e[3])) else e[3],
-                    'name': 'NA' if(e[4]=='NA' or np.isnan(e[4])) else self.func_dict[int(e[4])],# dictionary
+                    'name': 'NA' if(e[4]=='NA' or np.isnan(e[4])) else self.func_dict[str(int(e[4]))],# dictionary
                     'counters': e[5],
                     'counter value': e[6],
                     'Tag': e[8],
@@ -482,4 +482,4 @@ class Data(object):
 
     def set_statistics(self, stat):
         with self.lock:
-            self.stat = stat
+            self.stat.update(stat)

@@ -38,6 +38,8 @@ def receive_events():
         data.add_events(request.json['value'])
     elif request.json['type'] == 'info':
         d = request.json['value']
+        data.set_event_types(d['event_types'])
+        data.set_functions(d['functions'])
         data.set_FOI(d['foi'])
         data.set_labels(d['labels'])
         data.add_events(d['events'])
@@ -76,7 +78,6 @@ def set_sampling_rate():
 
 @web_app.route('/executions', methods=['POST'])
 def receive_executions():
-    data.set_FOI(request.json['foi'])
     data.set_statistics(request.json['stat'])
     data.add_executions(request.json['executions'])
     return jsonify({'received': len(request.json['executions'])})

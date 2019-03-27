@@ -280,7 +280,8 @@ class Data(object):
                 if str(child_id) in self.executions:
                     child_id = str(child_id)
                 else:
-                    print("child not in executions", pexecution)
+                    print("child not in executions") # pexecution
+                    continue
             child_node = self.executions[child_id]
             ctid = len(this_tree['nodes'])
             if not "messages" in child_node:

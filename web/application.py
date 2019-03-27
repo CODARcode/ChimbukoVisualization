@@ -21,7 +21,7 @@ def get_tree():
             return jsonify(data.forest[tindex])
         else:
             eindex = request.json['eid']
-            if data.executions[eindex] is not None: # first request
+            if eindex in data.executions: # first request
                 return jsonify(data.generate_tree_by_eid(tindex, eindex))
 
 @web_app.route('/events', methods=['POST'])

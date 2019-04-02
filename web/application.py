@@ -75,11 +75,9 @@ def set_sampling_rate():
         print("set sampling_rate #{}".format(data.sampling_rate))
         return jsonify({'srate': data.sampling_rate})
 
-
 @web_app.route('/executions', methods=['POST'])
 def receive_executions():
-    data.set_statistics(request.json['stat'])
-    data.add_executions(request.json['executions'])
+    data.add_frame(request.json)
     return jsonify({'received': len(request.json['executions'])})
 
 

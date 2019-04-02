@@ -3,6 +3,7 @@ import time
 import random
 import numpy as np
 from threading import Lock
+from utils.FrameManager import FrameManager
 
 class Data(object):
     
@@ -43,6 +44,8 @@ class Data(object):
         self.stat = {}
         self.anomaly_cnt = 0
         self.filecnt = -1
+        self.frame_manager = FrameManager(self.process_frame) # MAX_BUFFER_SIZE
+
         # entry - entry time
         # value - execution time
         # comm ranks
@@ -495,3 +498,11 @@ class Data(object):
                     func_stat['ratio'] = temp['ratio'] if temp['ratio']>func_stat['ratio'] else func_stat['ratio']
                 else:
                     self.stat[func] = temp
+
+    def add_frame(self, frame):
+        self.frame_manager.enqueue(frame)
+
+    def process_frame(self, frame):
+        self.set_statistics(frame['stat'])
+        self.add_executions(frame['executions'])
+

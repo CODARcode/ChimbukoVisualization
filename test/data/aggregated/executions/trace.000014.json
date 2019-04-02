@@ -1,0 +1,1012 @@
+{
+    "executions": {
+        "3869735.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869737.0"
+            ],
+            "comm ranks": 0,
+            "entry": "1553621922039790",
+            "exit": "1553621922222076",
+            "findex": "3869735.0",
+            "messages": [],
+            "name": "void ga_dgop_(Integer *, DoublePrecision *, Integer *, char *, int) C [{fapi.c} {1645,1}-{1648,1}]",
+            "parent": "3867412.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869736.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869738.0"
+            ],
+            "comm ranks": 3,
+            "entry": "1553621922039792",
+            "exit": "1553621922222071",
+            "findex": "3869736.0",
+            "messages": [],
+            "name": "void ga_dgop_(Integer *, DoublePrecision *, Integer *, char *, int) C [{fapi.c} {1645,1}-{1648,1}]",
+            "parent": "3867385.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869737.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869739.0"
+            ],
+            "comm ranks": 0,
+            "entry": "1553621922039795",
+            "exit": "1553621922222070",
+            "findex": "3869737.0",
+            "messages": [],
+            "name": "void pnga_gop(Integer, void *, Integer, char *) C [{collect.c} {223,1}-{285,1}]",
+            "parent": "3869735.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869738.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869741.0"
+            ],
+            "comm ranks": 3,
+            "entry": "1553621922039797",
+            "exit": "1553621922222067",
+            "findex": "3869738.0",
+            "messages": [],
+            "name": "void pnga_gop(Integer, void *, Integer, char *) C [{collect.c} {223,1}-{285,1}]",
+            "parent": "3869736.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869739.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869742.0"
+            ],
+            "comm ranks": 0,
+            "entry": "1553621922039798",
+            "exit": "1553621922222064",
+            "findex": "3869739.0",
+            "messages": [],
+            "name": "void armci_msg_dgop(double *, int, char *) C [{message.c} {490,1}-{493,1}]",
+            "parent": "3869737.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869740.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869743.0"
+            ],
+            "comm ranks": 2,
+            "entry": "1553621922039798",
+            "exit": "1553621922222069",
+            "findex": "3869740.0",
+            "messages": [],
+            "name": "void ga_dgop_(Integer *, DoublePrecision *, Integer *, char *, int) C [{fapi.c} {1645,1}-{1648,1}]",
+            "parent": "3867386.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869741.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869744.0"
+            ],
+            "comm ranks": 3,
+            "entry": "1553621922039800",
+            "exit": "1553621922222062",
+            "findex": "3869741.0",
+            "messages": [],
+            "name": "void armci_msg_dgop(double *, int, char *) C [{message.c} {490,1}-{493,1}]",
+            "parent": "3869738.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869742.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869745.0"
+            ],
+            "comm ranks": 0,
+            "entry": "1553621922039801",
+            "exit": "1553621922222058",
+            "findex": "3869742.0",
+            "messages": [],
+            "name": "void do_gop(void *, int, char *, int, ARMCI_Group) C [{message.c} {174,1}-{211,1}]",
+            "parent": "3869739.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869743.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869746.0"
+            ],
+            "comm ranks": 2,
+            "entry": "1553621922039803",
+            "exit": "1553621922222065",
+            "findex": "3869743.0",
+            "messages": [],
+            "name": "void pnga_gop(Integer, void *, Integer, char *) C [{collect.c} {223,1}-{285,1}]",
+            "parent": "3869740.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869744.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869747.0"
+            ],
+            "comm ranks": 3,
+            "entry": "1553621922039803",
+            "exit": "1553621922222058",
+            "findex": "3869744.0",
+            "messages": [],
+            "name": "void do_gop(void *, int, char *, int, ARMCI_Group) C [{message.c} {174,1}-{211,1}]",
+            "parent": "3869741.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869745.0": {
+            "anomaly_score": "-1",
+            "children": [],
+            "comm ranks": 0,
+            "entry": "1553621922039806",
+            "exit": "1553621922222026",
+            "findex": "3869745.0",
+            "messages": [
+                {
+                    "destination-node-id": 1,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922039816"
+                },
+                {
+                    "destination-node-id": 2,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922039823"
+                },
+                {
+                    "destination-node-id": 3,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922039829"
+                },
+                {
+                    "destination-node-id": 0,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922039839"
+                },
+                {
+                    "destination-node-id": 0,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922039846"
+                },
+                {
+                    "destination-node-id": 0,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922221928"
+                },
+                {
+                    "destination-node-id": 0,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922221961"
+                },
+                {
+                    "destination-node-id": 0,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922221971"
+                },
+                {
+                    "destination-node-id": 0,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922221981"
+                },
+                {
+                    "destination-node-id": 3,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922221992"
+                },
+                {
+                    "destination-node-id": 2,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922222003"
+                },
+                {
+                    "destination-node-id": 1,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922222012"
+                }
+            ],
+            "name": "int comex_barrier(comex_group_t) C [{comex.c} {1131,1}-{1327,1}]",
+            "parent": "3869742.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869746.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869748.0"
+            ],
+            "comm ranks": 2,
+            "entry": "1553621922039806",
+            "exit": "1553621922222060",
+            "findex": "3869746.0",
+            "messages": [],
+            "name": "void armci_msg_dgop(double *, int, char *) C [{message.c} {490,1}-{493,1}]",
+            "parent": "3869743.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869747.0": {
+            "anomaly_score": "-1",
+            "children": [],
+            "comm ranks": 3,
+            "entry": "1553621922039808",
+            "exit": "1553621922222024",
+            "findex": "3869747.0",
+            "messages": [
+                {
+                    "destination-node-id": 0,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922039818"
+                },
+                {
+                    "destination-node-id": 1,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922039825"
+                },
+                {
+                    "destination-node-id": 2,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922039831"
+                },
+                {
+                    "destination-node-id": 3,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922039841"
+                },
+                {
+                    "destination-node-id": 3,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922039849"
+                },
+                {
+                    "destination-node-id": 3,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922212676"
+                },
+                {
+                    "destination-node-id": 3,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922212720"
+                },
+                {
+                    "destination-node-id": 3,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922212731"
+                },
+                {
+                    "destination-node-id": 0,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922212746"
+                },
+                {
+                    "destination-node-id": 2,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922212758"
+                },
+                {
+                    "destination-node-id": 1,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922212769"
+                },
+                {
+                    "destination-node-id": 3,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922222015"
+                }
+            ],
+            "name": "int comex_barrier(comex_group_t) C [{comex.c} {1131,1}-{1327,1}]",
+            "parent": "3869744.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869748.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "3869749.0"
+            ],
+            "comm ranks": 2,
+            "entry": "1553621922039810",
+            "exit": "1553621922222056",
+            "findex": "3869748.0",
+            "messages": [],
+            "name": "void do_gop(void *, int, char *, int, ARMCI_Group) C [{message.c} {174,1}-{211,1}]",
+            "parent": "3869746.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "3869749.0": {
+            "anomaly_score": "-1",
+            "children": [],
+            "comm ranks": 2,
+            "entry": "1553621922039814",
+            "exit": "1553621922222027",
+            "findex": "3869749.0",
+            "messages": [
+                {
+                    "destination-node-id": 3,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922039824"
+                },
+                {
+                    "destination-node-id": 0,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922039831"
+                },
+                {
+                    "destination-node-id": 1,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922039838"
+                },
+                {
+                    "destination-node-id": 2,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922039848"
+                },
+                {
+                    "destination-node-id": 2,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922039855"
+                },
+                {
+                    "destination-node-id": 2,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922181642"
+                },
+                {
+                    "destination-node-id": 2,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922181659"
+                },
+                {
+                    "destination-node-id": 3,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922181668"
+                },
+                {
+                    "destination-node-id": 0,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922181677"
+                },
+                {
+                    "destination-node-id": 1,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922181684"
+                },
+                {
+                    "destination-node-id": 2,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922212778"
+                },
+                {
+                    "destination-node-id": 2,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922222020"
+                }
+            ],
+            "name": "int comex_barrier(comex_group_t) C [{comex.c} {1131,1}-{1327,1}]",
+            "parent": "3869748.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4041606.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "4041607.0"
+            ],
+            "comm ranks": 1,
+            "entry": "1553621922138935",
+            "exit": "1553621922222072",
+            "findex": "4041606.0",
+            "messages": [],
+            "name": "void ga_dgop_(Integer *, DoublePrecision *, Integer *, char *, int) C [{fapi.c} {1645,1}-{1648,1}]",
+            "parent": "3867387.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4041607.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "4041608.0"
+            ],
+            "comm ranks": 1,
+            "entry": "1553621922143063",
+            "exit": "1553621922222067",
+            "findex": "4041607.0",
+            "messages": [],
+            "name": "void pnga_gop(Integer, void *, Integer, char *) C [{collect.c} {223,1}-{285,1}]",
+            "parent": "4041606.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4041608.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "4041609.0"
+            ],
+            "comm ranks": 1,
+            "entry": "1553621922143072",
+            "exit": "1553621922222062",
+            "findex": "4041608.0",
+            "messages": [],
+            "name": "void armci_msg_dgop(double *, int, char *) C [{message.c} {490,1}-{493,1}]",
+            "parent": "4041607.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4041609.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "4041610.0"
+            ],
+            "comm ranks": 1,
+            "entry": "1553621922143079",
+            "exit": "1553621922222057",
+            "findex": "4041609.0",
+            "messages": [],
+            "name": "void do_gop(void *, int, char *, int, ARMCI_Group) C [{message.c} {174,1}-{211,1}]",
+            "parent": "4041608.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4041610.0": {
+            "anomaly_score": "-1",
+            "children": [],
+            "comm ranks": 1,
+            "entry": "1553621922143092",
+            "exit": "1553621922222039",
+            "findex": "4041610.0",
+            "messages": [
+                {
+                    "destination-node-id": 2,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922143123"
+                },
+                {
+                    "destination-node-id": 3,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922143139"
+                },
+                {
+                    "destination-node-id": 0,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922143152"
+                },
+                {
+                    "destination-node-id": 1,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922143191"
+                },
+                {
+                    "destination-node-id": 1,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922143204"
+                },
+                {
+                    "destination-node-id": 1,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922143217"
+                },
+                {
+                    "destination-node-id": 3,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922143230"
+                },
+                {
+                    "destination-node-id": 0,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922143242"
+                },
+                {
+                    "destination-node-id": 2,
+                    "event-type": "send",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 1,
+                    "thread-id": 0,
+                    "time": "1553621922143253"
+                },
+                {
+                    "destination-node-id": 1,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 2,
+                    "thread-id": 0,
+                    "time": "1553621922181715"
+                },
+                {
+                    "destination-node-id": 1,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 3,
+                    "thread-id": 0,
+                    "time": "1553621922212802"
+                },
+                {
+                    "destination-node-id": 1,
+                    "event-type": "receive",
+                    "message_size": "40",
+                    "message_tag": "27624",
+                    "source-node-id": 0,
+                    "thread-id": 0,
+                    "time": "1553621922222031"
+                }
+            ],
+            "name": "int comex_barrier(comex_group_t) C [{comex.c} {1131,1}-{1327,1}]",
+            "parent": "4041609.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4132183.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "4132187.0",
+                "4132230.0",
+                "4132235.0"
+            ],
+            "comm ranks": 0,
+            "entry": "1553621922773606",
+            "exit": "1553621922775128",
+            "findex": "4132183.0",
+            "messages": [],
+            "name": "SP_BALANC [{sp_main.F} {3476,7}-{3531,9}]",
+            "parent": "4132142.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4132184.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "4132188.0",
+                "4132227.0",
+                "4132238.0"
+            ],
+            "comm ranks": 3,
+            "entry": "1553621922773606",
+            "exit": "1553621922775127",
+            "findex": "4132184.0",
+            "messages": [],
+            "name": "SP_BALANC [{sp_main.F} {3476,7}-{3531,9}]",
+            "parent": "4132115.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4132185.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "4132189.0",
+                "4132228.0",
+                "4132236.0"
+            ],
+            "comm ranks": 1,
+            "entry": "1553621922773607",
+            "exit": "1553621922775129",
+            "findex": "4132185.0",
+            "messages": [],
+            "name": "SP_BALANC [{sp_main.F} {3476,7}-{3531,9}]",
+            "parent": "4132116.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4132186.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "4132190.0",
+                "4132229.0",
+                "4132237.0"
+            ],
+            "comm ranks": 2,
+            "entry": "1553621922773608",
+            "exit": "1553621922775159",
+            "findex": "4132186.0",
+            "messages": [],
+            "name": "SP_BALANC [{sp_main.F} {3476,7}-{3531,9}]",
+            "parent": "4132118.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4191919.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "4191920.0"
+            ],
+            "comm ranks": 3,
+            "entry": "1553621923118031",
+            "exit": "1553621923119467",
+            "findex": "4191919.0",
+            "messages": [],
+            "name": "CF_CENMAS [{cf_main.F} {134,7}-{150,9}]",
+            "parent": "4191377.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4191920.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "4191921.0"
+            ],
+            "comm ranks": 3,
+            "entry": "1553621923118035",
+            "exit": "1553621923119464",
+            "findex": "4191920.0",
+            "messages": [],
+            "name": "CF_COMS [{cf_main.F} {197,7}-{212,9}]",
+            "parent": "4191919.0",
+            "prog names": "0",
+            "threads": 0
+        },
+        "4191921.0": {
+            "anomaly_score": "-1",
+            "children": [
+                "4191922.0"
+            ],
+            "comm ranks": 3,
+            "entry": "1553621923118038",
+            "exit": "1553621923119461",
+            "findex": "4191921.0",
+            "messages": [],
+            "name": "CF_CMS [{cf_main.F} {213,7}-{287,9}]",
+            "parent": "4191920.0",
+            "prog names": "0",
+            "threads": 0
+        }
+    },
+    "stat": {
+        "CF_CENMAS [{cf_main.F} {134,7}-{150,9}]": {
+            "abnormal": 46,
+            "ratio": 0.00046972116126507756,
+            "regular": 9792998.0
+        },
+        "CF_CMS [{cf_main.F} {213,7}-{287,9}]": {
+            "abnormal": 47,
+            "ratio": 0.0004799324908577966,
+            "regular": 9792997.0
+        },
+        "CF_COMS [{cf_main.F} {197,7}-{212,9}]": {
+            "abnormal": 46,
+            "ratio": 0.00046972116126507756,
+            "regular": 9792998.0
+        },
+        "Integer pnga_get_pgroup(Integer) C [{base.c} {1498,1}-{1502,1}]": {
+            "abnormal": 43,
+            "ratio": 0.0006586339869841671,
+            "regular": 6528621.0
+        },
+        "MD_FCLASS [{md_main.F} {2379,7}-{2552,9}]": {
+            "abnormal": 3,
+            "ratio": 9.228088825891803e-05,
+            "regular": 3250941.0
+        },
+        "MD_FINIT [{md_main.F} {2141,7}-{2245,9}]": {
+            "abnormal": 8,
+            "ratio": 0.00024507341174048687,
+            "regular": 3264320.0
+        },
+        "MD_FORCES [{md_main.F} {2246,7}-{2309,9}]": {
+            "abnormal": 12,
+            "ratio": 0.0003713238934547975,
+            "regular": 3231668.0
+        },
+        "MD_NEWTON [{md_main.F} {1673,7}-{2030,9}]": {
+            "abnormal": 20,
+            "ratio": 0.0006188923065497373,
+            "regular": 3231560.0
+        },
+        "SP_BALANC [{sp_main.F} {3476,7}-{3531,9}]": {
+            "abnormal": 44,
+            "ratio": 0.0013479021128978304,
+            "regular": 3264288.0
+        },
+        "SP_GETXBL [{sp_main.F} {2815,7}-{2839,9}]": {
+            "abnormal": 4,
+            "ratio": 4.913695846158079e-05,
+            "regular": 8140508.0
+        },
+        "SP_GTXPBL [{sp_main.F} {2899,7}-{3068,9}]": {
+            "abnormal": 4,
+            "ratio": 4.913695846158079e-05,
+            "regular": 8140508.0
+        },
+        "SP_TRAVEL [{sp_main.F} {1050,7}-{1108,9}]": {
+            "abnormal": 4,
+            "ratio": 0.00012131873464559764,
+            "regular": 3297096.0
+        },
+        "int ARMCI_NbGetS(void *, int *, void *, int *, int *, int, int, armci_hdl_t *) C [{capi.c} {285,1}-{288,1}]": {
+            "abnormal": 30,
+            "ratio": 5.148889758631719e-05,
+            "regular": 58264958.0
+        },
+        "int PARMCI_NbGetS(void *, int *, void *, int *, int *, int, int, armci_hdl_t *) C [{armci.c} {390,1}-{405,1}]": {
+            "abnormal": 30,
+            "ratio": 5.148889758631719e-05,
+            "regular": 58264958.0
+        },
+        "int comex_barrier(comex_group_t) C [{comex.c} {1131,1}-{1327,1}]": {
+            "abnormal": 67,
+            "ratio": 5.2694817695907615e-05,
+            "regular": 127147161.0
+        },
+        "int comex_gets(void *, int *, void *, int *, int *, int, int, comex_group_t) C [{comex.c} {845,1}-{917,1}]": {
+            "abnormal": 29,
+            "ratio": 4.977260100010661e-05,
+            "regular": 58264959.0
+        },
+        "int comex_nbgets(void *, int *, void *, int *, int *, int, int, comex_group_t, comex_request_t *) C [{comex.c} {1542,1}-{1553,1}]": {
+            "abnormal": 30,
+            "ratio": 5.148889758631719e-05,
+            "regular": 58264958.0
+        },
+        "void armci_msg_barrier() C [{capi.c} {510,1}-{513,1}]": {
+            "abnormal": 31,
+            "ratio": 6.62328401393915e-05,
+            "regular": 46804545.0
+        },
+        "void armci_msg_dgop(double *, int, char *) C [{message.c} {490,1}-{493,1}]": {
+            "abnormal": 65,
+            "ratio": 0.00014315162620247366,
+            "regular": 45406335.0
+        },
+        "void armci_msg_lgop(long *, int, char *) C [{message.c} {472,1}-{475,1}]": {
+            "abnormal": 4,
+            "ratio": 2.3259659911208576e-05,
+            "regular": 17197152.0
+        },
+        "void do_gop(void *, int, char *, int, ARMCI_Group) C [{message.c} {174,1}-{211,1}]": {
+            "abnormal": 26,
+            "ratio": 4.153118714214892e-05,
+            "regular": 62603530.0
+        },
+        "void ga_dgop_(Integer *, DoublePrecision *, Integer *, char *, int) C [{fapi.c} {1645,1}-{1648,1}]": {
+            "abnormal": 65,
+            "ratio": 0.00014315162620247366,
+            "regular": 45406335.0
+        },
+        "void ga_get_(Integer *, Integer *, Integer *, Integer *, Integer *, void *, Integer *) C [{fapi.c} {1159,1}-{1168,1}]": {
+            "abnormal": 25,
+            "ratio": 4.290741465526432e-05,
+            "regular": 58264963.0
+        },
+        "void ga_igop_(Integer *, Integer *, Integer *, char *, int) C [{fapi.c} {1625,1}-{1628,1}]": {
+            "abnormal": 4,
+            "ratio": 2.3897140969951497e-05,
+            "regular": 16738400.0
+        },
+        "void ga_sync_() C [{fapi.c} {1418,1}-{1421,1}]": {
+            "abnormal": 29,
+            "ratio": 8.772161201590072e-05,
+            "regular": 33059099.0
+        },
+        "void ngai_get_common(Integer, Integer *, Integer *, void *, Integer *, Integer, Integer, Integer *) C [{onesided.c} {1297,1}-{1815,1}]": {
+            "abnormal": 24,
+            "ratio": 4.119111806905375e-05,
+            "regular": 58264964.0
+        },
+        "void ngai_gets(char *, char *, int *, char *, int *, int *, int, int, int, int, int) C [{onesided.c} {521,1}-{557,1}]": {
+            "abnormal": 23,
+            "ratio": 3.947482148284318e-05,
+            "regular": 58264965.0
+        },
+        "void ngai_nbgets(char *, char *, int *, char *, int *, int *, int, int, int, int, int, armci_hdl_t *) C [{onesided.c} {470,1}-{519,1}]": {
+            "abnormal": 30,
+            "ratio": 5.148889758631719e-05,
+            "regular": 58264958.0
+        },
+        "void parmci_msg_barrier() C [{message.c} {504,1}-{508,1}]": {
+            "abnormal": 31,
+            "ratio": 6.62328401393915e-05,
+            "regular": 46804545.0
+        },
+        "void pnga_get(Integer, Integer *, Integer *, void *, Integer *) C [{onesided.c} {1824,1}-{1828,1}]": {
+            "abnormal": 24,
+            "ratio": 4.119111806905375e-05,
+            "regular": 58264964.0
+        },
+        "void pnga_gop(Integer, void *, Integer, char *) C [{collect.c} {223,1}-{285,1}]": {
+            "abnormal": 26,
+            "ratio": 4.153118714214892e-05,
+            "regular": 62603530.0
+        },
+        "void pnga_msg_sync() C [{collect.c} {141,1}-{152,1}]": {
+            "abnormal": 28,
+            "ratio": 8.469672884293863e-05,
+            "regular": 33059100.0
+        },
+        "void pnga_sync() C [{onesided.c} {144,1}-{162,1}]": {
+            "abnormal": 29,
+            "ratio": 8.772161201590072e-05,
+            "regular": 33059099.0
+        }
+    }
+}

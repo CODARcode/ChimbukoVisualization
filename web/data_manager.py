@@ -50,7 +50,11 @@ class Data(object):
 
     def set_functions(self, functions):# set function dictionary
         with self.lock:
-            self.func_dict = functions
+            if type(functions) == list: # make sure if functions is given as dict
+                for i in range(len(functions)):
+                    self.func_dict[str(i)] = functions[i]
+            else:
+                self.func_dict = functions
 
     def set_FOI(self, functions):
         with self.lock:

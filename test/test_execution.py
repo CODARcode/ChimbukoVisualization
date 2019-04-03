@@ -1,12 +1,12 @@
 import sys
-sys.path.insert(0,'../web/')
+sys.path.insert(0, '../')
 
 import time
 import json
 import glob
-import data_manager as dm
 import unittest
 import threading
+from web import data_manager as dm
 
 NUM_RANK = 8
 DATA_PATH_AGGR = "./data/aggregated/executions/" 

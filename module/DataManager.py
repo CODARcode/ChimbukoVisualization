@@ -3,9 +3,9 @@ import time
 import random
 import numpy as np
 from threading import Lock
-from utils.FrameManager import FrameManager
+from module.BufferManager import BufferManager
 
-class Data(object):
+class DataManager(object):
     
     def __init__(self):
         self.events = {} # store the event list by the rank ID {0:[...],1:[...],2:[...] ...}
@@ -14,26 +14,26 @@ class Data(object):
         self.pos = [] # the positions of the call stak tree in the scatter plot
         self.labels = [] # the passed labels of the lineid of functions
         self.forest_labels = [] # the learned label, for now I simulated
-        self.prog = []; # the program names of the tree in scatter plot
-        self.tidx = [];
-        self.eidx = [];
-        self.func_names = []; # the function name of interest in scatter plot
+        self.prog = [] # the program names of the tree in scatter plot
+        self.tidx = []
+        self.eidx = []
+        self.func_names = [] # the function name of interest in scatter plot
         self.func_dict = {} # all the names of the functions
         self.foi = [] # function of interest
         self.event_types = {} # set the indices indicating event types in the event list
         self.changed = False # if there are new data come in
         self.lineid2treeid = {} # indicates which line in events stream is which function
         # self.line_num = 0 # number of events from the very beggining of streaming
-        self.initial_timestamp = -1;
-        self.msgs = []; # debug only for messages
-        self.func_idx = 0; # global function index for each entry function
-        self.stacks = {}; # one stack for one program under the same rankId
+        self.initial_timestamp = -1
+        self.msgs = [] # debug only for messages
+        self.func_idx = 0 # global function index for each entry function
+        self.stacks = {} # one stack for one program under the same rankId
         self.idx_holder = {
             "fidx": [],
             "tidx": 0,
             "eidx": 0
-        };
-        self.sampling_rate = 1;
+        }
+        self.sampling_rate = 1
         self.sampling_strategy = ["uniform"]
         self.layout = ["entry", "value", "comm ranks", "exit"] # feild no.1, 2, ..
         self.log = []
@@ -44,7 +44,7 @@ class Data(object):
         self.stat = {}
         self.anomaly_cnt = 0
         self.filecnt = -1
-        self.frame_manager = FrameManager(self.process_frame) # MAX_BUFFER_SIZE
+        self.buffer_manager = BufferManager(self.process_frame) # MAX_BUFFER_SIZE
 
         # entry - entry time
         # value - execution time
@@ -158,13 +158,13 @@ class Data(object):
             self.clean_count = 0
             self.window_start = 0
             self.anomaly_cnt = 0
-            self.initial_timestamp = -1;
+            self.initial_timestamp = -1
             self.idx_holder = {
                 "fidx": [],
                 "tidx": 0,
                 "eidx": 0
-            };
-            self.stat = {};
+            }
+            self.stat = {}
             self.events.clear()
             self.executions.clear()
             self.forest.clear()
@@ -200,7 +200,7 @@ class Data(object):
         #print("for rank: ", rankId)
         events = self.events[rankId]
         #function_index = len(self.executions)
-        # stacks = {}; #one stack for one program under the same rankId
+        # stacks = {} #one stack for one program under the same rankId
         # for i, obj in enumerate(events):
         for obj in events: 
             self.idx_holder[rankId] += 1
@@ -499,8 +499,8 @@ class Data(object):
                 else:
                     self.stat[func] = temp
 
-    def add_frame(self, frame):
-        self.frame_manager.enqueue(frame)
+    def add_to_buffer(self, frame):
+        self.buffer_manager.add(frame)
 
     def process_frame(self, frame):
         self.set_statistics(frame['stat'])

@@ -5,7 +5,7 @@ import time
 import json
 import glob
 import unittest
-from web import data_manager as dm
+from module.DataManager import DataManager
 
 test_data = "./data/aggregated/events/" 
 
@@ -26,7 +26,7 @@ class TestEvent(unittest.TestCase):
         """
         Check if events trace data is correctly parsed.
         """
-        d = dm.Data()
+        d = DataManager()
         self.prep_data(d);
 
         event_list = glob.glob(test_data+"trace.*.json")
@@ -54,7 +54,7 @@ class TestEvent(unittest.TestCase):
         """
         Check if anomalies are correctly parsed.
         """
-        d = dm.Data()
+        d = DataManager()
         self.prep_data(d);
 
         event_list = glob.glob(test_data+"trace.*.json")

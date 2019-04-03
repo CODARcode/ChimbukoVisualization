@@ -1,11 +1,11 @@
 import sys
-sys.path.insert(0,'../web/')
+sys.path.insert(0, '../')
 
 import time
 import json
 import glob
 import unittest
-import data_manager as dm
+from web import data_manager as dm
 
 test_data = "./data/aggregated/events/" 
 

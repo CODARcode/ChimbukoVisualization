@@ -39,6 +39,7 @@ class Data {
                 latest_time = Math.max(latest_time, d[3]);// according to server, 3 is exit time
                 me.data.push({
                     "id": _json['tidx'][i],
+                    "eid": _json['eidx'][i],
                     "weight": 1,
                     "pos": d,
                     "anomaly_score": _json['labels'][i],
@@ -102,7 +103,8 @@ class Data {
             options.callback = callback;
             me.fetchWithCallback({
                 'data': 'tree',
-                'value': options.id
+                'value': options.id,
+                'eid': options.eid
             }, me._saveTree.bind(me), options);
         }
     }
@@ -126,7 +128,10 @@ class Data {
         var me = this;
         this.selectedIds = indices;// now use the first, will update to the center
         if(this.selectedIds.length>0){
-            me._getTree(me.views.selected.bind(me), {'id':me.selectedIds[0]});
+            me._getTree(me.views.selected.bind(me), {
+                'id':me.selectedIds[0],
+                'eid': me.selectedIds[1]
+            });
         }
     }
 

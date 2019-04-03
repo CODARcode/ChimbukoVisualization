@@ -3,6 +3,7 @@ import time
 import random
 import numpy as np
 from threading import Lock
+from utils.FrameManager import FrameManager
 
 class Data(object):
     
@@ -15,8 +16,9 @@ class Data(object):
         self.forest_labels = [] # the learned label, for now I simulated
         self.prog = []; # the program names of the tree in scatter plot
         self.tidx = [];
+        self.eidx = [];
         self.func_names = []; # the function name of interest in scatter plot
-        self.func_dict = [] # all the names of the functions
+        self.func_dict = {} # all the names of the functions
         self.foi = [] # function of interest
         self.event_types = {} # set the indices indicating event types in the event list
         self.changed = False # if there are new data come in
@@ -28,7 +30,8 @@ class Data(object):
         self.stacks = {}; # one stack for one program under the same rankId
         self.idx_holder = {
             "fidx": [],
-            "tidx": 0
+            "tidx": 0,
+            "eidx": 0
         };
         self.sampling_rate = 1;
         self.sampling_strategy = ["uniform"]
@@ -40,13 +43,21 @@ class Data(object):
         self.clean_count = 0
         self.stat = {}
         self.anomaly_cnt = 0
+        self.filecnt = -1
+        self.frame_manager = FrameManager(self.process_frame) # MAX_BUFFER_SIZE
+
         # entry - entry time
         # value - execution time
         # comm ranks
         # exit - exit time
 
     def set_functions(self, functions):# set function dictionary
-        self.func_dict = functions
+        with self.lock:
+            if type(functions) == list: # make sure if functions is given as dict
+                for i in range(len(functions)):
+                    self.func_dict[str(i)] = functions[i]
+            else:
+                self.func_dict = functions
 
     def set_FOI(self, functions):
         with self.lock:
@@ -54,8 +65,9 @@ class Data(object):
             #self.changed = True
 
     def set_event_types(self, types):
-        for i, e in enumerate(types):
-            self.event_types[e] = i
+        with self.lock:
+            for i, e in enumerate(types):
+                self.event_types[e] = i
 
     def set_labels(self, labels):
         with self.lock:
@@ -77,7 +89,7 @@ class Data(object):
                     'comm ranks': e[1],
                     'threads': e[2],
                     'event types': e[7] if(e[3]=='NA' or np.isnan(e[3])) else e[3],
-                    'name': 'NA' if(e[4]=='NA' or np.isnan(e[4])) else self.func_dict[int(e[4])],# dictionary
+                    'name': 'NA' if(e[4]=='NA' or np.isnan(e[4])) else self.func_dict[str(int(e[4]))],# dictionary
                     'counters': e[5],
                     'counter value': e[6],
                     'Tag': e[8],
@@ -100,24 +112,24 @@ class Data(object):
                 #if obj['lineid'] in self.labels:
                 #    print(obj['lineid'], ": ", e)
 
-                if obj['event types'] == self.event_types['EXIT']:
+                if obj['event types'] == self.event_types['ENTRY']:
                     fname = obj["name"]
                     if not fname in self.stat:
                         self.stat[fname] = {
-                            'anomal': 0,
-                            'normal': 0,
-                            'percent': 0
+                            'abnormal': 0,
+                            'regular': 0,
+                            'ratio': 0
                         }
                     s = self.stat[fname]
                     if str(int(obj["lineid"])) in self.labels:
                         self.anomaly_cnt += 1
                         obj['anomaly_score'] = -1
-                        s['anomal'] = s['anomal'] + 1
+                        s['abnormal'] = s['abnormal'] + 1
                     else:
                         obj['anomaly_score'] = 1
-                        s['normal'] = s['normal'] + 1
-                    if s['normal']>0 or s['anomal']>0:
-                        s['percent'] = (s['anomal']/(s['normal']+s['anomal']))*100 
+                        s['regular'] = s['regular'] + 1
+                    if s['regular']>0 or s['abnormal']>0:
+                        s['ratio'] = (s['abnormal']/(s['regular']+s['abnormal']))*100 
 
             print('processed', self.anomaly_cnt, 'anomalies.')
             #self.changed = True
@@ -149,7 +161,8 @@ class Data(object):
             self.initial_timestamp = -1;
             self.idx_holder = {
                 "fidx": [],
-                "tidx": 0
+                "tidx": 0,
+                "eidx": 0
             };
             self.stat = {};
             self.events.clear()
@@ -162,6 +175,8 @@ class Data(object):
             self.stacks.clear()
             self.log.clear()
             self.changed = False
+            self.eidx = []
+            self.tidx = []
 
     def _events2executions(self):
         #print("event 2 executions...")
@@ -211,7 +226,7 @@ class Data(object):
                 func['threads'] = obj['threads']
                 func['lineid'] = obj['lineid']
                 func['findex'] = self.func_idx #function_index
-                
+                func['anomaly_score'] = obj['anomaly_score']
                 #print(func['name'], func['findex'])
                 if len(stack) > 0:
                     func['parent'] = stack[-1]['findex']
@@ -225,7 +240,7 @@ class Data(object):
                 stack.append(func)
             elif obj['event types'] == self.event_types['EXIT']: #'exit'
                 if len(stack) > 0 and obj['name']:
-                    stack[-1]['anomaly_score'] = obj['anomaly_score']
+                    # stack[-1]['anomaly_score'] = obj['anomaly_score']
                     stack[-1]['exit'] = obj['timestamp']
                     #self.executions.append(stack[-1])
                     self.executions[stack[-1]['findex']] = stack[-1]
@@ -269,7 +284,11 @@ class Data(object):
         pnode['hide'] = False if pexecution['anomaly_score'] == -1 else True
         for child_id in pexecution['children']:
             if not child_id in self.executions:
-                print("child not in executions", pexecution)
+                if str(child_id) in self.executions:
+                    child_id = str(child_id)
+                else:
+                    print("child not in executions") # pexecution
+                    continue
             child_node = self.executions[child_id]
             ctid = len(this_tree['nodes'])
             if not "messages" in child_node:
@@ -296,6 +315,39 @@ class Data(object):
         this_tree = self.forest[treeid]
         execution = self.executions[this_tree['eid']]
         self.generate_tree_recursive(this_tree, execution, 0)
+
+    def generate_tree_by_eid(self, tid, eid):
+        execution = self.executions[eid]
+        this_tree = self.create_tree_by_execution(tid, execution)
+        self.generate_tree_recursive(this_tree, execution, 0)
+        return this_tree
+
+    def create_tree_by_execution(self, tid, execution):
+        if not "messages" in execution:
+            execution["messages"] = []
+        return {
+            "id": tid,
+            "eid": execution['findex'],
+            "prog_name": execution["prog names"],
+            "node_index": execution["comm ranks"],
+            "threads": execution["threads"],
+            "graph_index": execution['findex'],
+            "nodes": [{ # root of the tree
+                    "name": execution['name'], # self.foi,
+                    "id": 0, # parent
+                    "comm ranks": execution["comm ranks"],
+                    "prog_name": execution["prog names"],
+                    "threads": execution["threads"],
+                    "findex": execution["findex"],
+                    "value": (execution["exit"] - execution["entry"]),
+                    "messages": execution["messages"],
+                    "entry": execution["entry"],
+                    "exit": execution["exit"],
+                    "anomaly_score": execution["anomaly_score"]
+                }],
+            "edges": [],
+            "anomaly_score": execution['anomaly_score']
+        }
 
     def _exections2forest(self):
         # get tree based on foi
@@ -343,6 +395,7 @@ class Data(object):
         with self.lock:
             self._events2executions()
             self.remove_old_data()
+            # self.write_file()
             self._exections2forest()
 
             # the scatterplot positions of the forest
@@ -372,5 +425,84 @@ class Data(object):
         self.func_names = []
         self.forest_labels = []
         self.tidx = []
+        self.eidx = []
         print("reset forest data")
         self.changed = False
+        
+
+    def write_file(self):
+        self.filecnt += 1
+        execs = {}
+        for fidx in self.idx_holder['fidx']:
+            execs[fidx] = self.executions[fidx]
+
+        j = json.dumps(execs)
+        f = open('execution.'+str(self.filecnt)+'.json','w')
+        f.write(j)
+        f.close()
+
+        j = json.dumps(self.stat)
+        f = open('stat.'+str(self.filecnt)+'.json','w')
+        f.write(j)
+        f.close()
+
+    def add_executions(self, executions):
+        with self.lock:
+            _executions = self.calculate_layout(executions)
+            self.executions.update(_executions)
+            self.remove_old_data()
+
+    def calculate_layout(self, executions):
+        new_executions = {}
+        for i, (eidx, execution) in enumerate(executions.items()):
+            execution = self.update_id(execution)
+            execution['entry'] = int(execution['entry'])
+            execution['exit'] = int(execution['exit'])
+            execution['anomaly_score'] = int(execution['anomaly_score'])
+            if execution['anomaly_score'] == -1 or i%int(1/self.sampling_rate)==0: # Sampling
+                execution['value'] = (execution["exit"] - execution["entry"])
+                self.eidx.append(execution['findex'])
+                self.tidx.append(self.idx_holder['tidx'])
+                self.idx_holder['tidx'] += 1
+                self.forest_labels.append(execution["anomaly_score"])
+                self.prog.append(execution['prog names'])
+                self.func_names.append(execution['name'])  
+                self.pos.append([
+                    execution[self.layout[0]], # entry 
+                    execution[self.layout[1]], # value (execution time)
+                    (execution[self.layout[2]] + execution['threads']*0.1), # rank and thread
+                    execution[self.layout[3]] # exit
+                ])
+            new_executions[execution['findex']] = execution
+        print("added {} positions".format(len(self.pos)))
+        self.changed = True
+        return new_executions
+
+    def update_id(self, execution):
+        prefix = str(execution['comm ranks']) + '&'
+        execution['findex'] = prefix+str(execution['findex'])
+        execution['parent'] = prefix+str(execution['parent'])
+        new_children = []
+        for cid in execution['children']:
+            new_children.append(prefix+str(cid))
+        execution['children'] = new_children
+        return execution
+
+    def set_statistics(self, stat):
+        with self.lock:
+            for func, temp in stat.items():
+                if func in self.stat:
+                    func_stat = self.stat[func]
+                    func_stat['regular'] = temp['regular'] if temp['regular']>func_stat['regular'] else func_stat['regular']
+                    func_stat['abnormal'] = temp['abnormal'] if temp['abnormal']>func_stat['abnormal'] else func_stat['abnormal']
+                    func_stat['ratio'] = temp['ratio'] if temp['ratio']>func_stat['ratio'] else func_stat['ratio']
+                else:
+                    self.stat[func] = temp
+
+    def add_frame(self, frame):
+        self.frame_manager.enqueue(frame)
+
+    def process_frame(self, frame):
+        self.set_statistics(frame['stat'])
+        self.add_executions(frame['executions'])
+

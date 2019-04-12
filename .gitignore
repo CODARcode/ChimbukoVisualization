@@ -23,3 +23,9 @@ data/aggregated/
 data/dump/
 
 data/executions/
+
+data/
+
+utils/__pycache__/
+
+log/

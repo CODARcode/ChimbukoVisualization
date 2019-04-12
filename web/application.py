@@ -3,6 +3,7 @@ import time
 from flask import send_file, Response, jsonify, request, redirect, url_for
 from web import web_app
 from module.DataManager import DataManager
+from utils.CommonUtils import log
 
 data_manager = DataManager()
 
@@ -14,7 +15,7 @@ def home():
 def get_tree():
     if request.json['data'] == 'tree':
         tindex = request.json['value']
-        print("select tree #{}".format(tindex))
+        log("select tree #{}".format(tindex))
         if len(data_manager.forest) > 0:
             if len(data_manager.forest[tindex]['nodes']) == 1: # first request
                 data_manager.generate_tree(tindex)
@@ -37,13 +38,18 @@ def receive_events():
     elif request.json['type'] == 'events':
         data_manager.add_events(request.json['value'])
     elif request.json['type'] == 'info':
-        d = request.json['value']
-        data_manager.set_event_types(d['event_types'])
-        data_manager.set_functions(d['functions'])
-        data_manager.set_FOI(d['foi'])
-        data_manager.set_labels(d['labels'])
-        data_manager.add_events(d['events'])
-        data_manager.generate_forest()
+        start = time.time()
+        if not data_manager.log_manager.is_set():
+            data_manager.log_manager.start_recording(start)
+        data_manager.add_to_buffer(request.json)
+        # d = request.json['value']
+        # data_manager.set_event_types(d['event_types'])
+        # data_manager.set_functions(d['functions'])
+        # data_manager.set_FOI(d['foi'])
+        # data_manager.set_labels(d['labels'])
+        # data_manager.add_events(d['events'])
+        # data_manager.generate_forest()
+        data_manager.record_response_time(time.time()-start)
     elif request.json['type'] == 'reset':
         data_manager.reset()
     return jsonify({'received': len(data_manager.forest)})
@@ -55,12 +61,13 @@ def _stream():
     #send back forest data
     if data_manager.pos:
         with data_manager.lock: 
-            print("send {} data to front".format(len(data_manager.pos)))
+            log('sending', len(data_manager.pos), 'data to front')
             yield """
                 retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s, "eidx":%s, "stat":%s}\n\n
             """ % (json.dumps(data_manager.pos), json.dumps(data_manager.layout), json.dumps(data_manager.forest_labels), json.dumps(data_manager.prog), 
             json.dumps(data_manager.func_names), json.dumps(data_manager.tidx), json.dumps(data_manager.eidx), json.dumps(data_manager.stat) )
             data_manager.reset_forest()
+            data_manager.get_recording(time.time())
 
 @web_app.route('/stream')
 def stream():
@@ -72,12 +79,21 @@ def stream():
 def set_sampling_rate():
     if request.json['data'] == 'sampling_rate':
         data_manager.sampling_rate = float(request.json['value'])
-        print("set sampling_rate #{}".format(data_manager.sampling_rate))
+        log("set sampling_rate #{}".format(data_manager.sampling_rate))
         return jsonify({'srate': data_manager.sampling_rate})
 
 @web_app.route('/executions', methods=['POST'])
 def receive_executions():
-    data_manager.add_to_buffer(request.json)
+    start = time.time()
+    if not data_manager.log_manager.is_set():
+        data_manager.log_manager.start_recording(start)
+    #### 
+    # data_manager.add_to_buffer(request.json)
+    ####
+    data_manager.set_statistics(request.json['stat'])
+    data_manager.add_executions(request.json['executions'])
+    ####
+    data_manager.record_response_time(time.time()-start)
     return jsonify({'received': len(request.json['executions'])})
 
 

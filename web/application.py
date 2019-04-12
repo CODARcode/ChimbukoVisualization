@@ -88,10 +88,10 @@ def receive_executions():
     if not data_manager.log_manager.is_set():
         data_manager.log_manager.start_recording(start)
     #### 
-    # data_manager.add_to_buffer(request.json)
+    data_manager.add_to_buffer(request.json)
     ####
-    data_manager.set_statistics(request.json['stat'])
-    data_manager.add_executions(request.json['executions'])
+    # data_manager.set_statistics(request.json['stat'])
+    # data_manager.add_executions(request.json['executions'])
     ####
     data_manager.record_response_time(time.time()-start)
     return jsonify({'received': len(request.json['executions'])})

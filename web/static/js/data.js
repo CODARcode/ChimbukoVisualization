@@ -24,6 +24,7 @@ class Data {
 
         this.func_names = []
         this.prog_names = []
+        this.initial_timestamp = -1
     }
 
     streaming(){
@@ -31,12 +32,20 @@ class Data {
         var sse = new EventSource('/stream');
         sse.onmessage = function (message) {
             var _json = jQuery.parseJSON(message.data);  
-            //console.log(_json['pos'].length); //+" "+_json['percent'])
             me.stat = _json['stat']
             me.scatterLayout = _json['layout'];
             var latest_time = -1;
             _json['pos'].forEach(function(d, i) { //load data to front end (scatter plot view)
-                latest_time = Math.max(latest_time, d[3]);// according to server, 3 is exit time
+                if (me.initial_timestamp == -1) {
+                    me.initial_timestamp = d[_json['layout'].indexOf('entry')] // this will be moved to backend
+                    console.log('initial_timestamp: '+me.initial_timestamp)
+                } 
+                d[_json['layout'].indexOf('entry')] = d[_json['layout'].indexOf('entry')] - me.initial_timestamp;
+                d[_json['layout'].indexOf('exit')] = d[_json['layout'].indexOf('exit')] - me.initial_timestamp;
+                if (d[_json['layout'].indexOf('entry')]<0) {
+                    return 
+                }
+                latest_time = Math.max(latest_time, d[_json['layout'].indexOf('exit')]);// according to server, 3 is exit time
                 me.data.push({
                     "id": _json['tidx'][i],
                     "eid": _json['eidx'][i],

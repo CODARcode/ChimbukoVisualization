@@ -4,6 +4,8 @@ import random
 import numpy as np
 from threading import Lock
 from module.BufferManager import BufferManager
+from module.LogManager import LogManager
+from utils.CommonUtils import log
 
 class DataManager(object):
     
@@ -45,6 +47,7 @@ class DataManager(object):
         self.anomaly_cnt = 0
         self.filecnt = -1
         self.buffer_manager = BufferManager(self.process_frame) # MAX_BUFFER_SIZE
+        self.log_manager = LogManager() # MAX_BUFFER_SIZE
 
         # entry - entry time
         # value - execution time
@@ -99,7 +102,7 @@ class DataManager(object):
                     'lineid': e[12]}# here line id is start from the beggining of the stream
                 count += 1
                 if count == len(events):
-                    print(obj['timestamp'])
+                    log(obj['timestamp'])
                 #if obj['event types'] == self.event_types['RECV'] or obj['event types'] == self.event_types['SEND']:
                 #     print(prev)
                 #     print(obj)
@@ -131,7 +134,7 @@ class DataManager(object):
                     if s['regular']>0 or s['abnormal']>0:
                         s['ratio'] = (s['abnormal']/(s['regular']+s['abnormal']))*100 
 
-            print('processed', self.anomaly_cnt, 'anomalies.')
+            log('processed', self.anomaly_cnt, 'anomalies.')
             #self.changed = True
 
     def remove_old_data(self):
@@ -139,7 +142,7 @@ class DataManager(object):
         if self.window_start // self.time_window < self.clean_count:
             return
         self.clean_count += 1
-        print("clean old executions before {}".format(self.window_start))
+        log("clean old executions before {}".format(self.window_start))
         remove_list = []
         for findex, exe in self.executions.items():
             if(exe['exit']<self.window_start):
@@ -247,7 +250,7 @@ class DataManager(object):
                     self.idx_holder['fidx'].append(stack[-1]['findex'])
                     stack.pop()
                 else: # mismatching
-                    print("Exit before Entry", obj['comm ranks'], obj['prog names'], obj['threads'], obj['name'])
+                    log("Exit before Entry", obj['comm ranks'], obj['prog names'], obj['threads'], obj['name'])
                     # print(obj)
                     # if len(stack) > 0:
                         # print("matching error "+str(i)+":"+str(rankId)+"/"+ obj['name']+"/stack: "+stack[-1]['name'])
@@ -258,7 +261,7 @@ class DataManager(object):
                 if len(stack) > 0:
                     #make sure the message is correct to append
                     if obj['name'] != 'NA' and obj['name'] != stack[-1]['name']:
-                        print("message issue: "+obj['name']+":"+stack[-1]['name'])
+                        log("message issue: "+obj['name']+":"+stack[-1]['name'])
                     #append to function
                     #assumption: execution never exits until message is received
                     if not 'messages' in stack[-1]:
@@ -275,7 +278,7 @@ class DataManager(object):
                     temp = stack[-1]
                     self.msgs.append(temp['findex'])
                 else:
-                    print("Send/Recv mismatched", obj['comm ranks'], obj['prog names'], obj['threads'], obj['name'])
+                    log("Send/Recv mismatched", obj['comm ranks'], obj['prog names'], obj['threads'], obj['name'])
         # events = []
         del self.events[rankId][:]
 
@@ -287,7 +290,7 @@ class DataManager(object):
                 if str(child_id) in self.executions:
                     child_id = str(child_id)
                 else:
-                    print("child not in executions") # pexecution
+                    # log("child not in executions") # regular
                     continue
             child_node = self.executions[child_id]
             ctid = len(this_tree['nodes'])
@@ -365,7 +368,7 @@ class DataManager(object):
                     if not "messages" in execution:
                         execution["messages"] = []
                     if (execution["exit"]-execution["entry"]) < 0:
-                        print('negative run time detected.')
+                        log('negative run time detected.')
                     self.forest.append({
                         "id": len(self.forest),
                         "eid": fidx,
@@ -416,7 +419,7 @@ class DataManager(object):
                     self.pos.append([
                         ent, val, rnk_thd, ext
                     ])
-            print("generate {} trees".format(len(self.forest)))
+            log("generate {} trees".format(len(self.forest)))
             self.changed = True
     
     def reset_forest(self):
@@ -426,23 +429,20 @@ class DataManager(object):
         self.forest_labels = []
         self.tidx = []
         self.eidx = []
-        print("reset forest data")
+        log("reset forest data")
         self.changed = False
         
-
     def write_file(self):
         self.filecnt += 1
         execs = {}
         for fidx in self.idx_holder['fidx']:
-            execs[fidx] = self.executions[fidx]
-
-        j = json.dumps(execs)
-        f = open('execution.'+str(self.filecnt)+'.json','w')
-        f.write(j)
-        f.close()
-
-        j = json.dumps(self.stat)
-        f = open('stat.'+str(self.filecnt)+'.json','w')
+            if self.executions[fidx]['name'] in self.foi: #or 'messages' in self.executions[fidx]
+                execs[fidx] = self.executions[fidx]
+        j = json.dumps({
+            'executions': execs,
+            'stat': self.stat
+        })
+        f = open('trace.'+str(self.filecnt)+'.json','w')
         f.write(j)
         f.close()
 
@@ -473,13 +473,15 @@ class DataManager(object):
                     (execution[self.layout[2]] + execution['threads']*0.1), # rank and thread
                     execution[self.layout[3]] # exit
                 ])
+                if execution['anomaly_score'] == -1:
+                    self.anomaly_cnt += 1
             new_executions[execution['findex']] = execution
-        print("added {} positions".format(len(self.pos)))
+        log("added {} positions".format(len(self.pos)))
         self.changed = True
         return new_executions
 
     def update_id(self, execution):
-        prefix = str(execution['comm ranks']) + '&'
+        prefix = str(execution['comm ranks']) + '&&' # delimeter
         execution['findex'] = prefix+str(execution['findex'])
         execution['parent'] = prefix+str(execution['parent'])
         new_children = []
@@ -491,18 +493,68 @@ class DataManager(object):
     def set_statistics(self, stat):
         with self.lock:
             for func, temp in stat.items():
+                if 'factor' not in temp:
+                    temp['factor'] = 1 # by default
+                if 'mean' not in temp:
+                    temp['mean'] = -1
+                elif np.isnan(temp['mean']) or np.isinf(temp['mean']):
+                    temp['mean'] =-1
+                else:
+                    temp['mean'] = temp['mean'] * temp['factor']
+                
+                if 'std' not in temp:
+                    temp['std'] = -1
+                elif np.isnan(temp['std']) or np.isinf(temp['std']):
+                    temp['std'] =-1
+                else:
+                    temp['std'] = temp['std'] * temp['factor'] # sqrt(VAR[CX]) => std[x] = C*std[cx], c == 1/factor
+                
+                if 'regular' in temp:
+                    temp['total'] = temp['regular']
+
+                if np.isnan(temp['total']) or np.isinf(temp['total']):
+                    temp['total'] =-1
+                else:
+                    temp['total'] = temp['total'] * temp['factor'] 
+                 
                 if func in self.stat:
                     func_stat = self.stat[func]
-                    func_stat['regular'] = temp['regular'] if temp['regular']>func_stat['regular'] else func_stat['regular']
                     func_stat['abnormal'] = temp['abnormal'] if temp['abnormal']>func_stat['abnormal'] else func_stat['abnormal']
-                    func_stat['ratio'] = temp['ratio'] if temp['ratio']>func_stat['ratio'] else func_stat['ratio']
+                    func_stat['total'] = temp['total'] if temp['total']>func_stat['total'] else func_stat['total']
+                    func_stat['mean'] = temp['mean'] # replace
+                    func_stat['std'] = temp['std'] # replace
+                    # if 'ratio' in temp:
+                    #     if 'ratio' in func:
+                    #         func_stat['ratio'] = temp['ratio'] if temp['ratio']>func_stat['ratio'] else func_stat['ratio']
+                    #     else:
+                    #         func_stat['ratio'] = temp['ratio']
+                    # else:
+                    #     func_stat['ratio'] = (func_stat['abnormal']/(func_stat['abnormal']+func_stat['regular']))*100
                 else:
                     self.stat[func] = temp
 
     def add_to_buffer(self, frame):
+        if not self.log_manager.is_set():
+            self.log_manager.start_recording(time.time())
         self.buffer_manager.add(frame)
 
     def process_frame(self, frame):
-        self.set_statistics(frame['stat'])
-        self.add_executions(frame['executions'])
+        if 'type' in frame: # Raw trace events
+            value = frame['value']
+            self.set_event_types(value['event_types'])
+            self.set_functions(value['functions'])
+            self.set_FOI(value['foi'])
+            self.set_labels(value['labels'])
+            self.add_events(value['events'])
+            self.generate_forest()
+        else: # Executions
+            self.set_statistics(frame['stat'])
+            self.add_executions(frame['executions'])
+    
+    def record_response_time(self, time):
+        self.log_manager.add_response_time(time)
 
+    def get_recording(self, time):
+        self.log_manager.pin_recording(time)
+        self.log_manager.get_avg_response_time()
+        log('NUM ANOMALIES: ', self.anomaly_cnt)

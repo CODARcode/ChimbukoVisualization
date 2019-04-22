@@ -61,6 +61,7 @@ def _stream():
     #send back forest data
     if data_manager.pos:
         with data_manager.lock: 
+            data_manager.record_push_time(time.time())
             log('sending', len(data_manager.pos), 'data to front')
             yield """
                 retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s, "eidx":%s, "stat":%s}\n\n
@@ -87,6 +88,8 @@ def receive_executions():
     start = time.time()
     if not data_manager.log_manager.is_set():
         data_manager.log_manager.start_recording(start)
+    else:
+        data_manager.log_manager.add_receive_time(start)
     #### 
     data_manager.add_to_buffer(request.json)
     ####

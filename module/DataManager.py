@@ -470,7 +470,7 @@ class DataManager(object):
                 self.pos.append([
                     execution[self.layout[0]], # entry 
                     execution[self.layout[1]], # value (execution time)
-                    (execution[self.layout[2]] + execution['threads']*0.1), # rank and thread
+                    execution[self.layout[2]], # rank and thread
                     execution[self.layout[3]] # exit
                 ])
                 if execution['anomaly_score'] == -1:
@@ -553,6 +553,9 @@ class DataManager(object):
     
     def record_response_time(self, time):
         self.log_manager.add_response_time(time)
+
+    def record_push_time(self, time):
+        self.log_manager.add_push_time(time)
 
     def get_recording(self, time):
         self.log_manager.pin_recording(time)

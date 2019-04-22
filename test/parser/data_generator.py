@@ -7,8 +7,10 @@ import json
 import glob
 from module.DataManager import DataManager
 
-MODE = 'events' # events or executions
-DATA_PATH = "../../data/nwchem_outdated/" 
+MODE = 'executions' # events or executions
+DATA_PATH = "../../data/aggregated/executions/" 
+RANK_NUMBER_DESIRED = 200
+RANK_NUMBER_CURRENT = 4
 
 def update_old_events_to_trace_format(): # ../../data/nwchem_outdated/
     """
@@ -136,67 +138,63 @@ def divide_by_rank():
 
         eidmap = {}
         eids = {}
-        
-        for i in range(len(data_list)):
-            data = []
-            with open(data_list[i], 'r') as f:
-                data = json.load(f)
-            executions = data['executions']
-            frame_data = {}
-            for eid, execution in executions.items():
-                
-                execution['comm ranks'] = execution['comm ranks'] + EXPAND_OFFSET
-                
-                rank_num = execution['comm ranks'] 
-                
-                if rank_num not in frame_data:
-                    frame_data[rank_num] = {}
-                # if rank_num not in eidmap:
-                #     eidmap[rank_num] = {}
-                if rank_num not in eids:
-                    eids[rank_num] = -1
-                
-                fid = str(execution['findex']) if type(execution['findex']) == int else execution['findex']
-                if fid not in eidmap:
-                    eidmap[fid] = eids[rank_num]
-                    eids[rank_num] -= 1
-                execution['findex'] = eidmap[fid]
-                
-                pid = str(execution['parent']) if type(execution['parent']) == int else execution['parent']
-                if pid not in eidmap:
-                    eidmap[pid] = eids[rank_num]
-                    eids[rank_num] -= 1
-                execution['parent'] = eidmap[pid]
-                
-                new_children = []
-                for cid in execution['children']:
-                    cid = str(cid) if type(cid) == int else cid
-                    if cid not in eidmap:
-                        eidmap[cid] = eids[rank_num]
+        for offset in range(0, RANK_NUMBER_DESIRED, RANK_NUMBER_CURRENT): 
+            for i in range(len(data_list)):
+                data = []
+                with open(data_list[i], 'r') as f:
+                    data = json.load(f)
+                executions = data['executions']
+                frame_data = {}
+                for eid, execution in executions.items():
+                    
+                    execution['comm ranks'] = execution['comm ranks'] + offset
+                    
+                    rank_num = execution['comm ranks'] 
+                    
+                    if rank_num not in frame_data:
+                        frame_data[rank_num] = {}
+                    # if rank_num not in eidmap:
+                    #     eidmap[rank_num] = {}
+                    if rank_num not in eids:
+                        eids[rank_num] = -1
+                    
+                    fid = str(execution['findex']) if type(execution['findex']) == int else execution['findex']
+                    if fid not in eidmap:
+                        eidmap[fid] = eids[rank_num]
                         eids[rank_num] -= 1
-                    new_children.append(eidmap[cid])
-                execution['children'] = new_children
-                
-                frame_data[rank_num][eidmap[eid]] = execution
+                    execution['findex'] = eidmap[fid]
+                    
+                    pid = str(execution['parent']) if type(execution['parent']) == int else execution['parent']
+                    if pid not in eidmap:
+                        eidmap[pid] = eids[rank_num]
+                        eids[rank_num] -= 1
+                    execution['parent'] = eidmap[pid]
+                    
+                    new_children = []
+                    for cid in execution['children']:
+                        cid = str(cid) if type(cid) == int else cid
+                        if cid not in eidmap:
+                            eidmap[cid] = eids[rank_num]
+                            eids[rank_num] -= 1
+                        new_children.append(eidmap[cid])
+                    execution['children'] = new_children
+                    
+                    frame_data[rank_num][eidmap[eid]] = execution
 
-            for rank, rank_data in frame_data.items():
-                data['executions'] = rank_data
-                j = json.dumps(data)
-                f = open('rank.'+str(int(rank))+'.trace.'+str(filecnt)+'.json','w')
-                f.write(j)
-                f.close()
-            filecnt += 1
+                for rank, rank_data in frame_data.items():
+                    data['executions'] = rank_data
+                    j = json.dumps(data)
+                    f = open('rank.'+str(int(rank))+'.trace.'+str(i)+'.json','w')
+                    f.write(j)
+                    f.close()
 
 def update_statistics():
     
     data_list = glob.glob(DATA_PATH+"trace.*.json")
     data_list.sort(key=lambda x: int(x.split('.')[-2]))
-
-    
-
         
 
 if __name__ == "__main__":
-    update_old_events_to_trace_format()
+    # update_old_events_to_trace_format()
     # convert_events_to_executions()
-    # divide_by_rank()
+    divide_by_rank() # RANK_NUMBER

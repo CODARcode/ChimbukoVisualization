@@ -376,7 +376,8 @@ class ScatterView extends View {
         names.sort(function(x, y) {
             x = x.replace(/ *\prog#[0-9]-*\ */g, "");
             y = y.replace(/ *\prog#[0-9]-*\ */g, "");
-            return d3.ascending(me.data.stat[y]['ratio'], me.data.stat[x]['ratio']);
+            // return d3.ascending(me.data.stat[y]['ratio'], me.data.stat[x]['ratio']);
+            return d3.ascending(me.data.stat[y]['abnormal'], me.data.stat[x]['abnormal']);
         })
         var legend = me.legend.selectAll(".scatter-legend-item")
             .data(names)
@@ -412,10 +413,14 @@ class ScatterView extends View {
                 var prefix = (d+"([").match(/.+?(?=[\[\(])/)[0];
                 var displayName = prefix.match(/(.*::)*(.*)/)[2];
                 var stat = me.data.stat[d.replace(/ *\prog#[0-9]-*\ */g, "")];
-                var ratio = stat['ratio'].toFixed(2) + " %";
+                // var ratio = stat['ratio']
+                // if (ratio === undefined) {
+                //     ratio = (stat['abnormal']/(stat['abnormal']+stat['regular'])) * 100
+                // }
+                // ratio = ratio.toFixed(2) + " %";
                 var anomaly = me.formatSuffix(stat['abnormal']);
-                var regular = me.formatSuffix(stat['regular']).replace('G', 'B') ;
-                return displayName+": "+ratio+ " ("+anomaly+"/"+regular+")";
+                var total = me.formatSuffix(stat['total']).replace('G', 'B') ;
+                return displayName+": "+anomaly+"/"+total; //+ratio
             })
         me.filter_all = (me.filter_all === false)? undefined : me.filter_all;
     }

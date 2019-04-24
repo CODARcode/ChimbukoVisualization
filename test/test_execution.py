@@ -6,7 +6,7 @@ import json
 import glob
 import unittest
 import threading
-from web import data_manager as dm
+from module.DataManager import DataManager
 
 NUM_RANK = 8
 DATA_PATH_AGGR = "./data/aggregated/executions/" 
@@ -41,7 +41,7 @@ class TestExecution(unittest.TestCase):
         """
         Test that the forest are correctly generated.
         """
-        d = dm.Data()
+        d = DataManager()
         self.prep_data(d);
 
         event_list = glob.glob(DATA_PATH_AGGR+"trace.*.json")
@@ -60,7 +60,7 @@ class TestExecution(unittest.TestCase):
         """
         Test that the forest is not generated safely.
         """
-        d = dm.Data()
+        d = DataManager()
         self.prep_data(d);
 
         event_list = glob.glob(DATA_PATH_RANK+"trace.*.json")

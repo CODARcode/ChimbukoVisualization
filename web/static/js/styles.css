@@ -105,4 +105,16 @@ text {
 .sampling-rate-slider {
     width: 100px;
 }
+.treeview{
+    width: 800px;
+    height: 300px;
+}
+.baselineview{
+    width: 800px;
+    height: 300px;
+}
+.baseline_cell {
+    border: 1px solid black;
+}
+
 

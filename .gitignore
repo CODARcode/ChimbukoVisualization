@@ -10,3 +10,22 @@ data/*.json
 
 data/.DS_Store
 
+
+\.history/
+
+module/__pycache__/
+
+test/__pycache__/
+
+
+data/aggregated/
+
+data/dump/
+
+data/executions/
+
+data/
+
+utils/__pycache__/
+
+log/

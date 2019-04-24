@@ -45,7 +45,7 @@
                     <span id="srate_val">1</span>
                 </div>
                 <button id="apply" type="button"> apply </button>
-                &nbsp; &nbsp; <input type="checkbox" id="scatter-cbox"> anomaly
+                <!-- &nbsp; &nbsp; <input type="checkbox" id="scatter-cbox"> anomaly -->
                 &nbsp; &nbsp; <input type="checkbox" id="scatter-legend-filter"> filter all
                 <div class="nopadding" style="width: 900px;">
                     <svg id="overview" class="scatterplot"></svg>
@@ -53,14 +53,18 @@
                 </div>
             </div>
             <div class="col-lg-6 well" id = "rightpanel">
-                <div class="row well nopadding">
-                    &nbsp; &nbsp; <b class="title">Selected Call Stack Tree</b>
-                    <svg id="treeview" style = "width: 745;"></svg>
-                </div>
-                <div class="row well nopadding" style="overflow-x: none;">
-                    &nbsp; &nbsp; <b class="title">Timeline and Message Visualization</b>
-                    <svg id="temporalview" style = "width: 745;"></svg>
-                </div>
+                &nbsp; &nbsp; <b class="title">Selected Call Stack Tree</b></br>
+                <svg id="treeview" class='treeview'></svg>
+                <svg id="baselineview" class='baselineview'></svg>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6 well nopadding" id = "bottom_leftpanel">
+                &nbsp; &nbsp; <b class="title" >Distribution of Anomalous Executions</b><br/> 
+            </div>
+            <div class="col-lg-6 well" id = "bottom_rightpanel">
+                &nbsp; &nbsp; <b class="title">Timeline and Message Visualization</b></br>
+                <svg id="temporalview" style = "width: 745;"></svg>
             </div>
         </div>
     </div>

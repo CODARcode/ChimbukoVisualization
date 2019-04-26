@@ -22,54 +22,60 @@
 
 <body>
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-lg-6 well nopadding" id = "leftpanel">
-                &nbsp; &nbsp; <b class="title">Projection of Function Executions</b><br/> 
-                &nbsp; &nbsp; x axis:
-                <select id="sbox_x">
-                    <option value="0" selected>Entry</option>
-                    <option value="1">Execution Time</option>
-                    <option value="2">Rank#.Thread#</option>
-                    <option value="3">Exit</option>
-                </select>
-                &nbsp; y axis:
-                <select id="sbox_y">
-                    <option value="0">Entry</option>
-                    <option value="1" selected>Execution Time</option>
-                    <option value="2">Rank#.Thread#</option>
-                    <option value="3">Exit</option>
-                </select>
-                <div class="srate_container">
-                    &nbsp; &nbsp; Sampling rate: 
-                    <input type="range" min="0.001" max="1" value="1" step="0.001" class="sampling-rate-slider" id="srate">
-                    <span id="srate_val">1</span>
+        <div class="row nopadding">
+            <div class="leftpanel col-lg-6 well nopadding" id="leftpanel" ><!-- style='background-color: blue' -->
+                <div class="row visrow">
+                    <b class="title" > &nbsp; &nbsp; Global Rank Anomaly</b>
+                    <svg id="globalview" class="globalview"></svg>
                 </div>
-                <button id="apply" type="button"> apply </button>
-                <!-- &nbsp; &nbsp; <input type="checkbox" id="scatter-cbox"> anomaly -->
-                &nbsp; &nbsp; <input type="checkbox" id="scatter-legend-filter"> filter all
-                <div class="nopadding" style="width: 900px;">
-                    <svg id="overview" class="scatterplot"></svg>
-                    <div id="scatter-legend" class="scatter-legend nopadding" style=" width: 300px; height: 600px; overflow-y:auto;"></div>
+                <div class="row visrow">
+                    <b class="title">&nbsp; &nbsp; Projection of Function Executions</b><br/> 
+                    <div>
+                        &nbsp; &nbsp; x axis:
+                        <select id="sbox_x">
+                            <option value="0" selected>Entry</option>
+                            <option value="1">Execution Time</option>
+                            <option value="2">Rank#.Thread#</option>
+                            <option value="3">Exit</option>
+                        </select>
+                        &nbsp; y axis:
+                        <select id="sbox_y">
+                            <option value="0">Entry</option>
+                            <option value="1" selected>Execution Time</option>
+                            <option value="2">Rank#.Thread#</option>
+                            <option value="3">Exit</option>
+                        </select>
+                        <div class="srate_container">
+                            &nbsp; &nbsp; Call Depth: 
+                            <input type="range" min="0.01" max="1" value="1" step="0.01" class="sampling-rate-slider" id="srate">
+                            <span id="srate_val">1</span>
+                        </div>
+                        &nbsp; &nbsp; <button id="apply" type="button"> apply </button>
+                        <!-- &nbsp; &nbsp; <input type="checkbox" id="scatter-cbox"> anomaly -->
+                        <!-- &nbsp; &nbsp; <input type="checkbox" id="scatter-legend-filter"> filter all -->
+                    </div>
+                    <div class="nopadding" >
+                        <svg id="overview" class="scatterview"></svg>
+                        <!-- <div id="scatter-legend" class="scatter-legend nopadding"></div> -->
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-6 well" id = "rightpanel">
-                &nbsp; &nbsp; <b class="title">Selected Call Stack Tree</b></br>
-                <svg id="treeview" class='treeview'></svg>
-                <svg id="baselineview" class='baselineview'></svg>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-6 well nopadding" id = "bottom_leftpanel">
-                &nbsp; &nbsp; <b class="title" >Distribution of Anomalous Executions</b><br/> 
-            </div>
-            <div class="col-lg-6 well" id = "bottom_rightpanel">
-                &nbsp; &nbsp; <b class="title">Timeline and Message Visualization</b></br>
-                <svg id="temporalview" style = "width: 745;"></svg>
+            <div class="rightpanel col-lg-6 well nopadding" id = "rightpanel" > <!-- style='background-color: red' -->
+                <div class="row visrow">
+                    <b class="title">&nbsp; &nbsp; Selected Call Stack Tree</b></br>
+                    <svg id="treeview" class='treeview'></svg>
+                    <svg id="baselineview" class='baselineview'></svg>
+                </div>
+                <div class="row visrow">
+                    <b class="title">&nbsp; &nbsp; Timeline and Message Visualization</b></br>
+                    <svg id="temporalview" class="temporalview"></svg>
+                </div>
             </div>
         </div>
     </div>
     <script src="/static/js/constant.js"></script>
     <script src="/static/js/view.js"></script>
+    <script src="/static/js/globalview.js"></script>
     <script src="/static/js/scatterview.js"></script>
     <script src="/static/js/graphview.js"></script>
     <script src="/static/js/dynamicgraphview.js"></script>

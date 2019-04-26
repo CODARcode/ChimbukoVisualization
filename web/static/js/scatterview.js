@@ -77,9 +77,11 @@ class ScatterView extends View {
     }
 
     draw(){
+        var start = Date.now()
         this._drawAxis();
         this._drawDots();
         this._drawLegend()
+        console.log('Scatterplot Rendering Time: '+ ((Date.now()-start)/1000))
         //this._drawPointLabel();
     }
 
@@ -218,18 +220,20 @@ class ScatterView extends View {
             .data(me.data.data)
             .enter()
             .filter(function(d) { 
-                var lkey = "prog#"+d.prog_name+"-"+d.func_name;
-                if (!me.legend_items[lkey]) {
-                    me.legend_items[lkey] = {}
-                    me._fillColor(d, set_progname, set_funcname)
-                }
-                if (me.filter_all) {
-                    me.filter[lkey] = true;
-                } 
-                if (me.anomaly_only) {
-                    return !(me.filter[lkey]) && (d.anomaly_score<0);
-                } else {
-                    return !(me.filter[lkey])
+                if(d.pos[2]<3) {
+                    var lkey = "prog#"+d.prog_name+"-"+d.func_name;
+                    if (!me.legend_items[lkey]) {
+                        me.legend_items[lkey] = {}
+                        me._fillColor(d, set_progname, set_funcname)
+                    }
+                    if (me.filter_all) {
+                        me.filter[lkey] = true;
+                    } 
+                    if (me.anomaly_only) {
+                        return !(me.filter[lkey]) && (d.anomaly_score<0);
+                    } else {
+                        return !(me.filter[lkey])
+                    }
                 }
             })
                 .append("circle")

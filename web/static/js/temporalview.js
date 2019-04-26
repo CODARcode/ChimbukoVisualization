@@ -192,7 +192,7 @@ class TemporalView extends View {
         this.context
             // .call(d3.axisTop(this.contextX).ticks(8).tickFormat(d=>d/1000+'ms'));
             .call(d3.axisTop(this.contextX).ticks(8).tickFormat(function(d){
-                return ((d -me.data.initial_timestamp)/1000000).toFixed(2)+' s'
+                return (d/1000000).toFixed(2)+' s'
             }));
         this.bruchSelection.call(this.brushX.move, null)
     }
@@ -202,7 +202,7 @@ class TemporalView extends View {
         this.xAxis
             // .call(d3.axisTop(this.x).ticks(5).tickSizeOuter(0).tickFormat(d=>d/1000+'ms'))
             .call(d3.axisTop(this.x).ticks(5).tickSizeOuter(0).tickFormat(function(d) {
-                return ((d -me.data.initial_timestamp)/1000000).toFixed(2)+' s'
+                return (d/1000000).toFixed(2)+' s'
             }))
             .append("text")
             .attr("class", "label")

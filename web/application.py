@@ -64,9 +64,9 @@ def _stream():
             data_manager.record_push_time(time.time())
             log('sending', len(data_manager.pos), 'data to front')
             yield """
-                retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s, "eidx":%s, "stat":%s}\n\n
+                retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s, "eidx":%s, "stat":%s, "global_rank":%s}\n\n
             """ % (json.dumps(data_manager.pos), json.dumps(data_manager.layout), json.dumps(data_manager.forest_labels), json.dumps(data_manager.prog), 
-            json.dumps(data_manager.func_names), json.dumps(data_manager.tidx), json.dumps(data_manager.eidx), json.dumps(data_manager.stat) )
+            json.dumps(data_manager.func_names), json.dumps(data_manager.tidx), json.dumps(data_manager.eidx), json.dumps(data_manager.stat), json.dumps(data_manager.global_rank_anomaly) )
             data_manager.reset_forest()
             data_manager.get_recording(time.time())
 

@@ -49,10 +49,11 @@ class DataManager(object):
         self.buffer_manager = BufferManager(self.process_frame) # MAX_BUFFER_SIZE
         self.log_manager = LogManager() # MAX_BUFFER_SIZE
 
-        # entry - entry time
-        # value - execution time
-        # comm ranks
-        # exit - exit time
+        self.global_rank_anomaly = {}
+        self.global_rank_anomaly_temp = {}
+        self.global_rank_anomaly_time_bound = 0 # starting from 0
+        self.global_rank_anomaly_interval = 10000000 # 10 sec by default (1s = 1000000)
+        self.global_rank_anomaly_time_window = self.global_rank_anomaly_interval*6 # (60 sec )
 
     def set_functions(self, functions):# set function dictionary
         with self.lock:
@@ -180,6 +181,8 @@ class DataManager(object):
             self.changed = False
             self.eidx = []
             self.tidx = []
+            self.global_rank_anomaly = {}
+            self.global_rank_anomaly_temp = {}
 
     def _events2executions(self):
         #print("event 2 executions...")
@@ -448,39 +451,52 @@ class DataManager(object):
 
     def add_executions(self, executions):
         with self.lock:
-            _executions = self.calculate_layout(executions)
+            _executions = self.process_executions(executions)
             self.executions.update(_executions)
             self.remove_old_data()
 
-    def calculate_layout(self, executions):
+    def process_executions(self, executions):
         new_executions = {}
         for i, (eidx, execution) in enumerate(executions.items()):
-            execution = self.update_id(execution)
-            execution['entry'] = int(execution['entry'])
-            execution['exit'] = int(execution['exit'])
-            execution['anomaly_score'] = int(execution['anomaly_score'])
+            execution = self.update_execution(execution)
+            self.update_global_rank_anomaly(execution) # Counting anomalies
             if execution['anomaly_score'] == -1 or i%int(1/self.sampling_rate)==0: # Sampling
-                execution['value'] = (execution["exit"] - execution["entry"])
-                self.eidx.append(execution['findex'])
-                self.tidx.append(self.idx_holder['tidx'])
-                self.idx_holder['tidx'] += 1
-                self.forest_labels.append(execution["anomaly_score"])
-                self.prog.append(execution['prog names'])
-                self.func_names.append(execution['name'])  
-                self.pos.append([
-                    execution[self.layout[0]], # entry 
-                    execution[self.layout[1]], # value (execution time)
-                    execution[self.layout[2]], # rank and thread
-                    execution[self.layout[3]] # exit
-                ])
-                if execution['anomaly_score'] == -1:
-                    self.anomaly_cnt += 1
+                self.calculate_layout(execution)
             new_executions[execution['findex']] = execution
-        log("added {} positions".format(len(self.pos)))
+        # log("added {} positions".format(len(self.pos)))
         self.changed = True
         return new_executions
+    
+    def calculate_layout(self, execution):
+        self.eidx.append(execution['findex'])
+        self.tidx.append(self.idx_holder['tidx'])
+        self.idx_holder['tidx'] += 1
+        self.forest_labels.append(execution["anomaly_score"])
+        self.prog.append(execution['prog names'])
+        self.func_names.append(execution['name'])  
+        self.pos.append([
+            execution[self.layout[0]], # entry 
+            execution[self.layout[1]], # value (execution time)
+            execution[self.layout[2]], # rank and thread
+            execution[self.layout[3]] # exit
+        ])
+        if execution['anomaly_score'] == -1:
+            self.anomaly_cnt += 1
 
-    def update_id(self, execution):
+    def update_execution(self, execution):
+        execution['entry'] = int(execution['entry'])
+        execution['exit'] = int(execution['exit'])
+        execution['anomaly_score'] = int(execution['anomaly_score'])
+        execution['comm ranks'] = int(execution['comm ranks'])
+        
+        if self.initial_timestamp == -1: 
+            self.initial_timestamp = execution['entry']
+            print("Initial time: ", self.initial_timestamp)
+        
+        execution['entry'] -= self.initial_timestamp
+        execution['exit'] -= self.initial_timestamp
+        execution['value'] = execution["exit"] - execution["entry"]
+
         prefix = str(execution['comm ranks']) + '&&' # delimeter
         execution['findex'] = prefix+str(execution['findex'])
         execution['parent'] = prefix+str(execution['parent'])
@@ -489,6 +505,29 @@ class DataManager(object):
             new_children.append(prefix+str(cid))
         execution['children'] = new_children
         return execution
+
+    def update_global_rank_anomaly(self, execution):
+        
+        # update window if time has passed
+        if execution['exit'] > self.global_rank_anomaly_time_bound:
+            self.global_rank_anomaly[int(self.global_rank_anomaly_time_bound/1000000)] = self.global_rank_anomaly_temp
+            self.global_rank_anomaly_temp = {}
+            self.global_rank_anomaly_time_bound += self.global_rank_anomaly_interval
+        
+        # count anomaly per rank
+        if execution['comm ranks'] not in self.global_rank_anomaly_temp:
+            self.global_rank_anomaly_temp[execution['comm ranks']] = 0
+        self.global_rank_anomaly_temp[execution['comm ranks']] += 1
+
+        # remove passed timewindow
+        remove_list = []
+        for t in self.global_rank_anomaly.keys():
+            if t < ((self.global_rank_anomaly_time_bound - self.global_rank_anomaly_time_window)/1000000):
+                remove_list.append(t)
+        
+        for t in remove_list:
+            del self.global_rank_anomaly[t]
+
 
     def set_statistics(self, stat):
         with self.lock:

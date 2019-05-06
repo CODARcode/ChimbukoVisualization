@@ -462,7 +462,7 @@ class DataManager(object):
             self.update_global_rank_anomaly(execution) # Counting anomalies
             if execution['anomaly_score'] == -1 or i%int(1/self.sampling_rate)==0: # Sampling
                 self.calculate_layout(execution)
-            new_executions[execution['findex']] = execution
+                new_executions[execution['findex']] = execution
         # log("added {} positions".format(len(self.pos)))
         self.changed = True
         return new_executions

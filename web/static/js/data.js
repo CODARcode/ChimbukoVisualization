@@ -28,6 +28,7 @@ class Data {
         this.initial_timestamp = -1
         this.prev_receive_time = -1
         this.global_rank_anomaly = {}
+        this.rank_of_interest = new Set(); // by default
     }
 
     streaming(){

@@ -2,6 +2,7 @@ class ScatterView extends View {
     constructor(data, svg) {
         super(data, svg, {});
         var me = this;
+        me.name = 'scatterview'
         me.color = me.vis.anomalyColor;
         me.margin = {
             top: 0,
@@ -63,24 +64,25 @@ class ScatterView extends View {
     }
 
     stream_update(){
-        var me = this;
-        me.legend_items = {}
-        me.selections.clear();
-        me._updateAxis();
-        me.svg.selectAll("circle").remove();
-        me.xAxis.selectAll("text.label").remove();
-        me.yAxis.selectAll("text.label").remove();
-        me.draw();        
-        me._zoom();
+        this.selections.clear();
+        this.clear();
+        this._updateAxis();
+        this.draw();        
+        this._zoom();
         // me.transform = d3.zoomIdentity;
         //move some constructor here
     }
-
+    clear() {
+        this.legend_items = {}
+        this.svg.selectAll("circle").remove();
+        this.xAxis.selectAll("text.label").remove();
+        this.yAxis.selectAll("text.label").remove();
+    }
     draw(){
         var start = Date.now()
         this._drawAxis();
         this._drawDots();
-        this._drawLegend()
+        // this._drawLegend()
         console.log('Scatterplot Rendering Time: '+ ((Date.now()-start)/1000))
         //this._drawPointLabel();
     }
@@ -220,7 +222,7 @@ class ScatterView extends View {
             .data(me.data.data)
             .enter()
             .filter(function(d) { 
-                if(d.pos[2]<3) {
+                if(me.data.rank_of_interest.has(d.pos[2])) {
                     var lkey = "prog#"+d.prog_name+"-"+d.func_name;
                     if (!me.legend_items[lkey]) {
                         me.legend_items[lkey] = {}

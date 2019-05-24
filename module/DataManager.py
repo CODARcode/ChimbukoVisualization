@@ -49,11 +49,12 @@ class DataManager(object):
         self.buffer_manager = BufferManager(self.process_frame) # MAX_BUFFER_SIZE
         self.log_manager = LogManager() # MAX_BUFFER_SIZE
 
+        self.SECOND = 1000000 # microsecond by default
         self.global_rank_anomaly = {}
         self.global_rank_anomaly_temp = {}
         self.global_rank_anomaly_time_bound = 0 # starting from 0
-        self.global_rank_anomaly_interval = 10000000 # 10 sec by default (1s = 1000000)
-        self.global_rank_anomaly_time_window = self.global_rank_anomaly_interval*6 # (60 sec )
+        self.global_rank_anomaly_interval = self.SECOND * 10 
+        self.global_rank_anomaly_time_window = self.SECOND * 60 
 
     def set_functions(self, functions):# set function dictionary
         with self.lock:

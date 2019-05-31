@@ -5,6 +5,7 @@ import numpy as np
 from threading import Lock
 from module.BufferManager import BufferManager
 from module.LogManager import LogManager
+from module.OnlineStatManager import OnlineStatManager
 from utils.CommonUtils import log
 
 class DataManager(object):
@@ -50,11 +51,14 @@ class DataManager(object):
         self.log_manager = LogManager() # MAX_BUFFER_SIZE
 
         self.SECOND = 1000000 # microsecond by default
-        self.global_rank_anomaly = {}
-        self.global_rank_anomaly_temp = {}
-        self.global_rank_anomaly_time_bound = 0 # starting from 0
-        self.global_rank_anomaly_interval = self.SECOND * 10 
-        self.global_rank_anomaly_time_window = self.SECOND * 60 
+        self.GRA = {} # Global Rank Anomaly
+        self.GRA_temp = {} 
+        self.GRA_time_bound = 0 # starting from 0
+        self.GRA_interval = self.SECOND * 10 #  interval for # anomalies calculation
+        self.GRA_time_window = self.SECOND * 60 # interval for removal of rank stat
+        self.GRA_sampling_interval = self.SECOND * 60 # interval for stratified sampling
+        self.GRA_outliers = set()
+        self.online_stat_manager = OnlineStatManager()
 
     def set_functions(self, functions):# set function dictionary
         with self.lock:
@@ -182,8 +186,9 @@ class DataManager(object):
             self.changed = False
             self.eidx = []
             self.tidx = []
-            self.global_rank_anomaly = {}
-            self.global_rank_anomaly_temp = {}
+            self.GRA = {}
+            self.GRA_temp = {}
+            self.GRA_outliers = set()
 
     def _events2executions(self):
         #print("event 2 executions...")
@@ -460,11 +465,22 @@ class DataManager(object):
         new_executions = {}
         for i, (eidx, execution) in enumerate(executions.items()):
             execution = self.update_execution(execution)
-            self.update_global_rank_anomaly(execution) # Counting anomalies
-            if execution['anomaly_score'] == -1 or i%int(1/self.sampling_rate)==0: # Sampling
+            self.update_GRA(execution) # Counting anomalies
+            new_executions[execution['findex']] = execution
+        
+        # GRA Sampling
+        upper_bound = self.online_stat_manager.get_upper_bound()
+        for t, rmap in self.GRA.items():
+            for rank, freq in rmap.items():
+                if upper_bound < freq:
+                    self.GRA_outliers.add(rank)
+        log('GRA upper bound: ', upper_bound)
+        log('GRA outliers: ', self.GRA_outliers)
+
+        for eidx, execution in new_executions.items():
+            if execution['comm ranks'] in self.GRA_outliers:
                 self.calculate_layout(execution)
-                new_executions[execution['findex']] = execution
-        # log("added {} positions".format(len(self.pos)))
+
         self.changed = True
         return new_executions
     
@@ -507,28 +523,28 @@ class DataManager(object):
         execution['children'] = new_children
         return execution
 
-    def update_global_rank_anomaly(self, execution):
-        
-        # update window if time has passed
-        if execution['exit'] > self.global_rank_anomaly_time_bound:
-            self.global_rank_anomaly[int(self.global_rank_anomaly_time_bound/1000000)] = self.global_rank_anomaly_temp
-            self.global_rank_anomaly_temp = {}
-            self.global_rank_anomaly_time_bound += self.global_rank_anomaly_interval
-        
+    def update_GRA(self, execution):
+        # update GRA if window has passed
+        if execution['exit'] > self.GRA_time_bound:
+            self.GRA[int(self.GRA_time_bound/1000000)] = self.GRA_temp
+            self.online_stat_manager.compute(self.GRA_temp)
+            self.GRA_temp = {} # initialize GRA info
+            self.GRA_time_bound += self.GRA_interval
         # count anomaly per rank
-        if execution['comm ranks'] not in self.global_rank_anomaly_temp:
-            self.global_rank_anomaly_temp[execution['comm ranks']] = 0
-        self.global_rank_anomaly_temp[execution['comm ranks']] += 1
+        if execution['comm ranks'] not in self.GRA_temp:
+            self.GRA_temp[execution['comm ranks']] = 0
+        self.GRA_temp[execution['comm ranks']] += 1
+        # remove old data
+        self.remove_old_GRA()
 
+    def remove_old_GRA(self):
         # remove passed timewindow
         remove_list = []
-        for t in self.global_rank_anomaly.keys():
-            if t < ((self.global_rank_anomaly_time_bound - self.global_rank_anomaly_time_window)/1000000):
+        for t in self.GRA.keys():
+            if t < ((self.GRA_time_bound - self.GRA_time_window)/1000000):
                 remove_list.append(t)
-        
         for t in remove_list:
-            del self.global_rank_anomaly[t]
-
+            del self.GRA[t]
 
     def set_statistics(self, stat):
         with self.lock:

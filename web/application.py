@@ -66,7 +66,7 @@ def _stream():
             yield """
                 retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s, "eidx":%s, "stat":%s, "global_rank":%s}\n\n
             """ % (json.dumps(data_manager.pos), json.dumps(data_manager.layout), json.dumps(data_manager.forest_labels), json.dumps(data_manager.prog), 
-            json.dumps(data_manager.func_names), json.dumps(data_manager.tidx), json.dumps(data_manager.eidx), json.dumps(data_manager.stat), json.dumps(data_manager.global_rank_anomaly) )
+            json.dumps(data_manager.func_names), json.dumps(data_manager.tidx), json.dumps(data_manager.eidx), json.dumps(data_manager.stat), json.dumps(data_manager.GRA) )
             data_manager.reset_forest()
             data_manager.get_recording(time.time())
 

@@ -59,16 +59,21 @@ def _stream():
         time.sleep(0.1)
     #data_manager.generate_forest()
     #send back forest data
-    if data_manager.pos:
-        with data_manager.lock: 
-            data_manager.record_push_time(time.time())
-            log('sending', len(data_manager.pos), 'data to front')
-            yield """
-                retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s, "eidx":%s, "stat":%s, "global_rank":%s}\n\n
-            """ % (json.dumps(data_manager.pos), json.dumps(data_manager.layout), json.dumps(data_manager.forest_labels), json.dumps(data_manager.prog), 
-            json.dumps(data_manager.func_names), json.dumps(data_manager.tidx), json.dumps(data_manager.eidx), json.dumps(data_manager.stat), json.dumps(data_manager.GRA) )
-            data_manager.reset_forest()
-            data_manager.get_recording(time.time())
+    # if data_manager.pos:
+    with data_manager.lock: 
+        data_manager.record_push_time(time.time())
+        # log('sending', len(data_manager.pos), 'data to front')
+        # yield """
+        #     retry: 10000\ndata:{"pos":%s, "layout":%s, "labels":%s, "prog":%s, "func":%s, "tidx":%s, "eidx":%s, "stat":%s, "global_rank":%s}\n\n
+        # """ % (json.dumps(data_manager.pos), json.dumps(data_manager.layout), json.dumps(data_manager.forest_labels), json.dumps(data_manager.prog), 
+        # json.dumps(data_manager.func_names), json.dumps(data_manager.tidx), json.dumps(data_manager.eidx), json.dumps(data_manager.stat), json.dumps(data_manager.GRA) )
+        # data_manager.reset_forest()
+        
+        yield """
+            retry: 10000\ndata:{"frames":%s}\n\n
+        """ % ( json.dumps(data_manager.frames) )
+        data_manager.get_recording(time.time())
+        data_manager.changed = False
 
 @web_app.route('/stream')
 def stream():

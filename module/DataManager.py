@@ -60,6 +60,10 @@ class DataManager(object):
         self.GRA_outliers = set()
         self.online_stat_manager = OnlineStatManager()
 
+        self.frames = {} # frames obj
+        self.frame_id = -1 # frame id 
+        self.FRAME_WINDOW = 100 # frame window
+
     def set_functions(self, functions):# set function dictionary
         with self.lock:
             if type(functions) == list: # make sure if functions is given as dict
@@ -604,8 +608,9 @@ class DataManager(object):
             self.add_events(value['events'])
             self.generate_forest()
         else: # Executions
-            self.set_statistics(frame['stat'])
-            self.add_executions(frame['executions'])
+            # self.set_statistics(frame['stat'])
+            # self.add_executions(frame['executions'])
+            self.calculate_frame(frame['executions'])
     
     def record_response_time(self, time):
         self.log_manager.add_response_time(time)
@@ -617,3 +622,24 @@ class DataManager(object):
         self.log_manager.pin_recording(time)
         self.log_manager.get_avg_response_time()
         log('NUM ANOMALIES: ', self.anomaly_cnt)
+
+    def calculate_frame(self, executions):
+        self.frame_id += 1
+        frame_info = {
+            'total': 0
+        }
+        for i, execution in executions.items():
+            execution = self.update_execution(execution)
+            if execution['comm ranks'] not in frame_info:
+                frame_info[execution['comm ranks']] = 0
+            frame_info[execution['comm ranks']] += 1
+            frame_info['total'] += 1
+            self.anomaly_cnt += 1
+        self.frames[self.frame_id] = frame_info
+
+        if len(self.frames.keys()) > self.FRAME_WINDOW:
+            del_id = self.frame_id - self.FRAME_WINDOW
+            del self.frames[del_id]
+        
+        self.changed = True
+        

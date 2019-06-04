@@ -23,58 +23,23 @@
 <body>
     <div class="container-fluid">
         <div class="row nopadding">
-            <div class="leftpanel col-lg-6 well nopadding" id="leftpanel" ><!-- style='background-color: blue' -->
                 <div class="row visrow">
-                    <b class="title" > &nbsp; &nbsp; Global Rank Anomaly</b>
-                    <svg id="globalview" class="globalview"></svg>
+                    <div class="title"><b> &nbsp; &nbsp; Data Stream Visualization</b></div>
+                    <svg id="streamview" class="streamview"></svg>
                 </div>
                 <div class="row visrow">
-                    <b class="title">&nbsp; &nbsp; Projection of Function Executions</b><br/> 
-                    <div>
-                        &nbsp; &nbsp; x axis:
-                        <select id="sbox_x">
-                            <option value="0" selected>Entry</option>
-                            <option value="1">Execution Time</option>
-                            <option value="2">Rank#.Thread#</option>
-                            <option value="3">Exit</option>
-                        </select>
-                        &nbsp; y axis:
-                        <select id="sbox_y">
-                            <option value="0">Entry</option>
-                            <option value="1" selected>Execution Time</option>
-                            <option value="2">Rank#.Thread#</option>
-                            <option value="3">Exit</option>
-                        </select>
-                        <div class="srate_container">
-                            &nbsp; &nbsp; Call Depth: 
-                            <input type="range" min="0.01" max="1" value="1" step="0.01" class="sampling-rate-slider" id="srate">
-                            <span id="srate_val">1</span>
-                        </div>
-                        &nbsp; &nbsp; <button id="apply" type="button"> apply </button>
-                        <!-- &nbsp; &nbsp; <input type="checkbox" id="scatter-cbox"> anomaly -->
-                        <!-- &nbsp; &nbsp; <input type="checkbox" id="scatter-legend-filter"> filter all -->
-                    </div>
+                    <b class="title">&nbsp; &nbsp; Detailed Frame Visualization</b><br/> 
                     <div class="nopadding" >
-                        <svg id="overview" class="scatterview"></svg>
-                        <!-- <div id="scatter-legend" class="scatter-legend nopadding"></div> -->
+                        <div id='detailed_frame_info'></div>
+                        <svg id="frameview" class="frameview"></svg>
                     </div>
                 </div>
-            </div>
-            <div class="rightpanel col-lg-6 well nopadding" id = "rightpanel" > <!-- style='background-color: red' -->
-                <div class="row visrow">
-                    <b class="title">&nbsp; &nbsp; Selected Call Stack Tree</b></br>
-                    <svg id="treeview" class='treeview'></svg>
-                    <svg id="baselineview" class='baselineview'></svg>
-                </div>
-                <div class="row visrow">
-                    <b class="title">&nbsp; &nbsp; Timeline and Message Visualization</b></br>
-                    <svg id="temporalview" class="temporalview"></svg>
-                </div>
-            </div>
         </div>
     </div>
     <script src="/static/js/constant.js"></script>
     <script src="/static/js/view.js"></script>
+    <script src="/static/js/streamview.js"></script>
+    <script src="/static/js/frameview.js"></script>
     <script src="/static/js/globalview.js"></script>
     <script src="/static/js/scatterview.js"></script>
     <script src="/static/js/graphview.js"></script>

@@ -50,19 +50,24 @@ class DataManager(object):
         self.buffer_manager = BufferManager(self.process_frame) # MAX_BUFFER_SIZE
         self.log_manager = LogManager() # MAX_BUFFER_SIZE
 
-        self.SECOND = 1000000 # microsecond by default
+        self.SECOND_IN_MICROSECOND = 1000000 # microsecond by default
         self.GRA = {} # Global Rank Anomaly
         self.GRA_temp = {} 
         self.GRA_time_bound = 0 # starting from 0
-        self.GRA_interval = self.SECOND * 10 #  interval for # anomalies calculation
-        self.GRA_time_window = self.SECOND * 60 # interval for removal of rank stat
-        self.GRA_sampling_interval = self.SECOND * 60 # interval for stratified sampling
+        self.GRA_interval = self.SECOND_IN_MICROSECOND * 10 #  interval for # anomalies calculation
+        self.GRA_time_window = self.SECOND_IN_MICROSECOND * 60 # interval for removal of rank stat
+        self.GRA_sampling_interval = self.SECOND_IN_MICROSECOND * 60 # interval for stratified sampling
         self.GRA_outliers = set()
         self.online_stat_manager = OnlineStatManager()
 
         self.frames = {} # frames obj
+        self.frame_temp = {
+            'total': 0
+        } 
         self.frame_id = -1 # frame id 
         self.FRAME_WINDOW = 100 # frame window
+        self.FRAME_INTERVAL = 0.001 # second
+        self.frame_time_bound = -1
 
     def set_functions(self, functions):# set function dictionary
         with self.lock:
@@ -624,22 +629,24 @@ class DataManager(object):
         log('NUM ANOMALIES: ', self.anomaly_cnt)
 
     def calculate_frame(self, executions):
-        self.frame_id += 1
-        frame_info = {
-            'total': 0
-        }
+        if self.frame_time_bound == -1:
+            self.frame_time_bound = time.time()
         for i, execution in executions.items():
             execution = self.update_execution(execution)
-            if execution['comm ranks'] not in frame_info:
-                frame_info[execution['comm ranks']] = 0
-            frame_info[execution['comm ranks']] += 1
-            frame_info['total'] += 1
+            if execution['comm ranks'] not in self.frame_temp:
+                self.frame_temp[execution['comm ranks']] = 0
+            self.frame_temp[execution['comm ranks']] += 1
+            self.frame_temp['total'] += 1
             self.anomaly_cnt += 1
-        self.frames[self.frame_id] = frame_info
-
+        now = time.time()
+        if now - self.frame_time_bound > (self.FRAME_INTERVAL):
+            self.frame_id += 1
+            self.frames[self.frame_id] = self.frame_temp
+            self.frame_time_bound = now
+            self.frame_temp = {
+                'total': 0
+            }
         if len(self.frames.keys()) > self.FRAME_WINDOW:
             del_id = self.frame_id - self.FRAME_WINDOW
             del self.frames[del_id]
-        
         self.changed = True
-        

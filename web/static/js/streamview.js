@@ -7,10 +7,10 @@ class StreamView extends View {
         this.HOVER_LINE_COLOR = '#A8A3A3'//'#ff8080'
         this.NON_SELECTED_LINE_COLOR = '#A8A3A3'//'#ddd'
         this.xAxisLabel = 'Frame';
-        this.yAxisLabel = 'Anomalies';
+        this.yAxisLabel = '#. Anomalies';
         this._data = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
-        this.container_width = 1200;
+        this.container_width = 700;
         this.container_height = 300;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
@@ -35,6 +35,7 @@ class StreamView extends View {
         this._data = this.data.frames;
         this.adjust_scale();
         this.draw();
+        this._updateCurrentView();
     }
     get_y_max(d) {
         return Math.max(...Object.values(d));
@@ -59,7 +60,8 @@ class StreamView extends View {
                 .attr('y', 30)
                 .style('text-anchor', 'middle')
                 .text(this.xAxisLabel)
-                .attr('fill', 'black');
+                .attr('fill', 'black')
+                .style('font-weight', 'bold');
         this.yAxis.call(this.axisLeft)
             .append('text')
                 .attr('class', 'streamview_yLabel')
@@ -69,7 +71,8 @@ class StreamView extends View {
                 .attr('dy', '.71em')
                 .style('text-anchor', 'middle')
                 .text(this.yAxisLabel)
-                .attr('fill', 'black');
+                .attr('fill', 'black')
+                .style('font-weight', 'bold');
     }
     _drawline() {
         var me = this;
@@ -91,12 +94,18 @@ class StreamView extends View {
     }
     getLineData() {
         var res = []
+        this.maxFrameNo = -1
         Object.keys(this._data).forEach(frameno => {
             var frame = this._data[frameno]
             res.push({
                 'frameno': frameno,
                 'value': frame['total'],
             })
+            console.log(typeof frameno)
+            frameno = Number(frameno)
+            if(this.maxFrameNo < frameno) {
+                this.maxFrameNo = frameno
+            }
         });
         return res;
     }
@@ -154,12 +163,13 @@ class StreamView extends View {
         
         function clicked() {
             console.log('clicked: '+me.frameno)
+            me.data.detailed_frame_no = me.frameno
             me.data.detailed_frame = me._data[me.frameno]
             console.log(me.data.detailed_frame)
             if (!me.frameview) {
                 me.frameview = me.data.views.getView('frameview');
             }
-            me.frameview.stream_update();
+            me.frameview._update();
         }
     }
     display_roi_labels() {
@@ -195,6 +205,13 @@ class StreamView extends View {
                 me.rank_of_interest_labels[rank].attr('display', 'none')
             }
         });
+    }
+
+    _updateCurrentView() {
+        if (!this.currentview) {
+            this.currentview = this.data.views.getView('currentview');
+        }
+        this.currentview._update(this._data[this.maxFrameNo]);
     }
 }
 d3.selection.prototype.moveToFront = function() {

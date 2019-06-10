@@ -17,6 +17,8 @@ class Data {
         // this.views.addView(new GlobalView(this, d3.select("#globalview")));
         this.views.addView(new StreamView(this, d3.select("#streamview")));
         this.views.addView(new FrameView(this, d3.select("#frameview")));
+        this.views.addView(new CurrentView(this, d3.select("#currentview")));
+        this.views.addView(new HistView(this, d3.select("#histview")));
 
         this.k = visOptions.clusterk;
         this.eps = visOptions.clustereps;

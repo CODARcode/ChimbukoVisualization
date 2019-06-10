@@ -82,16 +82,29 @@ text {
     margin: 0px;
     display: block;
 }
+.viscol {
+    display: inline-block;
+}
 /* Visualization Components */
 .streamview {
     width: 100%;
     height: 300px;
-    display: block;
+    display: inline-block;
 }
 .frameview {
     width: 100%;
-    height: 500px;
-    display: block;
+    height: 300px;
+    display: inline-block;
+}
+.currentview {
+    width: 100%;
+    height: 300px;
+    display: inline-block;
+}
+.histview {
+    width: 100%;
+    height: 300px;
+    display: inline-block;
 }
 .globalview {
     width: 100%;

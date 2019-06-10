@@ -24,22 +24,43 @@
     <div class="container-fluid">
         <div class="row nopadding">
                 <div class="row visrow">
-                    <div class="title"><b> &nbsp; &nbsp; Data Stream Visualization</b></div>
-                    <svg id="streamview" class="streamview"></svg>
-                </div>
-                <div class="row visrow">
-                    <b class="title">&nbsp; &nbsp; Detailed Frame Visualization</b><br/> 
-                    <div class="nopadding" >
-                        <div id='detailed_frame_info'></div>
-                        <svg id="frameview" class="frameview"></svg>
+                    <div class='viscol col-lg-5 nopadding'>
+                        <b class="title"> &nbsp; &nbsp; Data Stream Visualization</b>
+                        <svg id="streamview" class="streamview"></svg>
+                    </div>
+                    <div class='viscol col-lg-5 nopadding'>
+                        <div>
+                            <b class="title" style='display: inline-block'>&nbsp; &nbsp; Detailed Frame Visualization</b>
+                            <div id='detailed_frame_info' style='display: inline-block;'></div>
+                        </div>
+                        <div class="nopadding" >
+                            
+                            <svg id="frameview" class="frameview"></svg>
+                        </div>
                     </div>
                 </div>
-        </div>
+                <div class="row visrow">
+                    <div class='viscol col-lg-5 nopadding'>
+                        <b class="title"> &nbsp; &nbsp; Current Anomaly Status</b>
+                        <svg id="currentview" class="currentview"></svg>
+                    </div>
+                    <div class='viscol col-lg-5 nopadding'>
+                        <div>
+                            <b class="title" style='display: inline-block'>&nbsp; &nbsp; Selected Rank History </b>
+                            <div id='selected_rank_no' style='display: inline-block;'></div>
+                        </div>
+                        <div class="nopadding" >
+                            <svg id="histview" class="histview"></svg>
+                        </div>
+                    </div>
+                </div>
     </div>
     <script src="/static/js/constant.js"></script>
     <script src="/static/js/view.js"></script>
     <script src="/static/js/streamview.js"></script>
     <script src="/static/js/frameview.js"></script>
+    <script src="/static/js/currentview.js"></script>
+    <script src="/static/js/histview.js"></script>
     <script src="/static/js/globalview.js"></script>
     <script src="/static/js/scatterview.js"></script>
     <script src="/static/js/graphview.js"></script>

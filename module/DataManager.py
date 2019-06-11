@@ -60,6 +60,7 @@ class DataManager(object):
         self.GRA_outliers = set()
         self.online_stat_manager = OnlineStatManager()
 
+        self.accum_rankmap = {} # accumulated # anomalies per rank
         self.frames = {} # frames obj
         self.frame_temp = {
             'total': 0
@@ -643,6 +644,7 @@ class DataManager(object):
             self.frame_id += 1
             self.frames[self.frame_id] = self.frame_temp
             self.frame_time_bound = now
+            self.update_rankmap()
             self.frame_temp = {
                 'total': 0
             }
@@ -650,3 +652,9 @@ class DataManager(object):
             del_id = self.frame_id - self.FRAME_WINDOW
             del self.frames[del_id]
         self.changed = True
+
+    def update_rankmap(self):
+        for rank, value in self.frame_temp.items():
+            if rank not in self.accum_rankmap:
+                self.accum_rankmap[rank] = 0
+            self.accum_rankmap[rank] += value

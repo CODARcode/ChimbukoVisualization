@@ -70,8 +70,8 @@ def _stream():
         # data_manager.reset_forest()
         
         yield """
-            retry: 10000\ndata:{"frames":%s}\n\n
-        """ % ( json.dumps(data_manager.frames) )
+            retry: 10000\ndata:{"frames":%s, "ranks": %s}\n\n
+        """ % ( json.dumps(data_manager.frames), json.dumps(data_manager.accum_rankmap) )
         data_manager.get_recording(time.time())
         data_manager.changed = False
 

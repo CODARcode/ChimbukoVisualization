@@ -24,13 +24,13 @@
     <div class="container-fluid">
         <div class="row nopadding">
                 <div class="row visrow">
-                    <div class='viscol col-lg-5 nopadding'>
-                        <b class="title"> &nbsp; &nbsp; Data Stream Visualization</b>
+                    <div class='viscol col-lg-6 nopadding'>
+                        <b class="title"> &nbsp; &nbsp; Data Stream View</b>
                         <svg id="streamview" class="streamview"></svg>
                     </div>
                     <div class='viscol col-lg-5 nopadding'>
                         <div>
-                            <b class="title" style='display: inline-block'>&nbsp; &nbsp; Detailed Frame Visualization</b>
+                            <b class="title" style='display: inline-block'>&nbsp; &nbsp; Frame Details</b>
                             <div id='detailed_frame_info' style='display: inline-block;'></div>
                         </div>
                         <div class="nopadding" >
@@ -40,9 +40,11 @@
                     </div>
                 </div>
                 <div class="row visrow">
-                    <div class='viscol col-lg-5 nopadding'>
-                        <b class="title"> &nbsp; &nbsp; Current Anomaly Status</b>
-                        <svg id="currentview" class="currentview"></svg>
+                    <div class='viscol col-lg-6 nopadding'>
+                        <b class="title-inline"> &nbsp; &nbsp; Rank Overview</b>
+                        (50 ranks starting from rank # <input type='text' id='start_rank_no' value=0 width="40px"/>)
+                        <button id="rank_btn" type="button"> apply </button>
+                        <svg id="rankview" class="rankview"></svg>
                     </div>
                     <div class='viscol col-lg-5 nopadding'>
                         <div>
@@ -50,7 +52,7 @@
                             <div id='selected_rank_no' style='display: inline-block;'></div>
                         </div>
                         <div class="nopadding" >
-                            <svg id="histview" class="histview"></svg>
+                            <svg id="historyview" class="historyview"></svg>
                         </div>
                     </div>
                 </div>
@@ -59,8 +61,8 @@
     <script src="/static/js/view.js"></script>
     <script src="/static/js/streamview.js"></script>
     <script src="/static/js/frameview.js"></script>
-    <script src="/static/js/currentview.js"></script>
-    <script src="/static/js/histview.js"></script>
+    <script src="/static/js/rankview.js"></script>
+    <script src="/static/js/historyview.js"></script>
     <script src="/static/js/globalview.js"></script>
     <script src="/static/js/scatterview.js"></script>
     <script src="/static/js/graphview.js"></script>

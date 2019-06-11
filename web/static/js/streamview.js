@@ -7,10 +7,10 @@ class StreamView extends View {
         this.HOVER_LINE_COLOR = '#A8A3A3'//'#ff8080'
         this.NON_SELECTED_LINE_COLOR = '#A8A3A3'//'#ddd'
         this.xAxisLabel = 'Frame';
-        this.yAxisLabel = '#. Anomalies';
+        this.yAxisLabel = '#. Anomaly';
         this._data = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
-        this.container_width = 700;
+        this.container_width = 850;
         this.container_height = 300;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
@@ -35,7 +35,7 @@ class StreamView extends View {
         this._data = this.data.frames;
         this.adjust_scale();
         this.draw();
-        this._updateCurrentView();
+        // this._notify();
     }
     get_y_max(d) {
         return Math.max(...Object.values(d));
@@ -94,7 +94,7 @@ class StreamView extends View {
     }
     getLineData() {
         var res = []
-        this.maxFrameNo = -1
+        this.data.maxFrameNo = -1
         Object.keys(this._data).forEach(frameno => {
             var frame = this._data[frameno]
             res.push({
@@ -103,8 +103,8 @@ class StreamView extends View {
             })
             console.log(typeof frameno)
             frameno = Number(frameno)
-            if(this.maxFrameNo < frameno) {
-                this.maxFrameNo = frameno
+            if(this.data.maxFrameNo < frameno) {
+                this.data.maxFrameNo = frameno
             }
         });
         return res;
@@ -207,11 +207,11 @@ class StreamView extends View {
         });
     }
 
-    _updateCurrentView() {
-        if (!this.currentview) {
-            this.currentview = this.data.views.getView('currentview');
-        }
-        this.currentview._update(this._data[this.maxFrameNo]);
+    _notify() {
+        // if (!this.rankview) {
+        //     this.rankview = this.data.views.getView('rankview');
+        // }
+        // this.rankview._update(this._data[this.data.maxFrameNo]);
     }
 }
 d3.selection.prototype.moveToFront = function() {

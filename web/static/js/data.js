@@ -17,8 +17,8 @@ class Data {
         // this.views.addView(new GlobalView(this, d3.select("#globalview")));
         this.views.addView(new StreamView(this, d3.select("#streamview")));
         this.views.addView(new FrameView(this, d3.select("#frameview")));
-        this.views.addView(new CurrentView(this, d3.select("#currentview")));
-        this.views.addView(new HistView(this, d3.select("#histview")));
+        this.views.addView(new RankView(this, d3.select("#rankview")));
+        this.views.addView(new HistoryView(this, d3.select("#historyview")));
 
         this.k = visOptions.clusterk;
         this.eps = visOptions.clustereps;
@@ -54,7 +54,8 @@ class Data {
             
             var _json = jQuery.parseJSON(message.data);  
             me.frames = _json['frames']
-            console.log(me.frames)
+            me.accum = _json['ranks']
+            console.log(me.accum)
             // me.stat = _json['stat']
             // me.scatterLayout = _json['layout'];
             // me.global_rank_anomaly = _json['global_rank']; 

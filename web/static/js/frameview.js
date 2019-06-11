@@ -8,10 +8,10 @@ class FrameView extends View {
         this.HOVER_LINE_COLOR = '#A8A3A3'//'#ff8080'
         this.NON_SELECTED_LINE_COLOR = '#A8A3A3'//'#ddd'
         this.xAxisLabel = 'Rank';
-        this.yAxisLabel = '#. Anomalies';
+        this.yAxisLabel = '#. Anomaly';
         this._data = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
-        this.container_width = 700;
+        this.container_width = 750;
         this.container_height = 300;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
@@ -62,7 +62,11 @@ class FrameView extends View {
         this.yAxis.selectAll('text.frameview_yLabel').remove();
         this.axisBottom = d3.axisBottom(this.xScale);
         this.axisLeft = d3.axisLeft(this.yScale);
-        this.xAxis.call(this.axisBottom)
+        this.xAxis.call(this.axisBottom).selectAll("text")
+            .attr('transform', 'rotate(-90)')
+            .attr('y', -5)
+            .attr('x', -15)
+        this.xAxis
             .append('text')
                 .attr('class', 'frameview_xLabel')
                 .attr('x', this.content_width/2)

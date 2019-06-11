@@ -1,35 +1,36 @@
-class CurrentView extends View {
+class HistoryView extends View {
     constructor(data, svg) {
         super(data, svg, {});
-        this.name = 'currentview'
+        this.name = 'historyview'
         this.detailed = d3.select("#selected_rank_no");
         this.LINE_COLOR = 'steelblue'//'#ff8080'
         this.SELECTED_LINE_COLOR = 'steelblue'//'#ff8080'
         this.HOVER_LINE_COLOR = '#A8A3A3'//'#ff8080'
         this.NON_SELECTED_LINE_COLOR = '#A8A3A3'//'#ddd'
-        this.xAxisLabel = 'Rank';
-        this.yAxisLabel = '#. Anomalies';
+        this.xAxisLabel = 'Frame';
+        this.yAxisLabel = '#. Anomaly';
         this._data = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
-        this.container_width = 700;
+        this.container_width = 750;
         this.container_height = 300;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
         this.rank_of_interest_labels = {};
+        this.NUM_FRAME = 50
         this.svg
-            .attr('class', 'currentview_svg')
+            .attr('class', 'historyview_svg')
             .attr('width', this.container_width)
             .attr('height', this.container_height);
         this.content_area = this.svg.append('g')
-            .attr('class', 'currentview_content_area')
+            .attr('class', 'historyview_content_area')
             .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')')
             .attr('width', this.content_width)
             .attr('height', this.content_height);
         this.xAxis = this.svg.append('g')
-            .attr('class', 'currentview_x_axis')
+            .attr('class', 'historyview_x_axis')
             .attr('transform', 'translate('+this.margin.left+',' + (this.content_height+this.margin.top) + ')');
         this.yAxis = this.svg.append('g')
-            .attr('class', 'currentview_y_axis')
+            .attr('class', 'historyview_y_axis')
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
     }
     stream_update(){
@@ -39,11 +40,20 @@ class CurrentView extends View {
         // this.adjust_scale();
         // this.draw();
     }
-    _update(data){
-        this._data = data
-        delete this._data['total']
+    _update(rankno){
+        this.detailed.text('Selected Rank #: '+rankno)
+        this._data = this.getHistoryData(rankno)
         this.adjust_scale();
         this.draw();
+    }
+    getHistoryData(rankno) {
+        var res = {}
+        for(var frameno in this.data.frames) {
+            if (frameno > (this.data.maxFrameNo-this.NUM_FRAME)) {
+                res[frameno] = this.data.frames[frameno][rankno]===undefined? 0: this.data.frames[frameno][rankno]
+            }
+        }
+        return res
     }
     get_y_max(d) {
         return Math.max(...Object.values(d));
@@ -57,13 +67,17 @@ class CurrentView extends View {
         this._drawBars();
     }
     _updateAxis() {
-        this.xAxis.selectAll('text.currentview_xLabel').remove();
-        this.yAxis.selectAll('text.currentview_yLabel').remove();
+        this.xAxis.selectAll('text.historyview_xLabel').remove();
+        this.yAxis.selectAll('text.historyview_yLabel').remove();
         this.axisBottom = d3.axisBottom(this.xScale);
         this.axisLeft = d3.axisLeft(this.yScale);
-        this.xAxis.call(this.axisBottom)
+        this.xAxis.call(this.axisBottom).selectAll("text")
+            .attr('transform', 'rotate(-90)')
+            .attr('x', -15)
+            .attr('y', -5)
+        this.xAxis
             .append('text')
-                .attr('class', 'currentview_xLabel')
+                .attr('class', 'historyview_xLabel')
                 .attr('x', this.content_width/2)
                 .attr('y', 30)
                 .style('text-anchor', 'middle')
@@ -72,7 +86,7 @@ class CurrentView extends View {
                 .style('font-weight', 'bold');
         this.yAxis.call(this.axisLeft)
             .append('text')
-                .attr('class', 'currentview_yLabel')
+                .attr('class', 'historyview_yLabel')
                 .attr('transform', 'rotate(-90)')
                 .attr('y', -42)
                 .attr('x', -this.content_height/2)
@@ -104,7 +118,7 @@ class CurrentView extends View {
                     console.log('content_height: '+me.content_height+', me.yScale(d.value): '+ me.yScale(d.value))
                     return me.content_height - me.yScale(d.value); }
                 );
-        this.bars = this.content_area.selectAll('currentview_bar');
+        this.bars = this.content_area.selectAll('historyview_bar');
     }
     getBarData() {
         var res = []

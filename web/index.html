@@ -30,7 +30,9 @@
                     </div>
                     <div class='viscol col-lg-5 nopadding'>
                         <div>
-                            <b class="title" style='display: inline-block'>&nbsp; &nbsp; Frame Details</b>
+                            <b class="title-inline" style='display: inline-block'>&nbsp; &nbsp; Frame Details</b>
+                            starting from rank # <input type='text' id='detail_start_no' value=0 width="40px"/>
+                            <button id="fbtn" type="button"> apply </button>
                             <div id='detailed_frame_info' style='display: inline-block;'></div>
                         </div>
                         <div class="nopadding" >
@@ -40,13 +42,15 @@
                     </div>
                 </div>
                 <div class="row visrow">
-                    <div class='viscol col-lg-6 nopadding'>
+                    <div class='viscol nopadding'>
                         <b class="title-inline"> &nbsp; &nbsp; Rank Overview</b>
-                        (50 ranks starting from rank # <input type='text' id='start_rank_no' value=0 width="40px"/>)
+                        starting from rank # <input type='text' id='start_rank_no' value=0 width="40px"/>
                         <button id="rank_btn" type="button"> apply </button>
                         <svg id="rankview" class="rankview"></svg>
                     </div>
-                    <div class='viscol col-lg-5 nopadding'>
+                </div>
+                <div class="row visrow">
+                    <div class='viscol nopadding'>
                         <div>
                             <b class="title" style='display: inline-block'>&nbsp; &nbsp; Selected Rank History </b>
                             <div id='selected_rank_no' style='display: inline-block;'></div>

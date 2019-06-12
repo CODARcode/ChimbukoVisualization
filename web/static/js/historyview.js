@@ -11,12 +11,12 @@ class HistoryView extends View {
         this.yAxisLabel = '#. Anomaly';
         this._data = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
-        this.container_width = 750;
+        this.container_width = 1500;
         this.container_height = 300;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
         this.rank_of_interest_labels = {};
-        this.NUM_FRAME = 50
+        this.NUM_FRAME = 100
         this.svg
             .attr('class', 'historyview_svg')
             .attr('width', this.container_width)
@@ -106,16 +106,16 @@ class HistoryView extends View {
                 .append("rect")
                 .style("fill", "steelblue")
                 .attr("x", function(d) { 
-                    console.log('rank #: '+d.rank+', x: '+me.xScale(d.rank))
+                    // console.log('rank #: '+d.rank+', x: '+me.xScale(d.rank))
                     return me.xScale(d.rank)
                 })
                 .attr("width", me.xScale.bandwidth())
                 .attr("y", function(d) { 
-                    console.log('value: '+d.value+', y: '+me.yScale(d.value))
+                    // console.log('value: '+d.value+', y: '+me.yScale(d.value))
                     return me.yScale(d.value)
                 })
                 .attr("height", function(d) { 
-                    console.log('content_height: '+me.content_height+', me.yScale(d.value): '+ me.yScale(d.value))
+                    // console.log('content_height: '+me.content_height+', me.yScale(d.value): '+ me.yScale(d.value))
                     return me.content_height - me.yScale(d.value); }
                 );
         this.bars = this.content_area.selectAll('historyview_bar');

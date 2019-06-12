@@ -31,6 +31,14 @@ class FrameView extends View {
         this.yAxis = this.svg.append('g')
             .attr('class', 'frameview_y_axis')
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
+        var me = this
+        this.rangeStart = 0
+        this.numVisibleRanks = 10
+        this.rank_no = d3.select("#detail_start_no").node()
+        this.rank_no_btn = d3.select("#fbtn").on("click", function(d) {
+            me.rangeStart = Number(me.rank_no.value)
+            me._update();
+        });
     }
     stream_update(){
         // this.detailed.text('Selected Frame #: '+this.data.detailed_frame_no)
@@ -41,10 +49,20 @@ class FrameView extends View {
     }
     _update(){
         this.detailed.text('Selected Frame #: '+this.data.detailed_frame_no)
-        this._data = this.data.detailed_frame
+        this._data = this.getRange(this.data.detailed_frame)
         delete this._data['total']
         this.adjust_scale();
         this.draw();
+    }
+    getRange(_data) {
+        var res = {}
+        for (var i=0; i<this.numVisibleRanks; i++) { 
+            var cnt = this.rangeStart + i
+            if (_data[cnt]>-1) {
+                res[cnt] = _data[cnt]
+            }
+        }
+        return res
     }
     get_y_max(d) {
         return Math.max(...Object.values(d));
@@ -97,16 +115,16 @@ class FrameView extends View {
                 .append("rect")
                 .style("fill", "steelblue")
                 .attr("x", function(d) { 
-                    console.log('rank #: '+d.rank+', x: '+me.xScale(d.rank))
+                    // console.log('rank #: '+d.rank+', x: '+me.xScale(d.rank))
                     return me.xScale(d.rank)
                 })
                 .attr("width", me.xScale.bandwidth())
                 .attr("y", function(d) { 
-                    console.log('value: '+d.value+', y: '+me.yScale(d.value))
+                    // console.log('value: '+d.value+', y: '+me.yScale(d.value))
                     return me.yScale(d.value)
                 })
                 .attr("height", function(d) { 
-                    console.log('content_height: '+me.content_height+', me.yScale(d.value): '+ me.yScale(d.value))
+                    // console.log('content_height: '+me.content_height+', me.yScale(d.value): '+ me.yScale(d.value))
                     return me.content_height - me.yScale(d.value); }
                 );
         this.bars = this.content_area.selectAll('frameview_bar');

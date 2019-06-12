@@ -96,13 +96,12 @@ class StreamView extends View {
         var res = []
         this.data.maxFrameNo = -1
         Object.keys(this._data).forEach(frameno => {
+            frameno = Number(frameno)
             var frame = this._data[frameno]
             res.push({
                 'frameno': frameno,
-                'value': frame['total'],
+                'value': (!frame['total'])? 0:frame['total']
             })
-            console.log(typeof frameno)
-            frameno = Number(frameno)
             if(this.data.maxFrameNo < frameno) {
                 this.data.maxFrameNo = frameno
             }

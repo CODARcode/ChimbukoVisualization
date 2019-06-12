@@ -11,7 +11,7 @@ class RankView extends View {
         this.yAxisLabel = '#. Anomaly';
         this._data = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
-        this.container_width = 850;
+        this.container_width = 1500;
         this.container_height = 300;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
@@ -32,7 +32,7 @@ class RankView extends View {
             .attr('class', 'rankview_y_axis')
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
         this.rangeStart = 0
-        this.numVisibleRanks = 50
+        this.numVisibleRanks = 100
         var me = this
         this.rank_no = d3.select("#start_rank_no").node()
         this.rank_no_btn = d3.select("#rank_btn").on("click", function(d) {
@@ -41,7 +41,7 @@ class RankView extends View {
         });
     }
     stream_update(){
-        this._data = this.getRange(this.data.accum)
+        this._data = this.getRange(this.data.streamAccumulated)
         this.adjust_scale();
         this.draw();
     }
@@ -112,16 +112,16 @@ class RankView extends View {
                 .append("rect")
                 .style("fill", "steelblue")
                 .attr("x", function(d) { 
-                    console.log('rank #: '+d.rank+', x: '+me.xScale(d.rank))
+                    // console.log('rank #: '+d.rank+', x: '+me.xScale(d.rank))
                     return me.xScale(d.rank)
                 })
                 .attr("width", me.xScale.bandwidth())
                 .attr("y", function(d) { 
-                    console.log('value: '+d.value+', y: '+me.yScale(d.value))
+                    // console.log('value: '+d.value+', y: '+me.yScale(d.value))
                     return me.yScale(d.value)
                 })
                 .attr("height", function(d) { 
-                    console.log('content_height: '+me.content_height+', me.yScale(d.value): '+ me.yScale(d.value))
+                    // console.log('content_height: '+me.content_height+', me.yScale(d.value): '+ me.yScale(d.value))
                     return me.content_height - me.yScale(d.value); }
                 ).on("click", function(d) {
                     if (!me.historyview) {
@@ -139,7 +139,6 @@ class RankView extends View {
                 'value': this._data[rank],
             })
         });
-        console.log(res)
         return res;
     }
 }

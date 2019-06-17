@@ -70,8 +70,8 @@ def _stream():
         # data_manager.reset_forest()
         
         yield """
-            retry: 10000\ndata:{"stream":%s}\n\n
-        """ % ( json.dumps(data_manager.stream) )
+            retry: 10000\ndata:{"stream":%s, "delta": %s}\n\n
+        """ % ( json.dumps(data_manager.stream), json.dumps(data_manager.delta) )
         data_manager.get_recording(time.time())
         data_manager.refresh()
         data_manager.changed = False

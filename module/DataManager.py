@@ -69,9 +69,9 @@ class DataManager(object):
         self.FRAME_INTERVAL = 0.001 # second
         self.frame_time_bound = -1
 
-        self.stream = {
-            'total': 0
-        }
+        self.stream = {}
+        self.delta = {}
+        self.prev = {}
 
     def set_functions(self, functions):# set function dictionary
         with self.lock:
@@ -619,7 +619,7 @@ class DataManager(object):
         else: # Executions
             # self.set_statistics(frame['stat'])
             # self.add_executions(frame['executions'])
-            self.update_stream(frame['executions'])
+            self._process_frame(frame['executions'])
     
     def record_response_time(self, time):
         self.log_manager.add_response_time(time)
@@ -633,18 +633,30 @@ class DataManager(object):
         log('NUM ANOMALIES: ', self.anomaly_cnt)
 
     def refresh(self):
-        self.stream = {
-            'total': 0
-        }
+        self.stream = {}
 
-    def update_stream(self, executions):
+    def _process_frame(self, executions):
+        stream = {}
         for i, execution in executions.items():
             execution = self.update_execution(execution)
-            if execution['comm ranks'] not in self.stream:
-                self.stream[execution['comm ranks']] = 0
-            self.stream[execution['comm ranks']] += 1
-            self.stream['total'] += 1
+            if execution['comm ranks'] not in stream:
+                stream[execution['comm ranks']] = 0
+            stream[execution['comm ranks']] += 1
             self.anomaly_cnt += 1
+        for rank, curr in stream.items():
+            if rank not in self.stream:
+                self.stream[rank] = []
+            if rank not in self.delta:
+                self.delta[rank] = 0
+            if rank not in self.prev:
+                self.prev[rank] = 0
+            delta = abs(curr - self.prev[rank])
+            self.delta[rank] += delta
+
+            print('rank:', rank, 'prev:', self.prev[rank], 'curr:', curr, 'delta:', delta, 'self.delta:', self.delta[rank])
+
+            self.stream[rank].append(curr)
+            self.prev[rank] = curr
         self.changed = True
         
 

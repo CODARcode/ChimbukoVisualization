@@ -132,19 +132,19 @@ text {
 }
 
 /* Subcomponents */
-.scatter-legend {
+.streamview-legend {
     display: inline-block; 
     vertical-align: top; 
     width: 300px;
-    height: 600px; 
+    height: 400px; 
     overflow-y: auto;
 }
-.scatter-legend-item {
+.streamview-legend-item {
     display: table;
     margin-bottom: 5px;
     cursor: pointer;
 }
-.scatter-legend-item-circle {
+.streamview-legend-item-circle {
     border-radius: 50%;
     behavior: url(PIE.htc);
     width: 20px;
@@ -152,7 +152,7 @@ text {
     display: inline-block;
     vertical-align: middle;
 }
-.scatter-legend-item-text {
+.streamview-legend-item-text {
     height: 20px;
     display: table-cell;
     vertical-align: middle;

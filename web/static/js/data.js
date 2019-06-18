@@ -16,8 +16,8 @@ class Data {
         // this.views.addView(new ScatterView(this, d3.select("#overview")));
         // this.views.addView(new GlobalView(this, d3.select("#globalview")));
         this.views.addView(new StreamView(this, d3.select("#streamview")));
-        this.views.addView(new FrameView(this, d3.select("#frameview")));
-        this.views.addView(new RankView(this, d3.select("#rankview")));
+        // this.views.addView(new FrameView(this, d3.select("#frameview")));
+        // this.views.addView(new RankView(this, d3.select("#rankview")));
         this.views.addView(new HistoryView(this, d3.select("#historyview")));
 
         this.k = visOptions.clusterk;
@@ -34,13 +34,16 @@ class Data {
         this.global_rank_anomaly = {}
         this.rank_of_interest = new Set(); // by default
 
-        this.streamCurrent = {};
-        this.streamAccumulated = {};
-        this.frameWindow = 10
-        this.frameInterval = 500 // ms
+        this.SECOND = 1000 // ms
+        this.delta = {};
+        this.frameID = 0;
+        this.frameWindow = 30
+        this.frameInterval = this.SECOND * 0.5
         this.frames = {};
-        this.frameID = -1;
+        this.renderingFrames = {};
+        this.selectedFrames = []
         this.date = new Date();
+        this.setWait = true;
         this.rendering();
     }
 
@@ -50,52 +53,89 @@ class Data {
         sse.onmessage = function (message) {
             console.log('['+me.date.toLocaleTimeString()+'] streaming()');
             var d = jQuery.parseJSON(message.data);  
-            var stream = d['stream']
-            me.updateStream(stream)
+            var frames = d['stream']
+            var delta = d['delta'];
+            me._update(frames, delta)
         };
     }
 
-    updateStream(stream) {
-        for(var rank in stream) {
-            if(!this.streamCurrent[rank]) {
-                this.streamCurrent[rank] = 0
-            }
-            if(!this.streamAccumulated[rank]) {
-                this.streamAccumulated[rank] = 0
-            }
-            this.streamCurrent[rank] += stream[rank]
-            this.streamAccumulated[rank] += stream[rank]
+    _update(frames, delta) {
+        this.selectedRanks = this.getOutlierRanks(delta)
+        // console.log(this.selectedRanks)
+        for(var rank in frames) { // aggregate frames
+            if(this.selectedRanks[0].includes(rank)) {
+                if(!this.frames[rank]) {
+                    this.frames[rank] = []
+                }
+                this.frames[rank] = this.frames[rank].concat(frames[rank])
+            } 
+            // else if(this.selectedRanks[1].includes(rank)) {
+            //     if(!this.frames.bottom[rank]) {
+            //         this.frames.bottom[rank] = []
+            //     }
+            //     this.frames.bottom[rank] = this.frames.bottom[rank].concat(frames[rank])
+            // }
         }
-    }
-    
-    resetStream() {
-        this.streamCurrent = {}
+        // console.log(this.frames)
     }
 
-    makeFrame() {
-        this.frameID += 1;
-        this.frames[this.frameID] = this.streamCurrent;
-        this.removeOldFrame();
-        this.resetStream();
-    }
-
-    removeOldFrame() {
-        var oldID = this.frameID - this.frameWindow
-        if (this.frames[oldID]!==undefined) {
-            delete this.frames[oldID];
+    getOutlierRanks(delta) {
+        var ranks = Object.keys(delta)
+        var deltaValues = Object.values(delta);
+        var sortedRanks = deltaValues.map((d, i) => [ranks[i], d]) 
+                        .sort(([r1, d1], [r2, d2]) => d2 - d1) 
+                        .map(([r, d]) => r); 
+        var m = 5
+        var top
+        var bottom
+        if( sortedRanks.length < 10 ) {
+            m = Math.floor((sortedRanks.length-1)/2)
+            top = sortedRanks.slice(0, m)
+            bottom = sortedRanks.slice(m)
+        } else {
+            top = sortedRanks.slice(0, m)
+            // bottom = sortedRanks.slice(sortedRanks.length-5)
+            // top = ranks.slice(0, 3) // Test
+            // bottom = ranks.slice(ranks.length-1) // Test
         }
+        return [top, bottom] 
     }
     
     rendering() {
-        if(Object.keys(this.streamAccumulated).length >0) {
-            var me = this; 
-            console.log('['+this.date.toLocaleTimeString()+'] rendering()');
-            this.makeFrame();
-            // console.log(this.frames)
-            // console.log(this.streamAccumulated)
+        console.log('['+this.date.toLocaleTimeString()+'] rendering()');
+        if(this.makeRenderingFrames()){
+            // console.log('Frame: '+this.frameID)
+            // console.log(this.renderingFrames)
             this.views.stream_update();
+            this.frameID += 1;
+            this.frameInterval = this.SECOND * 0.5
+        } else {
+            this.frameInterval = this.SECOND * 10
         }
         setTimeout(this.rendering.bind(this), this.frameInterval);
+    }
+
+    makeRenderingFrames() {
+        // console.log('['+this.date.toLocaleTimeString()+'] makeRenderingFrames()');
+        var res = false;
+        // for (var type in this.frames) {
+            var rawFrame = this.frames//[type]
+            for ( var rank in rawFrame) {
+                var rankData = rawFrame[rank]
+                if (rankData.length > 0) {
+                    res = true;
+                    var value = rankData.splice(0, 1)[0]
+                    if (Object.keys(this.renderingFrames).length == this.frameWindow) {
+                        delete this.renderingFrames[this.frameID-this.frameWindow] 
+                    }
+                    if (!this.renderingFrames[this.frameID]) {
+                        this.renderingFrames[this.frameID] = {}
+                    }
+                    this.renderingFrames[this.frameID][rank] = value;
+                } 
+            }
+        // }
+        return res;
     }
 
     fetchWithCallback(data, callback, options) {

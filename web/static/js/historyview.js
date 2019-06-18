@@ -11,7 +11,7 @@ class HistoryView extends View {
         this.yAxisLabel = '#. Anomaly';
         this._data = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
-        this.container_width = 1500;
+        this.container_width = 1000;
         this.container_height = 400;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
@@ -34,15 +34,15 @@ class HistoryView extends View {
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
     }
     stream_update(){
-        // this.detailed.text('Selected Frame #: '+this.data.detailed_frame_no)
-        // this._data = this.data.detailed_frame
-        // delete this._data['total']
-        // this.adjust_scale();
-        // this.draw();
+        if(this.data.rankHistoryInfo !== undefined) {
+            this._update(this.data.rankHistoryInfo)
+        }
     }
-    _update(rankno){
-        this.detailed.text('Selected Rank #: '+rankno)
-        this._data = this.getHistoryData(rankno)
+    _update(){
+        var rankInfo = this.data.rankHistoryInfo;
+        this.fillColor = rankInfo.fill
+        this.detailed.text('Selected Rank #: '+rankInfo.rank)
+        this._data = this.getHistoryData(rankInfo.rank)
         this.adjust_scale();
         this.draw();
     }
@@ -104,7 +104,7 @@ class HistoryView extends View {
         this.content_area.selectAll('rect')
             .data(barData).enter()
                 .append("rect")
-                .style("fill", "steelblue")
+                .style("fill", this.fillColor)
                 .attr("x", function(d) { 
                     // console.log('rank #: '+d.rank+', x: '+me.xScale(d.rank))
                     return me.xScale(d.rank)
@@ -128,7 +128,6 @@ class HistoryView extends View {
                 'value': this._data[rank],
             })
         });
-        console.log(res)
         return res;
     }
 }

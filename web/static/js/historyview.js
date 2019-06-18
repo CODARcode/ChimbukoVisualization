@@ -12,7 +12,7 @@ class HistoryView extends View {
         this._data = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
         this.container_width = 1500;
-        this.container_height = 300;
+        this.container_height = 400;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
         this.rank_of_interest_labels = {};
@@ -48,9 +48,9 @@ class HistoryView extends View {
     }
     getHistoryData(rankno) {
         var res = {}
-        for(var frameno in this.data.frames) {
-            if (frameno > (this.data.maxFrameNo-this.NUM_FRAME)) {
-                res[frameno] = this.data.frames[frameno][rankno]===undefined? 0: this.data.frames[frameno][rankno]
+        for(var frameno in this.data.renderingFrames) {
+            if (frameno > (this.data.frameID-this.NUM_FRAME)) {
+                res[frameno] = this.data.renderingFrames[frameno][rankno]===undefined? 0: this.data.renderingFrames[frameno][rankno]
             }
         }
         return res

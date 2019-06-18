@@ -44,6 +44,7 @@ class Data {
         this.selectedFrames = []
         this.date = new Date();
         this.setWait = true;
+        this.NUM_SELECTION_RANK = 10;
         this.rendering();
     }
 
@@ -85,7 +86,7 @@ class Data {
         var sortedRanks = deltaValues.map((d, i) => [ranks[i], d]) 
                         .sort(([r1, d1], [r2, d2]) => d2 - d1) 
                         .map(([r, d]) => r); 
-        var m = 5
+        var m = this.NUM_SELECTION_RANK
         var top
         var bottom
         if( sortedRanks.length < 10 ) {
@@ -110,7 +111,7 @@ class Data {
             this.frameID += 1;
             this.frameInterval = this.SECOND * 0.5
         } else {
-            this.frameInterval = this.SECOND * 10
+            this.frameInterval = this.SECOND * 2
         }
         setTimeout(this.rendering.bind(this), this.frameInterval);
     }

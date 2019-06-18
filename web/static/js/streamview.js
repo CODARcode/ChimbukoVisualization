@@ -2,15 +2,11 @@ class StreamView extends View {
     constructor(data, svg) {
         super(data, svg, {});
         this.name = 'streamview'
-        this.LINE_COLOR = 'steelblue'//'#ff8080'
-        this.SELECTED_LINE_COLOR = 'steelblue'//'#ff8080'
-        this.HOVER_LINE_COLOR = '#steelblue'//'#ff8080'
-        this.NON_SELECTED_LINE_COLOR = '#steelblue'//'#ddd'
         this.xAxisLabel = 'Frame';
         this.yAxisLabel = '# Anomaly';
         this.frames = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
-        this.container_width = 1500;
+        this.container_width = 1000;
         this.container_height = 400;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
@@ -30,11 +26,15 @@ class StreamView extends View {
         this.yAxis = this.svg.append('g')
             .attr('class', 'streamview_y_axis')
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
-        this.colorScale = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,19));
+        this.colorScale = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,1000));
+        this.STROKE_WIDTH_SELECTED = 3
+        this.STROKE_WIDTH = 0.5
+        this.selectedRankNo = -1;
+        this.legend = d3.select("#streamview-legend");
     }
     stream_update(){
+        this.legendData = {};
         this.frames = this.data.renderingFrames;
-        this.data.rank_of_interest = new Set(Object.keys(this.data.renderingFrames[this.data.frameID]))
         this.adjust_scale();
         this.draw();
     }
@@ -47,7 +47,8 @@ class StreamView extends View {
     }
     draw() {
         this._updateAxis();
-        this._drawline();
+        this._drawLine();
+        this._drawLegend();
     }
     _updateAxis() {
         this.xAxis.selectAll('text.streamview_xLabel').remove();
@@ -55,23 +56,27 @@ class StreamView extends View {
         this.axisBottom = d3.axisBottom(this.xScale);
         this.axisLeft = d3.axisLeft(this.yScale);
         this.xAxis.call(this.axisBottom)
-            .append('text')
+        this.xAxis.append('text')
                 .attr('class', 'streamview_xLabel')
                 .attr('x', this.content_width/2)
                 .attr('y', 30)
                 .style('text-anchor', 'middle')
-                .text(this.xAxisLabel);
+                .text(this.xAxisLabel)
+                .attr('fill', 'black')
+                .style('font-weight', 'bold');
         this.yAxis.call(this.axisLeft)
-            .append('text')
+        this.yAxis.append('text')
                 .attr('class', 'streamview_yLabel')
                 .attr('transform', 'rotate(-90)')
                 .attr('y', -42)
                 .attr('x', -this.content_height/2)
                 .attr('dy', '.71em')
                 .style('text-anchor', 'middle')
-                .text(this.yAxisLabel);
+                .text(this.yAxisLabel)
+                .attr('fill', 'black')
+                .style('font-weight', 'bold');
     }
-    _drawline() {
+    _drawLine() {
         var me = this;
         me._rank = -1;
         this.line_area.selectAll('path').remove() // remove
@@ -81,15 +86,23 @@ class StreamView extends View {
                 .datum(lineData[rank])
                 .attr('class', 'streamview_line')
                 .attr('fill', 'none')
-                .attr('stroke',me.SELECTED_LINE_COLOR) 
-                .attr('stroke-width', 1) 
+                .attr('stroke',d => (me.colorScale(d[0].rank))) 
+                .attr('stroke-width', this.STROKE_WIDTH) 
                 .attr('d', d3.line() // Draw Lines
                     .x(function(d) { return me.xScale(d.time)})
                     .y(function(d) { return me.yScale(d.value)}))
+                .filter(function(d){
+                    if(Number(me.selectedRankNo) === Number(d[0].rank)) {
+                        console.log('Selected line:'+ me.selectedRankNo)
+                        return true;
+                    }
+                    return false;
+                })
+                    .attr('stroke-width', this.STROKE_WIDTH_SELECTED) 
+                    .moveToFront();
         });
-        this.lines = this.line_area.selectAll('path');
+        this.lines = me.line_area.selectAll('.streamview_line');
         this.apply_hover();
-        this.display_roi_labels();
     }
     getLineData() {
         var res = {}
@@ -104,6 +117,9 @@ class StreamView extends View {
                     'value': Number(d[rank]),
                     'rank': Number(rank)
                 })
+                if (!this.legendData[rank]) {
+                    this.legendData[Number(rank)] = this.colorScale(Number(rank))
+                }
             })
         });
         return res;
@@ -113,12 +129,8 @@ class StreamView extends View {
         if ('ontouchstart' in document) me.svg
             .style('-webkit-tap-highlight-color', 'transparent')
             .on('touchmove', moved)
-            .on('touchstart', entered)
-            .on('touchend', left)
         else me.svg
             .on('mousemove', moved)
-            .on('mouseenter', entered)
-            .on('mouseleave', left)
             .on('click', clicked);
         me.line_area.selectAll('.streamview_hover_point').remove()
         me.hover_point = me.line_area.append('g')
@@ -132,6 +144,7 @@ class StreamView extends View {
             .attr('text-anchor', 'middle')
             .attr('y', -8);
         var times = Object.keys(me.frames).map(Number);
+        
         function moved() { 
             d3.event.preventDefault();
             var mouse_coord_x = d3.event.layerX
@@ -153,102 +166,86 @@ class StreamView extends View {
             // console.log('scaled coordinate: ('+ scaled_x +', '+ scaled_y+')')
             // console.log('value:'+value+', rank:'+me._rank)
             // console.log(me.frames)
-            me.lines
-                .attr('stroke', me.SELECTED_LINE_COLOR) 
-                .attr('stroke-width', 1.0) 
-                .filter(d => (+d[0].rank === +me._rank))
-                    .moveToFront();
-            
             // label for hover
-            me.hover_point.attr('transform', `translate(${me.xScale(times[i])},${me.yScale(value)})`);
-            me.hover_point.select('text').text('Rank#'+me._rank+' ('+value+')');
-            me.hover_point.attr('display', null);
-            me.hover_point.moveToFront();
-
-            // label for selected ranks
-            me.data.rank_of_interest.forEach(rank=>{
-                if(!(rank in me.rank_of_interest_labels)) {
-                    me.rank_of_interest_labels[rank] = me.line_area.append('g')
-                        .attr('class', 'streamview_roi_label')
-                        .attr('display', 'none');
-                    me.rank_of_interest_labels[rank].append('circle')
-                        .attr('r', 2.5);
-                    me.rank_of_interest_labels[rank].append('text')
-                        .style('font', '14px')
-                        .style('font-weight', 'bold')
-                        .attr('text-anchor', 'middle')
-                        .attr('y', -8);
-                }
-                if (rank in me.freqobj) {
-                    me.rank_of_interest_labels[rank].attr('transform', `translate(${me.xScale(times[i])},${me.yScale(me.freqobj[rank])})`);
-                    me.rank_of_interest_labels[rank]
-                        .select('text')
-                        .text('Rank#'+rank+' ('+me.freqobj[rank]+')')
-                        .attr('fill', 'blue');
-                    me.rank_of_interest_labels[rank].attr('display', null);
-                    me.rank_of_interest_labels[rank].moveToFront();
-                } 
-            });
-        }
-        function entered() {
-            me.lines
-                .style('mix-blend-mode', null)
-                .attr('stroke-width', 1)
-                .attr('stroke',me.SELECTED_LINE_COLOR);
+            // me.hover_point.attr('transform', `translate(${me.xScale(times[i])},${me.yScale(value)})`);
+            // me.hover_point.select('text').text('Rank#'+me._rank+' ('+value+')');
             // me.hover_point.attr('display', null);
+            // me.hover_point.moveToFront();
         }
-        function left() {
-            me.lines
-                .style('mix-blend-mode', 'multiply')
-                .attr('stroke-width', 1)
-                .attr('stroke', me.SELECTED_LINE_COLOR);
-            me.hover_point.attr('display', 'none');
-        }
+        
         function clicked() {
             console.log('clicked: '+me._rank)
-            var _rank = +me._rank;
+            var _me = me;
+            me.selectedRankNo = +me._rank;
+            me.data.rankHistoryInfo = {
+                'rank': me.selectedRankNo,
+                'fill': me.colorScale(me.selectedRankNo)
+            }
             if (!me.historyview) {
                 me.historyview = me.data.views.getView('historyview');
             }
-            me.historyview._update(me._rank);
+            me.historyview._update();
+            
+            me.line_area.selectAll('.streamview_line')
+                .filter(function(d){
+                    if(Number(me.selectedRankNo) === Number(d[0].rank)) {
+                        return true;
+                    }
+                    return false;
+                })
+                    .attr('stroke-width', this.STROKE_WIDTH_SELECTED) 
+                    .moveToFront();
         }
     }
-    display_roi_labels() {
+    _drawLegend() {
         var me = this;
-        // console.log(me.data.rank_of_interest)
-        me.line_area.selectAll('.streamview_roi_label').remove()
-        me.data.rank_of_interest.forEach(rank=>{
-            rank = Number(rank)
-            // if(!(rank in me.rank_of_interest_labels)) {
-            me.rank_of_interest_labels[rank] = me.line_area.append('g')
-                .attr('class', 'streamview_roi_label')
-                .attr('display', 'none');
-            me.rank_of_interest_labels[rank].append('circle')
-                .attr('r', 2.5);
-            me.rank_of_interest_labels[rank].append('text')
-                .style('font', '14px')
-                .style('font-weight', 'bold')
-                .attr('text-anchor', 'middle')
-                .attr('y', -8);
-            // }
-            var times = Object.keys(me.frames);
-            var values = Object.values(me.frames);
-            var last_time = times[times.length-1]
-            var last_values = values[values.length-1];
-            if (rank in last_values) {
-                me.rank_of_interest_labels[rank]
-                    .attr('transform', `translate(${me.xScale(last_time)},${me.yScale(last_values[rank])})`);
-                me.rank_of_interest_labels[rank]
-                    .select('text')
-                    .text('Rank#'+rank+' ('+last_values[rank]+')')
-                    .attr('fill', 'blue');
-                me.rank_of_interest_labels[rank]
-                    .attr('display', null)
-                    .moveToFront();
-            } else {
-                me.rank_of_interest_labels[rank].attr('display', 'none')
-            }
-        });
+        me.legend.selectAll(".streamview-legend-item").remove();
+        var ranks = Object.keys(me.legendData).map(Number)
+        // // ranks.sort(function(x, y) {
+        // //     x = x.replace(/ *\prog#[0-9]-*\ */g, "");
+        // //     y = y.replace(/ *\prog#[0-9]-*\ */g, "");
+        // //     // return d3.ascending(me.data.stat[y]['ratio'], me.data.stat[x]['ratio']);
+        // //     return d3.ascending(me.data.stat[y]['abnormal'], me.data.stat[x]['abnormal']);
+        // // })
+        var legend = me.legend.selectAll(".streamview-legend-item").data(ranks).enter()
+            .append("div")
+                .attr("class", "streamview-legend-item")
+                .on("click", function(d) {
+                    var rankno = Number(d)
+                    console.log('clicked: '+rankno)
+                    var _me = me;
+                    me.selectedRankNo = rankno;
+                    me.data.rankHistoryInfo = {
+                        'rank': rankno,
+                        'fill': me.colorScale(rankno)
+                    }
+                    if (!me.historyview) {
+                        me.historyview = me.data.views.getView('historyview');
+                    }
+                    me.historyview._update();
+                    me.line_area.selectAll('.streamview_line')
+                        .filter(function(d){
+                            return (Number(me.selectedRankNo) === Number(d[0].rank));
+                        })
+                            .attr('stroke-width', this.STROKE_WIDTH_SELECTED) 
+                            .moveToFront();
+                });
+        legend.append("div")
+            .attr("class", "streamview-legend-item-circle")
+            .style("background", function(d){
+                return me.legendData[d]
+            });
+        legend.append("text")
+            .attr("class", "streamview-legend-item-text")
+            .style("color", function(d) {
+                return (Number(me.selectedRankNo) === Number(d))? "black":"gray";
+            })
+            .style("font-weight", function(d) {
+                return (Number(me.selectedRankNo) === Number(d))? "bold":"";
+            })
+            .text(function(d){
+                return 'MPI Rank #'+d
+            })
     }
 }
 d3.selection.prototype.moveToFront = function() {

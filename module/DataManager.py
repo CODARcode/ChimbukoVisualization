@@ -633,6 +633,7 @@ class DataManager(object):
         log('NUM ANOMALIES: ', self.anomaly_cnt)
 
     def refresh(self):
+        self.delta = {k: self.delta[k] for k in self.delta if k in self.stream.keys()} # exclude ranks incontinous
         self.stream = {}
 
     def _process_frame(self, executions):

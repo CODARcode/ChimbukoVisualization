@@ -1,40 +1,40 @@
 class StreamView extends View {
-    constructor(data, svg) {
+    constructor(data, svg, name) {
         super(data, svg, {});
-        this.name = 'streamview'
+        this.name = name
         this.xAxisLabel = 'Frame';
         this.yAxisLabel = '# Anomaly';
         this.frames = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
         this.container_width = 1000;
-        this.container_height = 400;
+        this.container_height = 300;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
         this.rank_of_interest_labels = {};
         this.svg
-            .attr('class', 'streamview_svg')
+            .attr('class', this.name+this.name+'_svg')
             .attr('width', this.container_width)
             .attr('height', this.container_height);
         this.line_area = this.svg.append('g')
-            .attr('class', 'streamview_line_area')
+            .attr('class', this.name+'_line_area')
             .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')')
             .attr('width', this.content_width)
             .attr('height', this.content_height);
         this.xAxis = this.svg.append('g')
-            .attr('class', 'streamview_x_axis')
+            .attr('class', this.name+'_x_axis')
             .attr('transform', 'translate('+this.margin.left+',' + (this.content_height+this.margin.top) + ')');
         this.yAxis = this.svg.append('g')
-            .attr('class', 'streamview_y_axis')
+            .attr('class', this.name+'_y_axis')
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
         this.colorScale = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,1000));
         this.STROKE_WIDTH_SELECTED = 3
         this.STROKE_WIDTH = 0.5
         this.selectedRankNo = -1;
-        this.legend = d3.select("#streamview-legend");
+        this.legend = d3.select('#'+this.name+'-legend');
     }
     stream_update(){
         this.legendData = {};
-        this.frames = this.data.renderingFrames;
+        this.frames = (this.name == 'streamview')? this.data.renderingFrames : this.data.renderingFramesBottom;
         this.adjust_scale();
         this.draw();
     }
@@ -51,13 +51,13 @@ class StreamView extends View {
         this._drawLegend();
     }
     _updateAxis() {
-        this.xAxis.selectAll('text.streamview_xLabel').remove();
-        this.yAxis.selectAll('text.streamview_yLabel').remove();
+        this.xAxis.selectAll('text.'+this.name+'_xLabel').remove();
+        this.yAxis.selectAll('text.'+this.name+'_yLabel').remove();
         this.axisBottom = d3.axisBottom(this.xScale);
         this.axisLeft = d3.axisLeft(this.yScale);
         this.xAxis.call(this.axisBottom)
         this.xAxis.append('text')
-                .attr('class', 'streamview_xLabel')
+                .attr('class', this.name+'_xLabel')
                 .attr('x', this.content_width/2)
                 .attr('y', 30)
                 .style('text-anchor', 'middle')
@@ -66,7 +66,7 @@ class StreamView extends View {
                 .style('font-weight', 'bold');
         this.yAxis.call(this.axisLeft)
         this.yAxis.append('text')
-                .attr('class', 'streamview_yLabel')
+                .attr('class', this.name+'_yLabel')
                 .attr('transform', 'rotate(-90)')
                 .attr('y', -42)
                 .attr('x', -this.content_height/2)
@@ -84,7 +84,7 @@ class StreamView extends View {
         Object.keys(lineData).forEach(rank => {
             this.line_area.append('path')
                 .datum(lineData[rank])
-                .attr('class', 'streamview_line')
+                .attr('class', this.name+'_line')
                 .attr('fill', 'none')
                 .attr('stroke',d => (me.colorScale(d[0].rank))) 
                 .attr('stroke-width', this.STROKE_WIDTH) 
@@ -92,7 +92,7 @@ class StreamView extends View {
                     .x(function(d) { return me.xScale(d.time)})
                     .y(function(d) { return me.yScale(d.value)}))
                 .filter(function(d){
-                    if(Number(me.selectedRankNo) === Number(d[0].rank)) {
+                    if(me.selectedRankNo == d[0].rank) {
                         console.log('Selected line:'+ me.selectedRankNo)
                         return true;
                     }
@@ -101,7 +101,7 @@ class StreamView extends View {
                     .attr('stroke-width', this.STROKE_WIDTH_SELECTED) 
                     .moveToFront();
         });
-        this.lines = me.line_area.selectAll('.streamview_line');
+        this.lines = me.line_area.selectAll('.'+this.name+'_line');
         this.apply_hover();
     }
     getLineData() {
@@ -115,10 +115,10 @@ class StreamView extends View {
                 res[rank].push({
                     'time': Number(t),
                     'value': Number(d[rank]),
-                    'rank': Number(rank)
+                    'rank': rank
                 })
                 if (!this.legendData[rank]) {
-                    this.legendData[Number(rank)] = this.colorScale(Number(rank))
+                    this.legendData[rank] = this.colorScale(rank)
                 }
             })
         });
@@ -132,9 +132,9 @@ class StreamView extends View {
         else me.svg
             .on('mousemove', moved)
             .on('click', clicked);
-        me.line_area.selectAll('.streamview_hover_point').remove()
+        me.line_area.selectAll('.'+this.name+'_hover_point').remove()
         me.hover_point = me.line_area.append('g')
-            .attr('class', 'streamview_hover_point')
+            .attr('class', this.name+'_hover_point')
             .attr('display', 'none');
         me.hover_point.append('circle')
             .attr('r', 2.5);
@@ -174,77 +174,75 @@ class StreamView extends View {
         }
         
         function clicked() {
-            console.log('clicked: '+me._rank)
+            console.log('clicked: ' + me._rank)
             var _me = me;
-            me.selectedRankNo = +me._rank;
+            me.selectedRankNo = me._rank;
             me.data.rankHistoryInfo = {
                 'rank': me.selectedRankNo,
-                'fill': me.colorScale(me.selectedRankNo)
+                'fill': me.colorScale(me.selectedRankNo),
+                'from': me.name
             }
             if (!me.historyview) {
                 me.historyview = me.data.views.getView('historyview');
             }
             me.historyview._update();
             
-            me.line_area.selectAll('.streamview_line')
+            me.line_area.selectAll('.'+this.name+'_line')
                 .filter(function(d){
-                    if(Number(me.selectedRankNo) === Number(d[0].rank)) {
-                        return true;
-                    }
-                    return false;
+                    return (me.selectedRankNo == d[0].rank);
                 })
                     .attr('stroke-width', this.STROKE_WIDTH_SELECTED) 
                     .moveToFront();
+            me.draw();
         }
     }
     _drawLegend() {
         var me = this;
-        me.legend.selectAll(".streamview-legend-item").remove();
-        var ranks = Object.keys(me.legendData).map(Number)
-        // // ranks.sort(function(x, y) {
-        // //     x = x.replace(/ *\prog#[0-9]-*\ */g, "");
-        // //     y = y.replace(/ *\prog#[0-9]-*\ */g, "");
-        // //     // return d3.ascending(me.data.stat[y]['ratio'], me.data.stat[x]['ratio']);
-        // //     return d3.ascending(me.data.stat[y]['abnormal'], me.data.stat[x]['abnormal']);
-        // // })
-        var legend = me.legend.selectAll(".streamview-legend-item").data(ranks).enter()
-            .append("div")
-                .attr("class", "streamview-legend-item")
-                .on("click", function(d) {
-                    var rankno = Number(d)
+        me.legend.selectAll('.'+this.name+'-legend-item').remove();
+        var ranks = Object.keys(me.legendData)
+        ranks.sort(function(x, y) {
+            return d3.ascending(me.data.delta[y], me.data.delta[x]);
+        })
+        var legend = me.legend.selectAll('.'+this.name+'-legend-item').data(ranks).enter()
+            .append('div')
+                .attr('class', this.name+'-legend-item')
+                .on('click', function(d) {
+                    var rankno = d
                     console.log('clicked: '+rankno)
                     var _me = me;
                     me.selectedRankNo = rankno;
                     me.data.rankHistoryInfo = {
                         'rank': rankno,
-                        'fill': me.colorScale(rankno)
+                        'fill': me.colorScale(rankno),
+                        'from': me.name
                     }
                     if (!me.historyview) {
                         me.historyview = me.data.views.getView('historyview');
                     }
                     me.historyview._update();
-                    me.line_area.selectAll('.streamview_line')
+                    me.line_area.selectAll('.'+this.name+'_line')
                         .filter(function(d){
-                            return (Number(me.selectedRankNo) === Number(d[0].rank));
+                            return (me.selectedRankNo == d[0].rank);
                         })
                             .attr('stroke-width', this.STROKE_WIDTH_SELECTED) 
                             .moveToFront();
+                    me.draw();
                 });
-        legend.append("div")
-            .attr("class", "streamview-legend-item-circle")
-            .style("background", function(d){
+        legend.append('div')
+            .attr('class', this.name+'-legend-item-circle')
+            .style('background', function(d){
                 return me.legendData[d]
             });
-        legend.append("text")
-            .attr("class", "streamview-legend-item-text")
-            .style("color", function(d) {
-                return (Number(me.selectedRankNo) === Number(d))? "black":"gray";
+        legend.append('text')
+            .attr('class', this.name+'-legend-item-text')
+            .style('color', function(d) {
+                return (me.selectedRankNo=== d)? 'black':'gray';
             })
-            .style("font-weight", function(d) {
-                return (Number(me.selectedRankNo) === Number(d))? "bold":"";
+            .style('font-weight', function(d) {
+                return (me.selectedRankNo=== d)? 'bold':'';
             })
             .text(function(d){
-                return 'MPI Rank #'+d
+                return 'MPI Rank ID: '+d
             })
     }
 }

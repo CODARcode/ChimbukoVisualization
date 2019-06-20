@@ -11,8 +11,8 @@ class HistoryView extends View {
         this.yAxisLabel = '#. Anomaly';
         this._data = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
-        this.container_width = 1000;
-        this.container_height = 400;
+        this.container_width = 1400;
+        this.container_height = 300;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
         this.rank_of_interest_labels = {};
@@ -42,15 +42,16 @@ class HistoryView extends View {
         var rankInfo = this.data.rankHistoryInfo;
         this.fillColor = rankInfo.fill
         this.detailed.text('Selected Rank #: '+rankInfo.rank)
-        this._data = this.getHistoryData(rankInfo.rank)
+        this._data = this.getHistoryData(rankInfo.rank, rankInfo.from)
         this.adjust_scale();
         this.draw();
     }
-    getHistoryData(rankno) {
+    getHistoryData(rankno, from) {
         var res = {}
-        for(var frameno in this.data.renderingFrames) {
+        var frames = this.data.history; // (from=='streamview')? this.data.renderingFrames:this.data.renderingFramesBottom
+        for(var frameno in frames) {
             if (frameno > (this.data.frameID-this.NUM_FRAME)) {
-                res[frameno] = this.data.renderingFrames[frameno][rankno]===undefined? 0: this.data.renderingFrames[frameno][rankno]
+                res[frameno] = frames[frameno][rankno]===undefined? 0: frames[frameno][rankno]
             }
         }
         return res

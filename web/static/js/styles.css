@@ -136,7 +136,7 @@ text {
     display: inline-block; 
     vertical-align: top; 
     width: 300px;
-    height: 400px; 
+    height: 300px; 
     overflow-y: auto;
 }
 .streamview-legend-item {
@@ -153,6 +153,32 @@ text {
     vertical-align: middle;
 }
 .streamview-legend-item-text {
+    height: 20px;
+    display: table-cell;
+    vertical-align: middle;
+    padding-left: 5px;
+}
+.streamview-bottom-legend {
+    display: inline-block; 
+    vertical-align: top; 
+    width: 300px;
+    height: 300px; 
+    overflow-y: auto;
+}
+.streamview-bottom-legend-item {
+    display: table;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+.streamview-bottom-legend-item-circle {
+    border-radius: 50%;
+    behavior: url(PIE.htc);
+    width: 20px;
+    height: 20px !important;
+    display: inline-block;
+    vertical-align: middle;
+}
+.streamview-bottom-legend-item-text {
     height: 20px;
     display: table-cell;
     vertical-align: middle;

@@ -15,7 +15,8 @@ class Data {
         // this.views.addView(new TemporalView(this, d3.select("#temporalview")));
         // this.views.addView(new ScatterView(this, d3.select("#overview")));
         // this.views.addView(new GlobalView(this, d3.select("#globalview")));
-        this.views.addView(new StreamView(this, d3.select("#streamview")));
+        this.views.addView(new StreamView(this, d3.select("#streamview"), 'streamview'));
+        this.views.addView(new StreamView(this, d3.select("#streamview-bottom"), 'streamview-bottom'));
         // this.views.addView(new FrameView(this, d3.select("#frameview")));
         // this.views.addView(new RankView(this, d3.select("#rankview")));
         this.views.addView(new HistoryView(this, d3.select("#historyview")));
@@ -40,11 +41,14 @@ class Data {
         this.frameWindow = 30
         this.frameInterval = this.SECOND * 0.5
         this.frames = {};
+        this.frames_bottom = {};
         this.renderingFrames = {};
+        this.renderingFramesBottom = {};
         this.selectedFrames = []
         this.date = new Date();
         this.setWait = true;
         this.NUM_SELECTION_RANK = 10;
+        this.history = {};
         this.rendering();
     }
 
@@ -55,8 +59,8 @@ class Data {
             console.log('['+me.date.toLocaleTimeString()+'] streaming()');
             var d = jQuery.parseJSON(message.data);  
             var frames = d['stream']
-            var delta = d['delta'];
-            me._update(frames, delta)
+            me.delta = d['delta'];
+            me._update(frames, me.delta)
         };
     }
 
@@ -70,14 +74,13 @@ class Data {
                 }
                 this.frames[rank] = this.frames[rank].concat(frames[rank])
             } 
-            // else if(this.selectedRanks[1].includes(rank)) {
-            //     if(!this.frames.bottom[rank]) {
-            //         this.frames.bottom[rank] = []
-            //     }
-            //     this.frames.bottom[rank] = this.frames.bottom[rank].concat(frames[rank])
-            // }
+            else if(this.selectedRanks[1].includes(rank)) {
+                if(!this.frames_bottom[rank]) {
+                    this.frames_bottom[rank] = []
+                }
+                this.frames_bottom[rank] = this.frames_bottom[rank].concat(frames[rank])
+            }
         }
-        // console.log(this.frames)
     }
 
     getOutlierRanks(delta) {
@@ -95,9 +98,9 @@ class Data {
             bottom = sortedRanks.slice(m)
         } else {
             top = sortedRanks.slice(0, m)
-            // bottom = sortedRanks.slice(sortedRanks.length-5)
-            // top = ranks.slice(0, 3) // Test
-            // bottom = ranks.slice(ranks.length-1) // Test
+            bottom = sortedRanks.slice(sortedRanks.length-this.NUM_SELECTION_RANK)
+            // console.log('top:'+top.length)
+            // console.log('bottom:'+bottom.length)
         }
         return [top, bottom] 
     }
@@ -119,23 +122,44 @@ class Data {
     makeRenderingFrames() {
         // console.log('['+this.date.toLocaleTimeString()+'] makeRenderingFrames()');
         var res = false;
-        // for (var type in this.frames) {
-            var rawFrame = this.frames//[type]
-            for ( var rank in rawFrame) {
-                var rankData = rawFrame[rank]
-                if (rankData.length > 0) {
-                    res = true;
-                    var value = rankData.splice(0, 1)[0]
-                    if (Object.keys(this.renderingFrames).length == this.frameWindow) {
-                        delete this.renderingFrames[this.frameID-this.frameWindow] 
-                    }
-                    if (!this.renderingFrames[this.frameID]) {
-                        this.renderingFrames[this.frameID] = {}
-                    }
-                    this.renderingFrames[this.frameID][rank] = value;
-                } 
-            }
-        // }
+        var rawFrame = this.frames//[type]
+        for ( var rank in rawFrame) {
+            var rankData = rawFrame[rank]
+            if (rankData.length > 0) {
+                res = true;
+                var value = rankData.splice(0, 1)[0]
+                if (Object.keys(this.renderingFrames).length == this.frameWindow) {
+                    delete this.renderingFrames[this.frameID-this.frameWindow] 
+                }
+                if (!this.renderingFrames[this.frameID]) {
+                    this.renderingFrames[this.frameID] = {}
+                }
+                if (!this.history[this.frameID]) {
+                    this.history[this.frameID] = {}
+                }
+                this.renderingFrames[this.frameID][rank] = value;
+                this.history[this.frameID][rank] = value;
+            } 
+        }
+        var rawFrame = this.frames_bottom
+        for ( var rank in rawFrame) {
+            var rankData = rawFrame[rank]
+            if (rankData.length > 0) {
+                res = true;
+                var value = rankData.splice(0, 1)[0]
+                if (Object.keys(this.renderingFramesBottom).length == this.frameWindow) {
+                    delete this.renderingFramesBottom[this.frameID-this.frameWindow] 
+                }
+                if (!this.renderingFramesBottom[this.frameID]) {
+                    this.renderingFramesBottom[this.frameID] = {}
+                }
+                if (!this.history[this.frameID]) {
+                    this.history[this.frameID] = {}
+                }
+                this.renderingFramesBottom[this.frameID][rank] = value;
+                this.history[this.frameID][rank] = value;
+            } 
+        }
         return res;
     }
 

@@ -32,7 +32,24 @@ class HistoryView extends View {
         this.yAxis = this.svg.append('g')
             .attr('class', 'historyview_y_axis')
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
+
+        var me = this
+        this.checked = true;
+        this.rangeStart = 0;
+        this.checkNode = d3.select("#hckb").node()
+        this.rank_no = d3.select("#history_start_no").node()
+        d3.select("#hchkbtn").on("click", function(d) {
+            me.checked = me.checkNode.checked
+            me._update();
+        });
+        d3.select("#hbtn").on("click", function(d) {
+            me.checked = false
+            me.checkNode.checked = false
+            me.rangeStart = Number(me.rank_no.value)
+            me._update();
+        });
     }
+
     stream_update(){
         if(this.data.rankHistoryInfo !== undefined) {
             this._update(this.data.rankHistoryInfo)
@@ -50,8 +67,14 @@ class HistoryView extends View {
         var res = {}
         var frames = this.data.history; // (from=='streamview')? this.data.renderingFrames:this.data.renderingFramesBottom
         for(var frameno in frames) {
-            if (frameno > (this.data.frameID-this.NUM_FRAME)) {
-                res[frameno] = frames[frameno][rankno]===undefined? 0: frames[frameno][rankno]
+            if(this.checked) {
+                if (frameno > (this.data.frameID-this.NUM_FRAME)) {
+                    res[frameno] = frames[frameno][rankno]===undefined? 0: frames[frameno][rankno]
+                }
+            } else {
+                if (frameno >= this.rangeStart && frameno < this.rangeStart+this.NUM_FRAME ) {
+                    res[frameno] = frames[frameno][rankno]===undefined? 0: frames[frameno][rankno]
+                }
             }
         }
         return res

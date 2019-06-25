@@ -135,8 +135,8 @@ text {
 .streamview-legend {
     display: inline-block; 
     vertical-align: top; 
-    width: 300px;
-    height: 300px; 
+    width: 250px;
+    height: 200px; 
     overflow-y: auto;
 }
 .streamview-legend-item {
@@ -161,8 +161,8 @@ text {
 .streamview-bottom-legend {
     display: inline-block; 
     vertical-align: top; 
-    width: 300px;
-    height: 300px; 
+    width: 250px;
+    height: 200px; 
     overflow-y: auto;
 }
 .streamview-bottom-legend-item {
@@ -179,6 +179,45 @@ text {
     vertical-align: middle;
 }
 .streamview-bottom-legend-item-text {
+    height: 20px;
+    display: table-cell;
+    vertical-align: middle;
+    padding-left: 5px;
+}
+
+.deltaview-legend-item {
+    display: table;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+.deltaview-legend-item-circle {
+    border-radius: 50%;
+    behavior: url(PIE.htc);
+    width: 20px;
+    height: 20px !important;
+    display: inline-block;
+    vertical-align: middle;
+}
+.deltaview-legend-item-text {
+    height: 20px;
+    display: table-cell;
+    vertical-align: middle;
+    padding-left: 5px;
+}
+.deltaview-bottom-legend-item {
+    display: table;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+.deltaview-bottom-legend-item-circle {
+    border-radius: 50%;
+    behavior: url(PIE.htc);
+    width: 20px;
+    height: 20px !important;
+    display: inline-block;
+    vertical-align: middle;
+}
+.deltaview-bottom-legend-item-text {
     height: 20px;
     display: table-cell;
     vertical-align: middle;

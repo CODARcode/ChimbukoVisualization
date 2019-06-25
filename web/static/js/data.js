@@ -15,6 +15,8 @@ class Data {
         // this.views.addView(new TemporalView(this, d3.select("#temporalview")));
         // this.views.addView(new ScatterView(this, d3.select("#overview")));
         // this.views.addView(new GlobalView(this, d3.select("#globalview")));
+        this.views.addView(new StreamView(this, d3.select("#deltaview"), 'deltaview'));
+        this.views.addView(new StreamView(this, d3.select("#deltaview-bottom"), 'deltaview-bottom'));
         this.views.addView(new StreamView(this, d3.select("#streamview"), 'streamview'));
         this.views.addView(new StreamView(this, d3.select("#streamview-bottom"), 'streamview-bottom'));
         // this.views.addView(new FrameView(this, d3.select("#frameview")));
@@ -37,6 +39,7 @@ class Data {
 
         this.SECOND = 1000 // ms
         this.delta = {};
+        this.prev = {};
         this.frameID = 0;
         this.frameWindow = 30
         this.frameInterval = this.SECOND * 0.5
@@ -44,6 +47,8 @@ class Data {
         this.frames_bottom = {};
         this.renderingFrames = {};
         this.renderingFramesBottom = {};
+        this.renderingDelta = {};
+        this.renderingDeltaBottom = {};
         this.selectedFrames = []
         this.date = new Date();
         this.setWait = true;
@@ -60,27 +65,28 @@ class Data {
             var d = jQuery.parseJSON(message.data);  
             var frames = d['stream']
             me.delta = d['delta'];
-            me._update(frames, me.delta)
+            me._update(frames, me.delta);
         };
     }
 
     _update(frames, delta) {
-        this.selectedRanks = this.getOutlierRanks(delta)
+        // this.selectedRanks = this.getOutlierRanks(delta)
         // console.log(this.selectedRanks)
         for(var rank in frames) { // aggregate frames
-            if(this.selectedRanks[0].includes(rank)) {
+            // if(this.selectedRanks[0].includes(rank)) {
                 if(!this.frames[rank]) {
                     this.frames[rank] = []
                 }
                 this.frames[rank] = this.frames[rank].concat(frames[rank])
-            } 
-            else if(this.selectedRanks[1].includes(rank)) {
-                if(!this.frames_bottom[rank]) {
-                    this.frames_bottom[rank] = []
-                }
-                this.frames_bottom[rank] = this.frames_bottom[rank].concat(frames[rank])
-            }
+            // } 
+            // else if(this.selectedRanks[1].includes(rank)) {
+                // if(!this.frames_bottom[rank]) {
+                //     this.frames_bottom[rank] = []
+                // }
+                // this.frames_bottom[rank] = this.frames_bottom[rank].concat(frames[rank])
+            // }
         }
+        
     }
 
     getOutlierRanks(delta) {
@@ -89,19 +95,17 @@ class Data {
         var sortedRanks = deltaValues.map((d, i) => [ranks[i], d]) 
                         .sort(([r1, d1], [r2, d2]) => d2 - d1) 
                         .map(([r, d]) => r); 
-        var m = this.NUM_SELECTION_RANK
-        var top
-        var bottom
+        var top;
+        var bottom;
         if( sortedRanks.length < 10 ) {
-            m = Math.floor((sortedRanks.length-1)/2)
+            var m = Math.floor((sortedRanks.length-1)/2)
             top = sortedRanks.slice(0, m)
             bottom = sortedRanks.slice(m)
         } else {
-            top = sortedRanks.slice(0, m)
+            top = sortedRanks.slice(0, this.NUM_SELECTION_RANK)
             bottom = sortedRanks.slice(sortedRanks.length-this.NUM_SELECTION_RANK)
-            // console.log('top:'+top.length)
-            // console.log('bottom:'+bottom.length)
         }
+        console.log('top:'+top.length+', bottom:'+bottom.length)
         return [top, bottom] 
     }
     
@@ -121,46 +125,78 @@ class Data {
 
     makeRenderingFrames() {
         // console.log('['+this.date.toLocaleTimeString()+'] makeRenderingFrames()');
+        this.updateDelta();
+        this.selectedRanks = this.getOutlierRanks(this.delta)
+        console.log(this.delta)
         var res = false;
         var rawFrame = this.frames//[type]
         for ( var rank in rawFrame) {
             var rankData = rawFrame[rank]
             if (rankData.length > 0) {
-                res = true;
                 var value = rankData.splice(0, 1)[0]
-                if (Object.keys(this.renderingFrames).length == this.frameWindow) {
-                    delete this.renderingFrames[this.frameID-this.frameWindow] 
+                if(this.selectedRanks[0].includes(rank)) {
+                    res = true;
+                    if (Object.keys(this.renderingFrames).length == this.frameWindow) {
+                        delete this.renderingFrames[this.frameID-this.frameWindow] 
+                    }
+                    if (Object.keys(this.renderingDelta).length == this.frameWindow) {
+                        delete this.renderingDelta[this.frameID-this.frameWindow] 
+                    }
+                    if (!this.renderingFrames[this.frameID]) {
+                        this.renderingFrames[this.frameID] = {}
+                    }
+                    if (!this.renderingDelta[this.frameID]) {
+                        this.renderingDelta[this.frameID] = {}
+                    }
+                    this.renderingDelta[this.frameID][rank] = this.delta[rank]
+                    this.renderingFrames[this.frameID][rank] = value;
                 }
-                if (!this.renderingFrames[this.frameID]) {
-                    this.renderingFrames[this.frameID] = {}
+                if(this.selectedRanks[1].includes(rank)) {
+                    res = true;
+                    if (Object.keys(this.renderingFramesBottom).length == this.frameWindow) {
+                        delete this.renderingFramesBottom[this.frameID-this.frameWindow] 
+                    }
+                    if (Object.keys(this.renderingDeltaBottom).length == this.frameWindow) {
+                        delete this.renderingDeltaBottom[this.frameID-this.frameWindow] 
+                    }
+                    if (!this.renderingFramesBottom[this.frameID]) {
+                        this.renderingFramesBottom[this.frameID] = {}
+                    }
+                    if (!this.renderingDeltaBottom[this.frameID]) {
+                        this.renderingDeltaBottom[this.frameID] = {}
+                    }
+                    this.renderingDeltaBottom[this.frameID][rank] = this.delta[rank]
+                    this.renderingFramesBottom[this.frameID][rank] = value;
                 }
                 if (!this.history[this.frameID]) {
                     this.history[this.frameID] = {}
                 }
-                this.renderingFrames[this.frameID][rank] = value;
                 this.history[this.frameID][rank] = value;
-            } 
-        }
-        var rawFrame = this.frames_bottom
-        for ( var rank in rawFrame) {
-            var rankData = rawFrame[rank]
-            if (rankData.length > 0) {
-                res = true;
-                var value = rankData.splice(0, 1)[0]
-                if (Object.keys(this.renderingFramesBottom).length == this.frameWindow) {
-                    delete this.renderingFramesBottom[this.frameID-this.frameWindow] 
-                }
-                if (!this.renderingFramesBottom[this.frameID]) {
-                    this.renderingFramesBottom[this.frameID] = {}
-                }
-                if (!this.history[this.frameID]) {
-                    this.history[this.frameID] = {}
-                }
-                this.renderingFramesBottom[this.frameID][rank] = value;
-                this.history[this.frameID][rank] = value;
-            } 
+            }
         }
         return res;
+    }
+
+    updateDelta() {
+        var rawFrame = this.frames
+        for ( var rank in rawFrame) {
+            var rankData = rawFrame[rank];
+            if (rankData.length > 0) {
+                var curr = rankData[0];
+                if(this.delta[rank] === undefined) {
+                    this.delta[rank] = 0
+                } 
+                if (this.prev[rank] === undefined){
+                    this.prev[rank] = 0
+                }
+                var delta = Math.abs(curr - this.prev[rank])
+                this.delta[rank] += delta
+                this.prev[rank] = curr
+            } 
+            else {
+                delete this.delta[rank]
+            }
+        }
     }
 
     fetchWithCallback(data, callback, options) {

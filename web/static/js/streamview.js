@@ -3,10 +3,10 @@ class StreamView extends View {
         super(data, svg, {});
         this.name = name
         this.xAxisLabel = 'Frame';
-        this.yAxisLabel = '# Anomaly';
+        this.yAxisLabel = (this.name=='deltaview' || this.name=='deltaview-bottom')? 'Accumulated Delta': '# Anomaly';
         this.frames = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
-        this.container_width = 1000;
+        this.container_width = 800;
         this.container_height = 300;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
@@ -28,15 +28,25 @@ class StreamView extends View {
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
         this.colorScale = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,1000));
         this.STROKE_WIDTH_SELECTED = 3
-        this.STROKE_WIDTH = 0.5
+        this.STROKE_WIDTH = 1.0
         this.selectedRankNo = -1;
         this.legend = d3.select('#'+this.name+'-legend');
     }
     stream_update(){
-        this.legendData = {};
-        this.frames = (this.name == 'streamview')? this.data.renderingFrames : this.data.renderingFramesBottom;
+        this.frames = this.getFrames();
         this.adjust_scale();
         this.draw();
+    }
+    getFrames() {
+        if (this.name == 'streamview'){
+            return this.data.renderingFrames 
+        } else if (this.name == 'streamview-bottom'){
+            return this.data.renderingFramesBottom;
+        } else if (this.name == 'deltaview'){
+            return this.data.renderingDelta;
+        }  else if (this.name == 'deltaview-bottom'){
+            return this.data.renderingDeltaBottom;
+        }
     }
     get_y_max(d) {
         return Math.max(...Object.values(d));
@@ -117,9 +127,6 @@ class StreamView extends View {
                     'value': Number(d[rank]),
                     'rank': rank
                 })
-                if (!this.legendData[rank]) {
-                    this.legendData[rank] = this.colorScale(rank)
-                }
             })
         });
         return res;
@@ -196,8 +203,27 @@ class StreamView extends View {
             me.draw();
         }
     }
+
+    getLegendData() {
+        this.legendData = {};
+        var len = Object.keys(this.frames).length
+        if (len>0) {
+            var max = Math.max(...Object.keys(this.frames))
+            var frame = this.frames[max]
+            Object.keys(frame).forEach(rank => {
+                if (!this.legendData[rank]) {
+                    this.legendData[rank] = {
+                        'fill': this.colorScale(rank),
+                        'delta': this.data.delta[rank]
+                    }
+                }
+            })
+        }
+    }
+
     _drawLegend() {
         var me = this;
+        me.getLegendData();
         me.legend.selectAll('.'+this.name+'-legend-item').remove();
         var ranks = Object.keys(me.legendData)
         ranks.sort(function(x, y) {
@@ -231,7 +257,7 @@ class StreamView extends View {
         legend.append('div')
             .attr('class', this.name+'-legend-item-circle')
             .style('background', function(d){
-                return me.legendData[d]
+                return me.legendData[d].fill
             });
         legend.append('text')
             .attr('class', this.name+'-legend-item-text')
@@ -242,7 +268,7 @@ class StreamView extends View {
                 return (me.selectedRankNo=== d)? 'bold':'';
             })
             .text(function(d){
-                return 'MPI Rank ID: '+d
+                return 'MPI Rank ID: '+d+' ('+me.legendData[d].delta+')'
             })
     }
 }

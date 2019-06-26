@@ -98,7 +98,7 @@ class Data {
         var top;
         var bottom;
         if( sortedRanks.length < 10 ) {
-            var m = Math.floor((sortedRanks.length-1)/2)
+            var m = Math.floor((sortedRanks.length)/2)
             top = sortedRanks.slice(0, m)
             bottom = sortedRanks.slice(m)
         } else {
@@ -125,9 +125,10 @@ class Data {
 
     makeRenderingFrames() {
         // console.log('['+this.date.toLocaleTimeString()+'] makeRenderingFrames()');
-        this.updateDelta();
-        this.selectedRanks = this.getOutlierRanks(this.delta)
-        console.log(this.delta)
+        var delta = this.updateDelta();
+        console.log(delta)
+        this.selectedRanks = this.getOutlierRanks(delta)
+        console.log(this.selectedRanks)
         var res = false;
         var rawFrame = this.frames//[type]
         for ( var rank in rawFrame) {
@@ -178,25 +179,30 @@ class Data {
     }
 
     updateDelta() {
-        var rawFrame = this.frames
-        for ( var rank in rawFrame) {
-            var rankData = rawFrame[rank];
+        var delta = {}
+        for ( var rank in this.frames) {
+            var rankData = this.frames[rank];
             if (rankData.length > 0) {
                 var curr = rankData[0];
                 if(this.delta[rank] === undefined) {
                     this.delta[rank] = 0
-                } 
+                    delta[rank] = 0
+                } else {
+                    delta[rank] = this.delta[rank]
+                }
                 if (this.prev[rank] === undefined){
                     this.prev[rank] = 0
                 }
-                var delta = Math.abs(curr - this.prev[rank])
-                this.delta[rank] += delta
+                var value = Math.abs(curr - this.prev[rank])
+                delta[rank] += value
+                this.delta[rank] += value
                 this.prev[rank] = curr
             } 
-            else {
-                delete this.delta[rank]
-            }
+            // else {
+            //     delete this.delta[rank]
+            // }
         }
+        return delta
     }
 
     fetchWithCallback(data, callback, options) {

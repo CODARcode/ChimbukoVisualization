@@ -30,7 +30,8 @@ ls -al
 
 # start send pseudo-messages
 start_time="$(date -u +%s.%N)"
-jsrun -n $nranks -c 1 ./send_message.sh
+#jsrun -n $nranks -c 1 ./send_message.sh
+jsrun -n $nranks -c 1 python3 send_message.py "${addr}/messages" $filename $msz_count
 end_time="$(date -u +%s.%N)"
 
 elapsed="$(bc -l <<<"$end_time-$start_time")"

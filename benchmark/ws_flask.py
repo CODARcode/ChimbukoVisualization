@@ -162,7 +162,7 @@ if __name__ == '__main__':
     host = '0.0.0.0'
     port = 5000
     msg_size = 1024 * 1024
-    filename = None
+    filename = 'message.bin'
     if len(sys.argv) > 1:
         url = sys.argv[1]
         msg_size = int(sys.argv[2])

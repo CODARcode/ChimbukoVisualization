@@ -156,13 +156,23 @@ def api_root():
 if __name__ == '__main__':
     import sys
 
-    # arg 1: message size in bytes
-    # arg 2: filename with full path
+    # arg 1: url (e.g. http://0.0.0.0:5000)
+    # arg 2: message size in bytes
+    # arg 3: filename with full path
+    host = '0.0.0.0'
+    port = 5000
     msg_size = 1024 * 1024
     filename = None
     if len(sys.argv) > 1:
-        msg_size = int(sys.argv[1])
-        filename = sys.argv[2]
+        url = sys.argv[1]
+        msg_size = int(sys.argv[2])
+        filename = sys.argv[3]
+        
+        if url.startswith('http'):
+            url = url.split('//')[1]
+        host = url[:-5]
+        port = int(url[-4:])
+        
     test_message.generate(msg_size, filename)
 
     # to hide flask output
@@ -171,7 +181,7 @@ if __name__ == '__main__':
     sys.stdout = sys.stderr = open('log.txt', 'wt')
 
     try:
-        app.run()
+        app.run(host=host, port=port)
     finally:
         #print("finalize")
         test_message.join()

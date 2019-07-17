@@ -1,0 +1,109 @@
+
+========== 200 with 1 MBytes ==========
+web server @ http://h19n15:5000
+wait pseudo-message
+wait pseudo-message
+pseudo-message is ready!
+
+# Ranks             : 200
+Message size        : 1 MBytes
+# Message (per rank): 100
+Elapsed time        : 171.537479508 sec
+Throughput          : 116.59259572522318211046 MBytes/sec
+Throughput          : 116.59259572522318211046 Messages/sec
+
+=================================================
+Status                : PASSED
+Total message received: 20000
+Min. start time       : 1563380683.435 sec
+Max. end time         : 1563380853.165 sec
+Acc. process time     : 5.965 sec
+Total elapsed time    : 169.731 sec
+Avg. process time     : 0.000 sec
+Throughput            : 117.834 MBytes/sec
+Throughput            : 117.834 Messages/sec
+=================================================
+======================================================
+
+
+========== 200 with 2 MBytes ==========
+web server @ http://h19n15:5000
+wait pseudo-message
+wait pseudo-message
+pseudo-message is ready!
+
+# Ranks             : 200
+Message size        : 2 MBytes
+# Message (per rank): 100
+Elapsed time        : 340.276443815 sec
+Throughput          : 117.55148123549517294405 MBytes/sec
+Throughput          : 58.77574061774758647202 Messages/sec
+
+=================================================
+Status                : PASSED
+Total message received: 20000
+Min. start time       : 1563380858.040 sec
+Max. end time         : 1563381197.162 sec
+Acc. process time     : 7.876 sec
+Total elapsed time    : 339.121 sec
+Avg. process time     : 0.000 sec
+Throughput            : 117.952 MBytes/sec
+Throughput            : 58.976 Messages/sec
+=================================================
+======================================================
+
+
+========== 200 with 4 MBytes ==========
+web server @ http://h19n15:5000
+wait pseudo-message
+wait pseudo-message
+wait pseudo-message
+pseudo-message is ready!
+
+# Ranks             : 200
+Message size        : 4 MBytes
+# Message (per rank): 100
+Elapsed time        : 679.628615884 sec
+Throughput          : 117.71134724211570908910 MBytes/sec
+Throughput          : 29.42783681052892727227 Messages/sec
+
+=================================================
+Status                : PASSED
+Total message received: 20000
+Min. start time       : 1563381203.659 sec
+Max. end time         : 1563381881.362 sec
+Acc. process time     : 11.812 sec
+Total elapsed time    : 677.703 sec
+Avg. process time     : 0.001 sec
+Throughput            : 118.046 MBytes/sec
+Throughput            : 29.511 Messages/sec
+=================================================
+======================================================
+
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@batch4>
+Subject: Job 512751: <ws-test-200> in cluster <summit> Done
+
+Job <ws-test-200> was submitted from host <login2> by user <sungsoo> in cluster <summit> at Wed Jul 17 12:12:03 2019
+Job was executed on host(s) <1*batch4>, in queue <batch>, as user <sungsoo> in cluster <summit> at Wed Jul 17 12:24:34 2019
+                            <42*h19n15>
+                            <42*h19n16>
+                            <42*h19n17>
+                            <42*h19n18>
+                            <42*h20n01>
+                            <42*h20n02>
+</ccs/home/sungsoo> was used as the home directory.
+</gpfs/alpine/world-shared/csc299/sungsoo/ChimbukoVisualization/benchmark> was used as the working directory.
+Started at Wed Jul 17 12:24:34 2019
+Terminated at Wed Jul 17 12:44:43 2019
+Results reported at Wed Jul 17 12:44:43 2019
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <ws-test-200.e.512751> for stderr output of this job.
+

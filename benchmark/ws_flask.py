@@ -45,11 +45,13 @@ if __name__ == '__main__':
 
     # arg 1: url (e.g. http://0.0.0.0:5000)
     # arg 2: message size in bytes
-    # arg 3: filename with full path
+    # arg 3: message filename with full path
+    # arg 4: log filename with full path
     host = '0.0.0.0'
     port = 5000
     msg_size = 1024 * 1024
     filename = 'message.bin'
+    logfn = 'log.txt'
     if len(sys.argv) > 1:
         url = sys.argv[1]
         msg_size = int(sys.argv[2])
@@ -59,13 +61,15 @@ if __name__ == '__main__':
             url = url.split('//')[1]
         host = url[:-5]
         port = int(url[-4:])
+
+        logfn = sys.argv[4]
         
     test_message.generate(msg_size, filename)
 
     # to hide flask output
     stdout = sys.stdout
     stderr = sys.stderr
-    sys.stdout = sys.stderr = open('log.txt', 'wt')
+    sys.stdout = sys.stderr = open(logfn, 'wt')
 
     try:
         app.run(host=host, port=port)

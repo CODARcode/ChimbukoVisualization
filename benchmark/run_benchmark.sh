@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # test condition
-root=`pwd`
-nranks=10
-msz_mbytes=$(( 50 ))
-export msz_count=$(( 100 ))
-export filename="${root}/message.bin"
+#root=`pwd`
+#nranks=10
+#msz_mbytes=$(( 50 ))
+#export msz_count=$(( 100 ))
+#export filename="${root}/message.bin"
 
 #export addr="http://`hostname`:5000"
 export addr="http://127.0.0.1:5000"
@@ -23,8 +23,9 @@ do
     sleep 10
 done
 echo "pseudo-message is ready!"
-ls -al
+#ls -al
 
+sleep 1
 # start send pseudo-messages
 start_time="$(date -u +%s.%N)"
 #mpirun -n $nranks ./send_message.sh
@@ -51,4 +52,4 @@ echo
 
 wait $ws_pid
 #kill -9 $ws_pid
-rm -f ${filename} log.txt
+rm -f ${root}/log.txt ${filename}

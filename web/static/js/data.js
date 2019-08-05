@@ -98,13 +98,7 @@ class Data {
 
     _update(stream) {
         /**
-         * If data has pushed from backend, the callback of EventSource is invoked
-         * Receives delta and processed data
-         *  stream == {
-         *      rank_id = list of the number of anomalies per rank
-         *   }
-         *  "delta" from backend is deprecated (currently calculated in frontend side)
-         *  to reflect the changes at the moment whenever the plot is drawed.
+         * concat new array to the corresponding array based on the rank
          */
         for(var rank in stream) { 
             if(!this.stream[rank]) {

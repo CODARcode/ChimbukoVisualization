@@ -33,6 +33,10 @@ class StreamView extends View {
         this.legend = d3.select('#'+this.name+'-legend');
     }
     stream_update(){
+        /**
+         * Called whenever data has received from backend.
+         * Plot the graph after data converting and scales adjustment
+        **/
         this.frames = this.getFrames();
         this.adjust_scale();
         this.draw();

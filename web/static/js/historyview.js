@@ -11,12 +11,12 @@ class HistoryView extends View {
         this.yAxisLabel = '#. Anomaly';
         this._data = {};
         this.margin = {top: 20, right: 50, bottom: 30, left: 50};
-        this.container_width = 1400;
-        this.container_height = 300;
+        this.container_width = 1000;
+        this.container_height = 500;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
         this.rank_of_interest_labels = {};
-        this.NUM_FRAME = 100
+        this.NUM_FRAME = 50
         this.svg
             .attr('class', 'historyview_svg')
             .attr('width', this.container_width)
@@ -34,45 +34,58 @@ class HistoryView extends View {
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
 
         var me = this
-        this.checked = true;
-        this.rangeStart = 0;
-        this.checkNode = d3.select("#hckb").node()
+        this.dynamic = false;
+        this.rangeStart = 0
         this.rank_no = d3.select("#history_start_no").node()
-        d3.select("#hchkbtn").on("click", function(d) {
-            me.checked = me.checkNode.checked
+        d3.select("#static_btn").on("click", function(d) {
+            me.dynamic = false
             me._update();
         });
-        d3.select("#hbtn").on("click", function(d) {
-            me.checked = false
-            me.checkNode.checked = false
-            me.rangeStart = Number(me.rank_no.value)
+        d3.select("#dynamic_btn").on("click", function(d) {
+            me.dynamic = true
             me._update();
         });
     }
 
     stream_update(){
-        if(this.data.rankHistoryInfo !== undefined) {
+        /**
+         * Called whenever data has received from backend.
+         * Invokes rendering process if dynamic is set and the specific rank is selected.
+        **/
+        if( this.dynamic && this.data.rankHistoryInfo !== undefined) {
             this._update(this.data.rankHistoryInfo)
         }
     }
+
     _update(){
+        /**
+         * Renders delta plot after data converting and scales adjustment
+        **/
         var rankInfo = this.data.rankHistoryInfo;
         this.fillColor = rankInfo.fill
         this.detailed.text('Selected Rank #: '+rankInfo.rank)
-        this._data = this.getHistoryData(rankInfo.rank, rankInfo.from)
+        this._data = this.getHistoryData(rankInfo.rank)
         this.adjust_scale();
         this.draw();
     }
-    getHistoryData(rankno, from) {
+    getHistoryData(rankno) {
+        /**
+         * Prepares proper format for rendering history view
+         * 
+         * the format is like below:
+         * result == {
+         *      frame_id: the number of anomalies of the specific rank
+         * }
+         */
         var res = {}
         var frames = this.data.history; // (from=='streamview')? this.data.renderingFrames:this.data.renderingFramesBottom
         for(var frameno in frames) {
-            if(this.checked) {
+            if(this.dynamic) { // consider window size
                 if (frameno > (this.data.frameID-this.NUM_FRAME)) {
                     res[frameno] = frames[frameno][rankno]===undefined? 0: frames[frameno][rankno]
                 }
-            } else {
-                if (frameno >= this.rangeStart && frameno < this.rangeStart+this.NUM_FRAME ) {
+            } else { // render from the beginning
+                if (frameno >= this.rangeStart) {
                     res[frameno] = frames[frameno][rankno]===undefined? 0: frames[frameno][rankno]
                 }
             }

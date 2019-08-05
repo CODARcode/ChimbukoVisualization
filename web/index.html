@@ -23,67 +23,28 @@
 <body>
     <div class="container-fluid">
         <div class="row nopadding">
-                <div class="row visrow">
-                    <!-- <div class='viscol col-lg-6 nopadding'> -->
-                        <b class="title"> &nbsp; &nbsp; 10 Most Dynamic Ranks</b>
-                        <svg id="streamview" class="streamview"></svg>
-                        <div id="streamview-legend" class="streamview-legend nopadding"></div>
-                        <svg id="deltaview" class="deltaview"></svg>
-                        <div id="deltaview-legend" class="streamview-legend nopadding"></div>
-                    <!-- </div> -->
-                    <!-- <div class='viscol col-lg-5 nopadding'>
-                        <div>
-                            <b class="title-inline" style='display: inline-block'>&nbsp; &nbsp; Frame Details</b>
-                            starting from rank # <input type='text' id='detail_start_no' value=0 width="40px"/>
-                            <button id="fbtn" type="button"> apply </button>
-                            <div id='detailed_frame_info' style='display: inline-block;'></div>
-                        </div>
-                        <div class="nopadding" >
-                            
-                            <svg id="frameview" class="frameview"></svg>
-                        </div>
-                    </div> -->
+                <div class="viscol nopadding">
+                    <b class="title"> &nbsp; &nbsp; Top & Bottom 10 Dynamic Ranks</b>
+                    <svg id="deltaview" class="deltaview"></svg>
+                    <div id="deltaview-legend" class="deltaview-legend nopadding"></div>
+                    <div id="deltaview-bottom-legend" class="deltaview-legend nopadding"></div>
                 </div>
-                <div class="row visrow">
-                    <b class="title"> &nbsp; &nbsp; 10 Least Dynamic Ranks</b>
-                    <svg id="streamview-bottom" class="streamview"></svg>
-                    <div id="streamview-bottom-legend" class="streamview-legend nopadding"></div>
-                    <svg id="deltaview-bottom" class="deltaview"></svg>
-                    <div id="deltaview-bottom-legend" class="streamview-legend nopadding"></div>
-                </div>
-                <!-- <div class="row visrow">
-                    <div class='viscol nopadding'>
-                        <b class="title-inline"> &nbsp; &nbsp; Rank Overview</b>
-                        starting from rank # <input type='text' id='start_rank_no' value=0 width="40px"/>
-                        <button id="rank_btn" type="button"> apply </button>
-                        <svg id="rankview" class="rankview"></svg>
+                <div class='viscol nopadding'>
+                    <div>
+                        <b class="title" style='display: inline-block'>&nbsp; &nbsp; Selected Rank History </b>
+                        <button id="static_btn" type="button"> Static </button>
+                        <button id="dynamic_btn" type="button"> Dynamic </button>
+                        <div id='selected_rank_no' style='display: inline-block;'></div>
                     </div>
-                </div> -->
-                <div class="row visrow">
-                    <div class='viscol nopadding'>
-                        <div>
-                            <b class="title" style='display: inline-block'>&nbsp; &nbsp; Selected Rank History </b>
-                            <div id='selected_rank_no' style='display: inline-block;'></div>
-                            &nbsp; &nbsp; <input type="checkbox" id='hckb' checked> 100 latest frames 
-                            <button id="hchkbtn" type="button"> apply </button>
-                            &nbsp;&nbsp;&nbsp; starting from
-                            <input type='text' id='history_start_no' value=0 width="40px"/>
-                            <button id="hbtn" type="button"> apply </button>
-                            
-                        </div>
-                        <div class="nopadding" >
-                            <svg id="historyview" class="historyview"></svg>
-                        </div>
+                    <div class="nopadding" >
+                        <svg id="historyview" class="historyview"></svg>
                     </div>
                 </div>
     </div>
     <script src="/static/js/constant.js"></script>
     <script src="/static/js/view.js"></script>
-    <script src="/static/js/streamview.js"></script>
-    <script src="/static/js/frameview.js"></script>
-    <script src="/static/js/rankview.js"></script>
+    <script src="/static/js/deltaview.js"></script>
     <script src="/static/js/historyview.js"></script>
-    <script src="/static/js/globalview.js"></script>
     <script src="/static/js/scatterview.js"></script>
     <script src="/static/js/graphview.js"></script>
     <script src="/static/js/dynamicgraphview.js"></script>

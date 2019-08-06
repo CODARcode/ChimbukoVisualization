@@ -356,7 +356,7 @@ class DataManager(object):
                     rnk_thd = root[self.layout[2]] + root['threads']*0.1
                     ext = root[self.layout[3]]
 
-                    self.tidx.append(t["id"])hold tree index
+                    self.tidx.append(t["id"]) # hold tree index
                     self.forest_labels.append(t["anomaly_score"])
                     self.prog.append(root['prog_name'])
                     self.func_names.append(root['name'])  
@@ -374,7 +374,7 @@ class DataManager(object):
         self.prog = []
         self.func_names = []
         self.forest_labels = []
-        self.tidx = []hold tree index
+        self.tidx = [] # hold tree index
         self.eidx = []
         log("reset forest data")
         self.changed = False
@@ -655,7 +655,7 @@ class DataManager(object):
         Calculate position for frontend plot given by each execution. 
         """
         self.eidx.append(execution['findex'])
-        self.tidx.append(self.idx_holder['tidx'])hold tree index
+        self.tidx.append(self.idx_holder['tidx']) # hold tree index
         self.idx_holder['tidx'] += 1
         self.forest_labels.append(execution["anomaly_score"])
         self.prog.append(execution['prog names'])

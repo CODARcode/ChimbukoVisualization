@@ -21,7 +21,7 @@ class BufferManager:
         """
         Fetches data from the Queue and invoke callback function
         """
-         while not self.event.isSet():
+        while not self.event.isSet():
             if self.queue.empty():
                 self.event.wait(self.interval) # if queue is empty, wait watching for a while
             else:

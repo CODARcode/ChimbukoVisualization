@@ -82,3 +82,13 @@ var functionColors = {
     "MPI_Group_rank()":"black",
     "MD_FCLASS [{md_main.F} {2330,7}-{2496,9}]":"#98df8a"
 };
+
+// Manages view component layouts
+var componentLayout = {
+    'DYNAMIC_BAR_CHART_WIDTH': 500,
+    'DYNAMIC_BAR_CHART_HEIGHT': 500,
+    'DYNAMIC_BAR_CHART_MARGIN_TOP': 20,
+    'DYNAMIC_BAR_CHART_MARGIN_BOTTOM': 30,
+    'DYNAMIC_BAR_CHART_MARGIN_RIGHT': 50,
+    'DYNAMIC_BAR_CHART_MARGIN_LEFT': 50,
+}

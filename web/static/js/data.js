@@ -15,7 +15,7 @@ class Data {
         // this.views.addView(new TemporalView(this, d3.select("#temporalview")));
         // this.views.addView(new ScatterView(this, d3.select("#overview")));
         // this.views.addView(new GlobalView(this, d3.select("#globalview")));
-        this.views.addView(new DeltaView(this, d3.select("#deltaview"), 'deltaview'));
+        this.views.addView(new DynamicBarChartView(this, d3.select("#deltaview"), 'deltaview'));
         // this.views.addView(new StreamView(this, d3.select("#deltaview-bottom"), 'deltaview-bottom'));
         // this.views.addView(new StreamView(this, d3.select("#streamview"), 'streamview'));
         // this.views.addView(new StreamView(this, d3.select("#streamview-bottom"), 'streamview-bottom'));
@@ -101,8 +101,8 @@ class Data {
          * concat new array to the corresponding array based on the rank
          */
         for(var rank in stream) { 
-            if(!this.stream[rank]) {
-                this.stream[rank] = []
+            if(!this.frames[rank]) {
+                this.frames[rank] = []
             }
             this.frames[rank] = this.frames[rank].concat(stream[rank]) 
         }

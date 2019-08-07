@@ -1,7 +1,10 @@
 class DynamicBarChartView extends View {
 
     constructor(data, svg, name) {
-        super(data, svg, {});
+        super(data, svg, {
+            'width': componentLayout.DYNAMIC_BAR_CHART_WIDTH,
+            'height': componentLayout.DYNAMIC_BAR_CHART_HIEGHT
+        });
         this.name = name
         this.margin = {
             top: componentLayout.DYNAMIC_BAR_CHART_MARGIN_TOP, 

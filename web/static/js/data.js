@@ -11,16 +11,10 @@ class Data {
         //vis
         this.views = new Visualizations(this);
         this.views.init(this);
-        // this.views.addView(new DynamicGraphView(this, d3.select("#treeview")));
-        // this.views.addView(new TemporalView(this, d3.select("#temporalview")));
-        // this.views.addView(new ScatterView(this, d3.select("#overview")));
-        // this.views.addView(new GlobalView(this, d3.select("#globalview")));
+        this.views.addView(new DynamicGraphView(this, d3.select("#treeview")));
+        this.views.addView(new TemporalView(this, d3.select("#temporalview")));
+        this.views.addView(new ScatterView(this, d3.select("#overview"), 'scatterview'));
         this.views.addView(new DynamicBarChartView(this, d3.select("#deltaview"), 'deltaview'));
-        // this.views.addView(new StreamView(this, d3.select("#deltaview-bottom"), 'deltaview-bottom'));
-        // this.views.addView(new StreamView(this, d3.select("#streamview"), 'streamview'));
-        // this.views.addView(new StreamView(this, d3.select("#streamview-bottom"), 'streamview-bottom'));
-        // this.views.addView(new FrameView(this, d3.select("#frameview")));
-        // this.views.addView(new RankView(this, d3.select("#rankview")));
         this.views.addView(new HistoryView(this, d3.select("#historyview"), 'historyview'));
 
         this.k = visOptions.clusterk;

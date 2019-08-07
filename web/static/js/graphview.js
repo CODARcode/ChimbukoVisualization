@@ -1,6 +1,9 @@
 class GraphView extends View {
     constructor(data, svg, size, margin) {
-        super(data, svg, size);
+        super(data, svg, {
+            'width': componentLayout.DYNAMIC_GRAPH_VIEW_WIDTH,
+            'height': componentLayout.DYNAMIC_GRAPH_VIEW_HEIGHT
+        });
         var me = this;
         this.color = d3.scaleOrdinal(d3.schemeCategory20).domain(d3.range(0,19)); //me.vis.functionColor;
         me.margin = margin;

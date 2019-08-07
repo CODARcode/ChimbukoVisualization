@@ -1,14 +1,17 @@
 class ScatterView extends View {
-    constructor(data, svg) {
-        super(data, svg, {});
+    constructor(data, svg, name) {
+        super(data, svg, {
+            'width': componentLayout.SCATTERVIEW_WIDTH,
+            'height': componentLayout.SCATTERVIEW_HEIGHT
+        });
         var me = this;
-        me.name = 'scatterview'
+        me.name = name;
         me.color = me.vis.anomalyColor;
         me.margin = {
-            top: 0,
-            right: 20,
-            bottom: 20,
-            left: 60
+            top: componentLayout.SCATTERVIEW_MARGIN_TOP,
+            right: componentLayout.SCATTERVIEW_MARGIN_RIGHT,
+            bottom: componentLayout.SCATTERVIEW_MARGIN_BOTTOM,
+            left: componentLayout.SCATTERVIEW_MARGIN_LEFT
         };
         me.x = d3.scaleLinear().range([me.margin.left, me.size.width - me.margin.right]);
         me.y = d3.scaleLinear().range([me.margin.top + 5, me.size.height - me.margin.bottom]);
@@ -17,41 +20,33 @@ class ScatterView extends View {
         me.dot = {};
         this._drawBackground();
         me.xAxis = me.svg.append("g")
-            .attr("class", "scatter x axis")    
+            .attr("class", this.name+" x axis")    
             .attr("transform", "translate(0,"+(me.size.height - me.margin.bottom)+")")
         me.yAxis = me.svg.append("g")
-            .attr("class", "scatter y axis")
+            .attr("class", this.name+" y axis")
             .attr("transform", "translate("+me.margin.left+",0)")
 
         me.axis = [0, 1];
         me.sbox_x = d3.select("#sbox_x");
         me.sbox_y = d3.select("#sbox_y");
-        me.sval = d3.select("#srate_val");
-        me.srate = d3.select("#srate").on("input", function(){
-            me.sval.node().innerText = me.srate.node().value;
-        });
         me.btn = d3.select("#apply")
             .on("click", function(d) {
                 me.axis[0] = me.sbox_x.node().value-0;
                 me.axis[1] = me.sbox_y.node().value-0;
                 me.stream_update();
-                me.data.setSamplingRate({
-                    'data': 'sampling_rate',
-                    'value': me.srate.node().value
-                });
             });
 
         me.filter = {};
         me.legend_items = {};
-        me.legend = d3.select("#scatter-legend");
+        me.legend = d3.select("#"+this.name+"-legend");
 
         me.anomaly_only = false;
-        me.cbox = d3.select("#scatter-cbox").on("click", function(d) {
+        me.cbox = d3.select("#"+this.name+"-cbox").on("click", function(d) {
             me.anomaly_only = me.cbox.node().checked;
             me.stream_update();
         });
         
-        me.filter_cbox = d3.select("#scatter-legend-filter").on("click", function(d) {
+        me.filter_cbox = d3.select("#"+this.name+"-legend-filter").on("click", function(d) {
             me.filter_all = me.filter_cbox.node().checked;
             if(!me.filter_all) {
                 me.filter = {}
@@ -64,20 +59,32 @@ class ScatterView extends View {
     }
 
     stream_update(){
+        /**
+         * Scatterview won't be updated by "in-situ" mode.
+         */
+    }
+
+    update() {
+        /**
+         * Updates the results from In-Mem DB in the backend (Online Analysis MODE)
+         */
         this.selections.clear();
         this.clear();
         this._updateAxis();
-        this.draw();        
+        this.draw();
         this._zoom();
-        // me.transform = d3.zoomIdentity;
-        //move some constructor here
     }
+
     clear() {
+        /**
+         * Clear previous visualizations --> to be optimized for resusableness.
+         **/
         this.legend_items = {}
         this.svg.selectAll("circle").remove();
         this.xAxis.selectAll("text.label").remove();
         this.yAxis.selectAll("text.label").remove();
     }
+    
     draw(){
         var start = Date.now()
         this._drawAxis();

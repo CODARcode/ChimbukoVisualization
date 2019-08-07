@@ -1,6 +1,9 @@
 class TemporalView extends View {
 	constructor(data, svg){
-		super(data, svg, {});
+		super(data, svg, {
+            'width': componentLayout.TEMPORALVIEW_WIDTH,
+            'height': componentLayout.TEMPORALVIEW_HEIGHT
+        });
         var me = this;
 
         me.graph = null;

@@ -5,7 +5,9 @@ class DynamicGraphView extends GraphView {
             top: 0,
             right: 0,
             bottom: 0,
-            left: visOptions.dynamic_lmargin
+            left: visOptions.dynamic_lmargin,
+            'width': componentLayout.DYNAMIC_GRAPH_VIEW_WIDTH,
+            'height': componentLayout.DYNAMIC_GRAPH_VIEW_HEIGHT
         });
 
         var me = this;

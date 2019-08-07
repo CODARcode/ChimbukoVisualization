@@ -1,6 +1,9 @@
 class HistoryView extends View {
     constructor(data, svg) {
-        super(data, svg, {});
+        super(data, svg, {
+            'width': componentLayout.HISTORYVIEW_WIDTH,
+            'height': componentLayout.HISTORYVIEW_HEIGHT
+        });
         this.name = 'historyview'
         this.detailed = d3.select("#selected_rank_no");
         this.LINE_COLOR = 'steelblue'//'#ff8080'

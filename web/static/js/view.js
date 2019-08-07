@@ -6,8 +6,7 @@ class View {
         this.svg = svg;
         this.size = size;
         if('width' in size){
-            this.svg.attr("width", size.width)
-                .attr("height", size.height);
+            this.svg.style("width", size.width).style("height", size.height);
         }else{
             this.size = {"width":parseFloat(this.svg.style('width')),"height":parseFloat(this.svg.style('height'))}
         }

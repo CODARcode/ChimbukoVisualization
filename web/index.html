@@ -22,24 +22,67 @@
 
 <body>
     <div class="container-fluid">
-        <div class="row nopadding">
+        <div class="visrow nopadding">
+            <div class="viscol nopadding">
+                <b class="title"> &nbsp; &nbsp; Top & Bottom 10 Dynamic Ranks</b>
+                <svg id="deltaview" class="deltaview"></svg>
+                <div id="deltaview-legend" class="deltaview-legend nopadding"></div>
+                <div id="deltaview-bottom-legend" class="deltaview-legend nopadding"></div>
+            </div>
+            <div class='viscol nopadding'>
+                <div>
+                    <b class="title" style='display: inline-block'>&nbsp; &nbsp; Selected Rank History </b>
+                    <button id="static_btn" type="button"> Static </button>
+                    <button id="dynamic_btn" type="button"> Dynamic </button>
+                    <div id='selected_rank_no' style='display: inline-block;'></div>
+                </div>
+                <div class="nopadding" >
+                    <svg id="historyview" class="historyview"></svg>
+                </div>
+            </div>
+        </div>
+        <div class="visrow nopadding">
+            <div class="visrow">
                 <div class="viscol nopadding">
-                    <b class="title"> &nbsp; &nbsp; Top & Bottom 10 Dynamic Ranks</b>
-                    <svg id="deltaview" class="deltaview"></svg>
-                    <div id="deltaview-legend" class="deltaview-legend nopadding"></div>
-                    <div id="deltaview-bottom-legend" class="deltaview-legend nopadding"></div>
-                </div>
-                <div class='viscol nopadding'>
-                    <div>
-                        <b class="title" style='display: inline-block'>&nbsp; &nbsp; Selected Rank History </b>
-                        <button id="static_btn" type="button"> Static </button>
-                        <button id="dynamic_btn" type="button"> Dynamic </button>
-                        <div id='selected_rank_no' style='display: inline-block;'></div>
+                    <b class="title">&nbsp; &nbsp; Projection of Function Executions</b>
+                    &nbsp; &nbsp; x axis:
+                    <select id="sbox_x">
+                        <option value="0" selected>Entry</option>
+                        <option value="1">Execution Time</option>
+                        <option value="2">Rank#.Thread#</option>
+                        <option value="3">Exit</option>
+                    </select>
+                    &nbsp; y axis:
+                    <select id="sbox_y">
+                        <option value="0">Entry</option>
+                        <option value="1" selected>Execution Time</option>
+                        <option value="2">Rank#.Thread#</option>
+                        <option value="3">Exit</option>
+                    </select>
+                    <button id="apply" type="button"> apply </button>
+                    &nbsp; &nbsp; <input type="checkbox" id="scatter-legend-filter"> remove all
+                    <div class="nopadding">
+                        <svg id="overview" class="scatterview"></svg>
+                        <div id="scatterview-legend" class="legendview"></div>
                     </div>
-                    <div class="nopadding" >
-                        <svg id="historyview" class="historyview"></svg>
+                </div>
+                <div class="viscol nopadding">
+                    <div class="row visrow">
+                        <div >
+                            <b class="title">&nbsp; &nbsp; Selected Call Stack Tree</b>
+                            <svg id="treeview" class='treeview'></svg>
+                        </div>
+                    </div>
+                    <div class="row visrow">
+                        <div>
+                            <b class="title">&nbsp; &nbsp; Timeline and Message Visualization</b>
+                            <svg id="temporalview" class='temporalview'></svg>
+                        </div>
                     </div>
                 </div>
+            </div>
+            
+        </div>
     </div>
     <script src="/static/js/constant.js"></script>
     <script src="/static/js/view.js"></script>

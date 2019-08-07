@@ -74,179 +74,44 @@ text {
 .label {
     font-weight: bold;
 }
-.leftpanel {
-    display: inline-block;
-}
-.rightpanel {
-    display: inline-block;
-}
 .visrow {
-    border: 1px solid black;
-    width: 100%;
-    margin: 0px;
+    margin: 2px;
     display: block;
+    /* border: 1px solid black; */
 }
 .viscol {
     display: inline-block;
+    border: 1px solid black;
 }
 /* Visualization Components */
-.streamview {
-    width: 100%;
-    height: 300px;
-    display: inline-block;
-}
 .deltaview {
-    width: 100%;
+    width: 900px;
     height: 500px;
     display: inline-block;
 }
-.frameview {
-    width: 100%;
-    height: 300px;
-    display: inline-block;
-}
-.rankview {
-    width: 100%;
-    height: 300px;
-    display: inline-block;
-}
 .historyview {
-    width: 100%;
-    height: 300px;
+    width: 900px;
+    height: 500px;
     display: inline-block;
-}
-.globalview {
-    width: 100%;
-    height: 300px;
 }
 .scatterview {
     display: inline-block;  
-    width: 900px; 
+    width: 600px; 
+}
+.legendview {
+    width: 300px;
+    height: 600px;
+    overflow-y:auto;
+    display: inline-block;
 }
 .treeview{
-    width: 100%;
+    width: 900px;
     height: 600px;
-}
-.baselineview{
-    width: 100%;
-    height: 285px;
+    display: inline-block;
 }
 .temporalview {
-    width: 100%;
-    height: 500px
+    width: 900px;
+    height: 600px;
+    display: inline-block;
 }
 
-/* Subcomponents */
-.streamview-legend {
-    display: inline-block; 
-    vertical-align: top; 
-    width: 250px;
-    height: 200px; 
-    overflow-y: auto;
-}
-.streamview-legend-item {
-    display: table;
-    margin-bottom: 5px;
-    cursor: pointer;
-}
-.streamview-legend-item-circle {
-    border-radius: 50%;
-    behavior: url(PIE.htc);
-    width: 20px;
-    height: 20px !important;
-    display: inline-block;
-    vertical-align: middle;
-}
-.streamview-legend-item-text {
-    height: 20px;
-    display: table-cell;
-    vertical-align: middle;
-    padding-left: 5px;
-}
-.streamview-bottom-legend {
-    display: inline-block; 
-    vertical-align: top; 
-    width: 250px;
-    height: 200px; 
-    overflow-y: auto;
-}
-.streamview-bottom-legend-item {
-    display: table;
-    margin-bottom: 5px;
-    cursor: pointer;
-}
-.streamview-bottom-legend-item-circle {
-    border-radius: 50%;
-    behavior: url(PIE.htc);
-    width: 20px;
-    height: 20px !important;
-    display: inline-block;
-    vertical-align: middle;
-}
-.streamview-bottom-legend-item-text {
-    height: 20px;
-    display: table-cell;
-    vertical-align: middle;
-    padding-left: 5px;
-}
-.deltaview-legend {
-    display: inline-block; 
-    vertical-align: top; 
-    width: 200px;
-    height: 500px; 
-    overflow-y: auto;
-}
-.deltaview-legend-item {
-    display: table;
-    margin-bottom: 5px;
-    cursor: pointer;
-}
-.deltaview-legend-item-circle {
-    border-radius: 50%;
-    behavior: url(PIE.htc);
-    width: 20px;
-    height: 20px !important;
-    display: inline-block;
-    vertical-align: middle;
-}
-.deltaview-legend-item-text {
-    height: 20px;
-    display: table-cell;
-    vertical-align: middle;
-    padding-left: 5px;
-}
-.deltaview-bottom-legend {
-    display: inline-block; 
-    vertical-align: top; 
-    width: 200px;
-    height: 500px; 
-    overflow-y: auto;
-}
-.deltaview-bottom-legend-item {
-    display: table;
-    margin-bottom: 5px;
-    cursor: pointer;
-}
-.deltaview-bottom-legend-item-circle {
-    border-radius: 50%;
-    behavior: url(PIE.htc);
-    width: 20px;
-    height: 20px !important;
-    display: inline-block;
-    vertical-align: middle;
-}
-.deltaview-bottom-legend-item-text {
-    height: 20px;
-    display: table-cell;
-    vertical-align: middle;
-    padding-left: 5px;
-}
-.srate_container {
-    display: inline;
-}
-.sampling-rate-slider {
-    width: 100px;
-}
-.baseline_cell {
-    border: 1px solid black;
-}

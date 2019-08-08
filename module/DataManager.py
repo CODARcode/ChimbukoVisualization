@@ -20,7 +20,7 @@ class DataManager(object):
         self.forest = [] # (deprecated) the forest of call stack tree, roots are foi
         self.labels = [] # (deprecated) the passed labels of the lineid of functions
         self.forest_labels = [] # (deprecated) the learned label, for now I simulated
-        self.prog = [] # (deprecated) the program names of the tree in scatter plot
+        self.prog_names = [] # (deprecated) the program names of the tree in scatter plot
         self.func_names = [] # (deprecated) the function name of interest in scatter plot
         self.func_dict = {} # (deprecated) all the names of the functions
         self.foi = [] # (deprecated) function of interest
@@ -358,7 +358,7 @@ class DataManager(object):
 
                     self.tidx.append(t["id"]) # hold tree index
                     self.forest_labels.append(t["anomaly_score"])
-                    self.prog.append(root['prog_name'])
+                    self.prog_names.append(root['prog_name'])
                     self.func_names.append(root['name'])  
                     self.pos.append([
                         ent, val, rnk_thd, ext
@@ -371,7 +371,7 @@ class DataManager(object):
         (Deprecated) discards forest-related variables
         """
         self.pos = []
-        self.prog = []
+        self.prog_names = []
         self.func_names = []
         self.forest_labels = []
         self.tidx = [] # hold tree index
@@ -658,7 +658,7 @@ class DataManager(object):
         self.tidx.append(self.idx_holder['tidx']) # hold tree index
         self.idx_holder['tidx'] += 1
         self.forest_labels.append(execution["anomaly_score"])
-        self.prog.append(execution['prog names'])
+        self.prog_names.append(execution['prog names'])
         self.func_names.append(execution['name'])  
         self.pos.append([
             execution[self.layout[0]], # entry 
@@ -717,8 +717,7 @@ class DataManager(object):
             self.add_events(value['events'])
             self.generate_forest()
         else: # executions
-            # self.set_statistics(frame['stat'])
-            # self.add_executions(frame['executions'])
+            self.add_executions(frame['executions']) # Temporally added. Testing puporse assuming In-Mem DB exists. 
             self._process_frame(frame['executions'])
     
     def record_response_time(self, time):
@@ -780,5 +779,18 @@ class DataManager(object):
             self.stream[rank].append(curr)
             self.prev[rank] = curr
         self.changed = True
+
+    def get_scatterplot(self, start, end):
+        """
+        Returns data points for scatterplot.
+        """
+        # executions = query(start, end) <-- Assumed In-Mem DB exists.
+        # poitions = self.add_executions(executions)
+        return {
+            'coordinates': self.pos,
+            'func_names': self.func_names,
+            'prog_names': self.prog_names
+        }
+
 
 

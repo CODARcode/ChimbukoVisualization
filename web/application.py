@@ -72,9 +72,20 @@ def get_tree():
             if eindex in data_manager.executions: 
                 return jsonify(data_manager.generate_tree_by_eid(tindex, eindex))
 
+@web_app.route('/scatterplot', methods=['POST'])
+def get_scatterplot ():
+    '''
+    Returns executions queried by given time period (start, end)
+    '''
+    start = request.json['start']
+    end = request.json['end']
+    scatterplot = data_manager.get_scatterplot(start, end)
+    return jsonify(scatterplot)
+
 @web_app.route('/srate', methods=['POST'])
 def set_sampling_rate():
     """
+    (Deprecated)
     Sets sampling_rate as user adjusts.
     sampling_rate is utilized to uniformly downsample the visulizing data 
     """

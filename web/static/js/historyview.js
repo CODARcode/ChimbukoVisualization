@@ -157,7 +157,13 @@ class HistoryView extends View {
                 .attr("height", function(d) { 
                     // console.log('content_height: '+me.content_height+', me.yScale(d.value): '+ me.yScale(d.value))
                     return me.content_height - me.yScale(d.value); }
-                );
+                ).on('click', function(d) {
+                    me.getExecutionsByTime(me.notify.bind(me), {
+                        'rank': d.rank,
+                        'start': 0,
+                        'end': 0
+                    });
+                });
         this.bars = this.content_area.selectAll('historyview_bar');
     }
     getBarData() {
@@ -169,6 +175,32 @@ class HistoryView extends View {
             })
         });
         return res;
+    }
+    getExecutionsByTime(callback, data) {
+        fetch('/scatterplot', {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "same-origin"
+        }).then(response => response.json()
+            .then(json => {
+                if (response.ok) {
+                    callback(json);
+                    return json
+                } else {
+                    return Promise.reject(json)
+                }
+            })
+        )
+        .catch(error => console.log(error));
+    }
+    notify(layout) {
+        if (!this.scatterview) {
+            this.scatterview = this.data.views.getView('scatterview');
+        }
+        this.scatterview.update(layout);
     }
 }
 d3.selection.prototype.moveToFront = function() {

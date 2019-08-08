@@ -99,8 +99,8 @@ text {
     width: 600px; 
 }
 .legendview {
-    width: 300px;
-    height: 600px;
+    width: 200px;
+    height: 500px;
     overflow-y:auto;
     display: inline-block;
 }

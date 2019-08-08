@@ -56,6 +56,7 @@ class ScatterView extends View {
         
         me.colorScale = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,19));
         me.formatSuffix = d3.format(".2s")
+
     }
 
     stream_update(){
@@ -64,15 +65,69 @@ class ScatterView extends View {
          */
     }
 
-    update() {
+    update(layout) {
         /**
          * Updates the results from In-Mem DB in the backend (Online Analysis MODE)
          */
+        this.processLayout(layout);
+
         this.selections.clear();
         this.clear();
         this._updateAxis();
         this.draw();
         this._zoom();
+    }
+
+    processLayout(layout) {
+        this.coordinates = layout.coordinates;
+        this.prog_names = layout.prog_names;
+        this.func_names = layout.func_names;
+
+        me.layout = ["entry", "value", "comm ranks", "exit"]
+        // var latest_time = -1;
+        // _json['pos'].forEach(function(d, i) { //load data to front end (scatter plot view)
+        //     if (me.initial_timestamp == -1) {
+        //         me.initial_timestamp = d[_json['layout'].indexOf('entry')] // this will be moved to backend
+        //         console.log('initial_timestamp: '+me.initial_timestamp)
+        //     } 
+        //     d[_json['layout'].indexOf('entry')] = d[_json['layout'].indexOf('entry')] - me.initial_timestamp;
+        //     d[_json['layout'].indexOf('exit')] = d[_json['layout'].indexOf('exit')] - me.initial_timestamp;
+        //     if (d[_json['layout'].indexOf('entry')]<0) {
+        //         return 
+        //     }
+        //     latest_time = Math.max(latest_time, d[_json['layout'].indexOf('exit')]);// according to server, 3 is exit time
+        //     me.data.push({
+        //         "id": _json['tidx'][i],
+        //         "eid": _json['eidx'][i],
+        //         "weight": 1,
+        //         "pos": d,
+        //         "anomaly_score": _json['labels'][i],
+        //         "prog_name": _json['prog'][i],
+        //         "func_name": _json['func'][i],
+        //         "cluster_label": -1,
+        //         "tree": null
+        //     });
+        //     if(!(_json['prog'][i] in me.prog_names)) {
+        //         me.prog_names.push(_json['prog'][i]);
+        //     }
+        //     if(!(_json['func'][i] in me.func_names)) {
+        //         me.func_names.push(_json['func'][i]);
+        //     }
+        // });
+        // var time_window = 60000000;//1 min
+        // //pop data
+        // while(me.data.length>0&&latest_time-time_window>me.data[0]['pos'][3]){//#
+        //     me.data.shift();
+        // }
+        // me.idx_offset = me.data.length==0?0:me.data[0]['id'];
+        // console.log("refresh scatter plot, remove points exit before "+(latest_time-time_window)+", num of points: "+me.data.length);
+
+        // me.views.stream_update();
+        // if (_json["percent"] >= 1.0) {
+        //     sse.close();
+        //     sse = null;
+        //     console.log("sse closed");            
+        // }
     }
 
     clear() {
@@ -148,12 +203,12 @@ class ScatterView extends View {
 
         var pos_x = [];
         var pos_y = [];
-        if(me.data.scatterLayout[me.axis[0]] == 'comm ranks'){
+        if(me.layout[me.axis[0]] == 'comm ranks'){
             me.data.data.forEach(function(d){
                 pos_x.push(d.pos[me.axis[0]]);
             });
         }
-        if(me.data.scatterLayout[me.axis[1]] == 'comm ranks'){
+        if(me.layout[me.axis[1]] == 'comm ranks'){
             me.data.data.forEach(function(d){
                 pos_y.push(d.pos[me.axis[1]]);
             });
@@ -162,16 +217,16 @@ class ScatterView extends View {
         var set_y = Array.from(new Set(pos_y));
 
         var xAxis;
-        if(me.data.scatterLayout[me.axis[0]] == 'comm ranks'){
+        if(me.layout[me.axis[0]] == 'comm ranks'){
             xAxis = this.xAxis
             .call(d3.axisBottom(me.x)
                 .tickValues(set_x));
         }else{
             xAxis = this.xAxis
             .call(d3.axisBottom(me.x).tickFormat(function(d){
-                if(me.data.scatterLayout[me.axis[0]] == 'entry' || me.data.scatterLayout[me.axis[0]] == 'exit'){
+                if(me.layout[me.axis[0]] == 'entry' || me.layout[me.axis[0]] == 'exit'){
                     return parseFloat(d/1000000).toFixed(1)+"s";
-                }else if(me.data.scatterLayout[me.axis[0]] == 'value'){
+                }else if(me.layout[me.axis[0]] == 'value'){
                     return parseFloat(d/1000).toFixed(1)+"ms";
                 }else{
                     return d;
@@ -182,12 +237,12 @@ class ScatterView extends View {
             .attr("class", "label")
             .attr("x", me.size.width)
             .attr("y", -12)
-            .text(titles[me.data.scatterLayout[me.axis[0]]])
+            .text(titles[me.layout[me.axis[0]]])
             .attr("text-anchor", "end")
             .attr("fill", "black");
 
         var yAxis;
-        if(me.data.scatterLayout[me.axis[1]] == 'comm ranks'){
+        if(me.layout[me.axis[1]] == 'comm ranks'){
             yAxis = this.yAxis
             .call(d3.axisLeft(me.y)
                 .tickValues(set_y));
@@ -195,9 +250,9 @@ class ScatterView extends View {
             yAxis = this.yAxis
             .call(d3.axisLeft(me.y)
                 .tickFormat(function(d){
-                    if(me.data.scatterLayout[me.axis[1]] == 'entry' || me.data.scatterLayout[me.axis[1]] == 'exit'){
+                    if(me.layout[me.axis[1]] == 'entry' || me.layout[me.axis[1]] == 'exit'){
                         return parseFloat(d/1000000).toFixed(1)+"s";
-                    }else if(me.data.scatterLayout[me.axis[1]] == 'value'){
+                    }else if(me.layout[me.axis[1]] == 'value'){
                         return parseFloat(d/1000).toFixed(1)+"ms";
                     }else{
                         return d;
@@ -208,7 +263,7 @@ class ScatterView extends View {
             .attr("class", "label")
             .attr("x", 2)
             .attr("y", 12)
-            .text(titles[me.data.scatterLayout[me.axis[1]]])
+            .text(titles[me.layout[me.axis[1]]])
             .attr("text-anchor", "start")
             .attr("fill", "black");
     }
@@ -217,8 +272,8 @@ class ScatterView extends View {
         var me = this;
 
         // compute progname and funcname sets
-        var progname = me.data.prog_names;
-        var funcname = me.data.func_names;
+        var progname = me.prog_names;
+        var funcname = me.func_names;
         var set_progname = Array.from(new Set(progname));
         var set_funcname = Array.from(new Set(funcname));
         //console.log(set_progname);
@@ -226,29 +281,29 @@ class ScatterView extends View {
 
         // Add the scatterplot
         me.dot = me.svg.selectAll("dot")
-            .data(me.data.data)
+            .data(me.coordinates)
             .enter()
-            .filter(function(d) { 
-                if(me.data.rank_of_interest.has(d.pos[2])) {
-                    var lkey = "prog#"+d.prog_name+"-"+d.func_name;
-                    if (!me.legend_items[lkey]) {
-                        me.legend_items[lkey] = {}
-                        me._fillColor(d, set_progname, set_funcname)
-                    }
-                    if (me.filter_all) {
-                        me.filter[lkey] = true;
-                    } 
-                    if (me.anomaly_only) {
-                        return !(me.filter[lkey]) && (d.anomaly_score<0);
-                    } else {
-                        return !(me.filter[lkey])
-                    }
-                }
-            })
+            // .filter(function(d) { 
+            //     if(me.data.rank_of_interest.has(d.pos[2])) {
+            //         var lkey = "prog#"+d.prog_name+"-"+d.func_name;
+            //         if (!me.legend_items[lkey]) {
+            //             me.legend_items[lkey] = {}
+            //             me._fillColor(d, set_progname, set_funcname)
+            //         }
+            //         if (me.filter_all) {
+            //             me.filter[lkey] = true;
+            //         } 
+            //         if (me.anomaly_only) {
+            //             return !(me.filter[lkey]) && (d.anomaly_score<0);
+            //         } else {
+            //             return !(me.filter[lkey])
+            //         }
+            //     }
+            // })
                 .append("circle")
                 .attr("r", d => d.anomaly_score<0?5:4)
-                .attr("cx", d => me.x(d.pos[me.axis[0]]))
-                .attr("cy", d => me.y(d.pos[me.axis[1]]))
+                .attr("cx", d => me.x(d[me.axis[0]]))
+                .attr("cy", d => me.y(d[me.axis[1]]))
                 .attr("fill", d => me._fillColor(d, set_progname, set_funcname))
                 .attr("fill-opacity", d => me._fillOpacity(d))
                 .attr("stroke", d => d.anomaly_score<0?"black":0);
@@ -361,11 +416,11 @@ class ScatterView extends View {
 
     _updateAxis(){
         var me = this;
-        var xvalues = me.data.data.map(function(elt) {
-            return elt.pos[me.axis[0]];
+        var xvalues = me.coordinates.map(function(elt) {
+            return elt[me.axis[0]];
         });
-        var yvalues = me.data.data.map(function(elt) {
-            return elt.pos[me.axis[1]];
+        var yvalues = me.coordinates.map(function(elt) {
+            return elt[me.axis[1]];
         });
         var ranges = {
             "xMax": Math.max.apply(null, xvalues),

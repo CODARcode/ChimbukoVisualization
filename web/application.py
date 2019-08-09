@@ -57,29 +57,29 @@ def receive_executions():
 def get_tree():
     """
     Returns tree  
-        by tree_id if 'forest' is already generated (deprecated)
-        by execution_id after creating based on the current executions
+        by execution_id (eid) after creating based on the current executions
+        (deprecated) by tree_id (tid) if 'forest' is already generated 
     """
-    if request.json['data'] == 'tree':
-        tindex = request.json['value']
-        log("select tree #{}".format(tindex))
-        if len(data_manager.forest) > 0: # deprecated case 
-            if len(data_manager.forest[tindex]['nodes']) == 1: # first request
-                data_manager.generate_tree(tindex)
-            return jsonify(data_manager.forest[tindex])
+    if request.json['type'] == 'tree':
+        if len(data_manager.forest) > 0: # we no longer generate forest.
+            tid = request.json['tid']
+            log("select tree #{}".format(tid))
+            if len(data_manager.forest[tid]['nodes']) == 1: # first request
+                data_manager.generate_tree(tid)
+            return jsonify(data_manager.forest[tid])
         else: # in-situ analysis
-            eindex = request.json['eid']
-            if eindex in data_manager.executions: 
-                return jsonify(data_manager.generate_tree_by_eid(tindex, eindex))
+            eid = request.json['eid']
+            return jsonify(data_manager.generate_tree_by_eid(eid))
 
 @web_app.route('/scatterplot', methods=['POST'])
 def get_scatterplot ():
     '''
     Returns executions queried by given time period (start, end)
     '''
+    rank = request.json['rank']
     start = request.json['start']
     end = request.json['end']
-    scatterplot = data_manager.get_scatterplot(start, end)
+    scatterplot = data_manager.get_scatterplot(rank, start, end)
     return jsonify(scatterplot)
 
 @web_app.route('/srate', methods=['POST'])

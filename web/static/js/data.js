@@ -2,7 +2,7 @@ class Data {
     constructor(main) {
         //data
         this.data = [];
-        this.selectedIds = [1];
+        this.selected_eid = [1];
         this.streaming();
         this.idx_offset = 0;//how many has poped out
 
@@ -29,7 +29,6 @@ class Data {
         this.initial_timestamp = -1
         this.prev_receive_time = -1
         this.global_rank_anomaly = {}
-        this.rank_of_interest = new Set(); // by default
 
         this.SECOND = 1000 // ms
         this.delta = {};
@@ -48,6 +47,7 @@ class Data {
         this.setWait = true;
         this.NUM_SELECTION_RANK = 10;
         this.history = {};
+        this.selected_execution = {};
 
         // rendering is invoked as the thread startsd
         this.rendering(); 
@@ -236,45 +236,37 @@ class Data {
             .catch(error => console.log(error));
     }
 
-    _getTree(callback, options) {
+    _getTree(callback, execution) {
         var me = this;
-        var index = options.id-me.idx_offset;
-        if (me.data[index].tree) {
-            callback(me.data[index].tree, options);
+        if (execution.tree) {
+            callback(execution.tree, execution);
         } else {
-            options.callback = callback;
+            execution.callback = callback;
             me.fetchWithCallback({
-                'data': 'tree',
-                'value': options.id,
-                'eid': options.eid
-            }, me._saveTree.bind(me), options);
+                'type': 'tree',
+                'tid': execution.tid,
+                'eid': execution.eid
+            }, me._saveTree.bind(me), execution);
         }
     }
 
-    _saveTree(json, options) {
-        var me = this;
-        var index = options.id-me.idx_offset;
-        var callback = options.callback;
-
-        var tree = me.data[index];
-        tree.tree = json;
-        tree.tree.id = options.id;
-        tree.tree.nodes[0].level = 0;
-        tree.tree.edges.forEach(function(d){
-            tree.tree.nodes[d.target].level = tree.tree.nodes[d.source].level + 1;
+    _saveTree(json, execution) {
+        var callback = execution.callback;
+        execution.tree = json;
+        execution.tree.id = execution.eid;
+        execution.tree.nodes[0].level = 0;
+        execution.tree.edges.forEach(function(d){
+            execution.tree.nodes[d.target].level = execution.tree.nodes[d.source].level + 1;
         });
         //add a subtree list        
-        callback(tree.tree, options);
+        this.selected_execution = execution
+        callback(execution.tree, execution);
     }
-    setSelections(indices) {
+
+    setSelections(execution) {
         var me = this;
-        this.selectedIds = indices;// now use the first, will update to the center
-        if(this.selectedIds.length>0){
-            me._getTree(me.views.selected.bind(me), {
-                'id':me.selectedIds[0],
-                'eid': me.selectedIds[1]
-            });
-        }
+        this.selected_eid = execution.eid;// now use the first, will update to the center
+        me._getTree(me.views.selected.bind(me), execution);
     }
 
     clearHight() {
@@ -282,11 +274,11 @@ class Data {
     }
 
     getSelectedTree() {// now use the first, will update to the center
-        return this.data[this.selectedIds[0]-this.idx_offset].tree;
+        return this.selected_execution.tree;
     }
 
     isSelected(index) {
-        return this.selectedIds.indexOf(index+this.idx_offset) != -1;
+        return this.selected_eid == index;
     }
 
     getScoreByIndex(index) {

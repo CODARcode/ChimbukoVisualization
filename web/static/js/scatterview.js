@@ -56,7 +56,7 @@ class ScatterView extends View {
         
         me.colorScale = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,19));
         me.formatSuffix = d3.format(".2s")
-
+        me.layout = ["entry", "value", "comm ranks", "exit"]
     }
 
     stream_update(){
@@ -79,55 +79,31 @@ class ScatterView extends View {
     }
 
     processLayout(layout) {
-        this.coordinates = layout.coordinates;
-        this.prog_names = layout.prog_names;
-        this.func_names = layout.func_names;
+        var me = this;
 
-        me.layout = ["entry", "value", "comm ranks", "exit"]
-        // var latest_time = -1;
-        // _json['pos'].forEach(function(d, i) { //load data to front end (scatter plot view)
-        //     if (me.initial_timestamp == -1) {
-        //         me.initial_timestamp = d[_json['layout'].indexOf('entry')] // this will be moved to backend
-        //         console.log('initial_timestamp: '+me.initial_timestamp)
-        //     } 
-        //     d[_json['layout'].indexOf('entry')] = d[_json['layout'].indexOf('entry')] - me.initial_timestamp;
-        //     d[_json['layout'].indexOf('exit')] = d[_json['layout'].indexOf('exit')] - me.initial_timestamp;
-        //     if (d[_json['layout'].indexOf('entry')]<0) {
-        //         return 
-        //     }
-        //     latest_time = Math.max(latest_time, d[_json['layout'].indexOf('exit')]);// according to server, 3 is exit time
-        //     me.data.push({
-        //         "id": _json['tidx'][i],
-        //         "eid": _json['eidx'][i],
-        //         "weight": 1,
-        //         "pos": d,
-        //         "anomaly_score": _json['labels'][i],
-        //         "prog_name": _json['prog'][i],
-        //         "func_name": _json['func'][i],
-        //         "cluster_label": -1,
-        //         "tree": null
-        //     });
-        //     if(!(_json['prog'][i] in me.prog_names)) {
-        //         me.prog_names.push(_json['prog'][i]);
-        //     }
-        //     if(!(_json['func'][i] in me.func_names)) {
-        //         me.func_names.push(_json['func'][i]);
-        //     }
-        // });
-        // var time_window = 60000000;//1 min
-        // //pop data
-        // while(me.data.length>0&&latest_time-time_window>me.data[0]['pos'][3]){//#
-        //     me.data.shift();
-        // }
-        // me.idx_offset = me.data.length==0?0:me.data[0]['id'];
-        // console.log("refresh scatter plot, remove points exit before "+(latest_time-time_window)+", num of points: "+me.data.length);
-
-        // me.views.stream_update();
-        // if (_json["percent"] >= 1.0) {
-        //     sse.close();
-        //     sse = null;
-        //     console.log("sse closed");            
-        // }
+        me._data = []
+        me.coordinates = layout.coordinates;
+        me.prog_names = layout.prog_names;
+        me.func_names = layout.func_names;
+        
+        var latest_time = -1;
+        layout.coordinates.forEach(function(d, i) { //load data to front end (scatter plot view)
+            
+            d[me.layout.indexOf('entry')] = d[me.layout.indexOf('entry')];
+            d[me.layout.indexOf('exit')] = d[me.layout.indexOf('exit')];
+            if (d[me.layout.indexOf('entry')]<0) {
+                return 
+            }
+            latest_time = Math.max(latest_time, d[me.layout.indexOf('exit')]);// according to server, 3 is exit time
+            me._data.push({
+                "tid": -1, // <-- not generated yet
+                "eid": layout.eid[i],
+                "pos": d,
+                "prog_name": layout.prog_names[i],
+                "func_name": layout.func_names[i],
+                "tree": null
+            });
+        });
     }
 
     clear() {
@@ -193,7 +169,7 @@ class ScatterView extends View {
         me.svg.selectAll('.dotName').remove();
 
         var dotName = me.svg.selectAll('.dotName')
-        	.data(me.data.data);
+        	.data(me._data);
         dotName.exit().remove();
     }
 
@@ -204,12 +180,12 @@ class ScatterView extends View {
         var pos_x = [];
         var pos_y = [];
         if(me.layout[me.axis[0]] == 'comm ranks'){
-            me.data.data.forEach(function(d){
+            me._data.forEach(function(d){
                 pos_x.push(d.pos[me.axis[0]]);
             });
         }
         if(me.layout[me.axis[1]] == 'comm ranks'){
-            me.data.data.forEach(function(d){
+            me._data.forEach(function(d){
                 pos_y.push(d.pos[me.axis[1]]);
             });
         }        
@@ -281,41 +257,41 @@ class ScatterView extends View {
 
         // Add the scatterplot
         me.dot = me.svg.selectAll("dot")
-            .data(me.coordinates)
+            .data(me._data)
             .enter()
-            // .filter(function(d) { 
-            //     if(me.data.rank_of_interest.has(d.pos[2])) {
-            //         var lkey = "prog#"+d.prog_name+"-"+d.func_name;
-            //         if (!me.legend_items[lkey]) {
-            //             me.legend_items[lkey] = {}
-            //             me._fillColor(d, set_progname, set_funcname)
-            //         }
-            //         if (me.filter_all) {
-            //             me.filter[lkey] = true;
-            //         } 
-            //         if (me.anomaly_only) {
-            //             return !(me.filter[lkey]) && (d.anomaly_score<0);
-            //         } else {
-            //             return !(me.filter[lkey])
-            //         }
-            //     }
-            // })
+            .filter(function(d) { 
+                // if(me.rank_of_interest.has(d.pos[2])) {
+                var lkey = "prog#"+d.prog_name+"-"+d.func_name;
+                if (!me.legend_items[lkey]) {
+                    me.legend_items[lkey] = {}
+                    me._fillColor(d, set_progname, set_funcname)
+                }
+                if (me.filter_all) {
+                    me.filter[lkey] = true;
+                } 
+                return !(me.filter[lkey])
+                    // if (me.anomaly_only) {
+                    //     return !(me.filter[lkey]) && (d.anomaly_score<0);
+                    // } else {
+                    //     return !(me.filter[lkey])
+                    // }
+                // }
+            })
                 .append("circle")
-                .attr("r", d => d.anomaly_score<0?5:4)
-                .attr("cx", d => me.x(d[me.axis[0]]))
-                .attr("cy", d => me.y(d[me.axis[1]]))
+                .attr("r", 4)
+                .attr("cx", d => me.x(d.pos[me.axis[0]]))
+                .attr("cy", d => me.y(d.pos[me.axis[1]]))
                 .attr("fill", d => me._fillColor(d, set_progname, set_funcname))
                 .attr("fill-opacity", d => me._fillOpacity(d))
-                .attr("stroke", d => d.anomaly_score<0?"black":0);
+                .attr("stroke", 0);
 
         me.dot.on("click", function(d, i) {
-            console.log("clicked "+i+"th tree, id:"+d['id']);
-                me.data.clearHight();
-                me.data.setSelections([d['id'], d['eid']]);
+            console.log('clicked eid:'+ d.eid);
+                me.data.setSelections(d);
             })
             .append("title")
             .text(function(d, i) {
-                return d.func_name+"-prog#"+d.prog_name+"-tree#"+d['id'];
+                return d.func_name+"-prog#"+d.prog_name+"-execution#"+d['eid'];
             });
     }
     _fillColor(d, progname=[], funcname=[]){
@@ -325,13 +301,8 @@ class ScatterView extends View {
         var c = this.colorScale(funcname.indexOf(d.func_name)%5*4+d.prog_name%4);
         this.legend_items["prog#"+d.prog_name+"-"+d.func_name]['color'] = c;
         return c;
-
-        //var h = 360/funcname.length;
-        //var c = (100-30)/progname.length;
-        //var l = 60; 
-
-        //return d3.hcl(h*funcname.indexOf(d.func_name), 100-c*d.prog_name, l);
     }
+
     _clusterColor(d){
         return this.vis.clusterColor(d.cluster_label);
     }
@@ -445,7 +416,7 @@ class ScatterView extends View {
             x = x.replace(/ *\prog#[0-9]-*\ */g, "");
             y = y.replace(/ *\prog#[0-9]-*\ */g, "");
             // return d3.ascending(me.data.stat[y]['ratio'], me.data.stat[x]['ratio']);
-            return d3.ascending(me.data.stat[y]['abnormal'], me.data.stat[x]['abnormal']);
+            return d3.ascending(me._data.stat[y]['abnormal'], me._data.stat[x]['abnormal']);
         })
         var legend = me.legend.selectAll(".scatter-legend-item")
             .data(names)
@@ -480,7 +451,7 @@ class ScatterView extends View {
             .text(function(d){
                 var prefix = (d+"([").match(/.+?(?=[\[\(])/)[0];
                 var displayName = prefix.match(/(.*::)*(.*)/)[2];
-                var stat = me.data.stat[d.replace(/ *\prog#[0-9]-*\ */g, "")];
+                var stat = me._data.stat[d.replace(/ *\prog#[0-9]-*\ */g, "")];
                 // var ratio = stat['ratio']
                 // if (ratio === undefined) {
                 //     ratio = (stat['abnormal']/(stat['abnormal']+stat['regular'])) * 100

@@ -51,8 +51,8 @@ class DataManager(object):
         # Variables beeing utilized 
         self.initial_timestamp = -1 # holds initial timestamp
         self.pos = [] # the positions of the call stak tree in the scatter plot
-        self.tidx = [] # holds tree indices for tree processing
-        self.eidx = [] # holds execution indices for execution processing
+        self.tid = [] # holds tree indices for tree processing
+        self.eid = [] # holds execution indices for execution processing
         self.idx_holder = { "fidx": [], "tidx": 0, "eidx": 0} # holds a set of indices for processing
         self.sampling_rate = 1 # downsampling rate, default is 1
         self.layout = ["entry", "value", "comm ranks", "exit"] # 0: entry, 1: value, ... correspond to plot layout 
@@ -68,7 +68,7 @@ class DataManager(object):
         self.stream = {} # stores the number of anomalies per function in the current data frame
         self.delta = {} # stores the abs value of the change of the number of anomalies per function from the previous to current
         self.prev = {} # stores the number of anomalies per function in the previous data frame
-
+        self.EXECUTION_ID_DELIMETER = '&&' # <-- will be moved to constant configuration
 
 ##############################################################################################
 # Begin of the deprecated functions:
@@ -356,7 +356,7 @@ class DataManager(object):
                     rnk_thd = root[self.layout[2]] + root['threads']*0.1
                     ext = root[self.layout[3]]
 
-                    self.tidx.append(t["id"]) # hold tree index
+                    self.tid.append(t["id"]) # hold tree index
                     self.forest_labels.append(t["anomaly_score"])
                     self.prog_names.append(root['prog_name'])
                     self.func_names.append(root['name'])  
@@ -374,8 +374,8 @@ class DataManager(object):
         self.prog_names = []
         self.func_names = []
         self.forest_labels = []
-        self.tidx = [] # hold tree index
-        self.eidx = []
+        self.tid = [] # hold tree index
+        self.eid = []
         log("reset forest data")
         self.changed = False
         
@@ -579,14 +579,20 @@ class DataManager(object):
         execution = self.executions[this_tree['eid']]
         self.generate_tree_recursive(this_tree, execution, 0)
 
-    def generate_tree_by_eid(self, tid, eid):
+    def generate_tree_by_eid(self, eid):
         """
         Invokes generate_tree_recursive given by execution id 
         """
-        execution = self.executions[eid]
-        this_tree = self.create_tree_by_execution(tid, execution)
-        self.generate_tree_recursive(this_tree, execution, 0)
-        return this_tree
+        if self.EXECUTION_ID_DELIMETER in eid:
+            eid = eid.split(self.EXECUTION_ID_DELIMETER)[1]
+        tree = {}
+        if eid in self.executions:
+            execution = self.executions[eid]
+            tree = self.create_tree_by_execution(eid, execution)
+            self.generate_tree_recursive(tree, execution, 0)
+            return tree
+        else:
+            return tree
 
     def create_tree_by_execution(self, tid, execution):
         """
@@ -618,46 +624,24 @@ class DataManager(object):
             "anomaly_score": execution['anomaly_score']
         }
 
-    def add_executions(self, executions):
-        """
-        Add processed executions to the execution structure
-        """
-        with self.lock:
-            _executions = self.process_executions(executions)
-            self.executions.update(_executions)
-            self.remove_old_data()
-
     def process_executions(self, executions):
         """
-        Process and update received executions to proper format to be utilized in vis backend & frontend.
+        Process and update received executions to proper format to be utilized in vis backend & frontend.        
         """
-        new_executions = {}
-        for i, (eidx, execution) in enumerate(executions.items()):
-            execution = self.update_execution(execution)
-            # self.update_GRA(execution) # Counting anomalies
-        #     new_executions[execution['findex']] = execution
-        # # GRA Sampling
-        # upper_bound = self.online_stat_manager.get_upper_bound()
-        # for t, rmap in self.GRA.items():
-        #     for rank, freq in rmap.items():
-        #         if upper_bound < freq:
-        #             self.GRA_outliers.add(rank)
-        # log('GRA upper bound: ', upper_bound)
-        # log('GRA outliers: ', self.GRA_outliers)
-        # for eidx, execution in new_executions.items():
-        #     if execution['comm ranks'] in self.GRA_outliers:
-            self.calculate_layout(execution)
-        self.changed = True
-        return new_executions
-    
+        _executions = {}
+        with self.lock:
+            for i, (eid, execution) in enumerate(executions.items()):
+                execution = self._process_execution(execution)
+                self.calculate_layout(execution)
+                _executions[eid] = execution
+            self.executions.update(_executions)
+            self.changed = True
+
     def calculate_layout(self, execution):
         """
         Calculate position for frontend plot given by each execution. 
         """
-        self.eidx.append(execution['findex'])
-        self.tidx.append(self.idx_holder['tidx']) # hold tree index
-        self.idx_holder['tidx'] += 1
-        self.forest_labels.append(execution["anomaly_score"])
+        self.eid.append(execution['findex'])
         self.prog_names.append(execution['prog names'])
         self.func_names.append(execution['name'])  
         self.pos.append([
@@ -669,7 +653,7 @@ class DataManager(object):
         if execution['anomaly_score'] == -1:
             self.anomaly_cnt += 1
 
-    def update_execution(self, execution):
+    def _process_execution(self, execution):
         """
         Update execution information given by each execution. 
         """
@@ -686,7 +670,7 @@ class DataManager(object):
         execution['exit'] -= self.initial_timestamp
         execution['value'] = execution["exit"] - execution["entry"]
 
-        prefix = str(execution['comm ranks']) + '&&' # delimeter
+        prefix = str(execution['comm ranks']) + self.EXECUTION_ID_DELIMETER # delimeter
         execution['findex'] = prefix+str(execution['findex'])
         execution['parent'] = prefix+str(execution['parent'])
         new_children = []
@@ -717,7 +701,7 @@ class DataManager(object):
             self.add_events(value['events'])
             self.generate_forest()
         else: # executions
-            self.add_executions(frame['executions']) # Temporally added. Testing puporse assuming In-Mem DB exists. 
+            self.process_executions(frame['executions']) # Temporally added. Testing puporse assuming In-Mem DB exists. 
             self._process_frame(frame['executions'])
     
     def record_response_time(self, time):
@@ -761,7 +745,7 @@ class DataManager(object):
         """
         stream = {}
         for i, execution in executions.items():
-            execution = self.update_execution(execution)
+            execution = self._process_execution(execution)
             if execution['comm ranks'] not in stream:
                 stream[execution['comm ranks']] = 0
             stream[execution['comm ranks']] += 1
@@ -780,16 +764,17 @@ class DataManager(object):
             self.prev[rank] = curr
         self.changed = True
 
-    def get_scatterplot(self, start, end):
+    def get_scatterplot(self, rank, start, end):
         """
         Returns data points for scatterplot.
         """
-        # executions = query(start, end) <-- Assumed In-Mem DB exists.
-        # poitions = self.add_executions(executions)
+        # executions = query(rank, start, end) <-- Assumed In-Mem DB exists.
+        # result = self.process_executions(executions) 
         return {
             'coordinates': self.pos,
             'func_names': self.func_names,
-            'prog_names': self.prog_names
+            'prog_names': self.prog_names,
+            'eid': self.eid
         }
 
 

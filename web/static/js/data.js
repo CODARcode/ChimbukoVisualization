@@ -245,7 +245,10 @@ class Data {
             me.fetchWithCallback({
                 'type': 'tree',
                 'tid': execution.tid,
-                'eid': execution.eid
+                'eid': execution.eid,
+                'rid': execution.rid,
+                'start': execution.start,
+                'end': execution.end
             }, me._saveTree.bind(me), execution);
         }
     }

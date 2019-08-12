@@ -262,28 +262,28 @@ class TemporalView extends View {
                     return end - start;
                 }
             })
-            .attr("fill", d => (me.x(d.entry)>=me.x.range()[1]||me.x(d.entry + d.value)<=me.x.range()[0])?"none":me.getColor(d.name));
+            .attr("fill", d => (me.x(d.entry)>=me.x.range()[1]||me.x(d.entry + d.value)<=me.x.range()[0])?"none":me.getColor(d.func_name));
         /*me.traces.on("click", function(d, i) {
             d3.select(this).classed("selected", true);
         });*/
 
-        me.traces.append("title").text(d => d.name);
+        me.traces.append("title").text(d => d.func_name);
 
         me.tracetexts
             .attr("x", d => Math.max(me.x(d.entry), me.x.range()[0])+2)
             .attr("y", d => me.levelY(d.level)+15)
             .text(function(d){
-                var prefix = (d.name+"([").match(/.+?(?=[\[\(])/)[0];
+                var prefix = (d.func_name+"([").match(/.+?(?=[\[\(])/)[0];
                 var displayName = prefix.match(/(.*::)*(.*)/)[2];
                 return displayName; 
-            })//(d=>this.vis.functionMap[d.name])
+            })//(d=>this.vis.functionMap[d.func_name])
             .attr("fill", function(d){     
                 if(me.x(d.entry)>=me.x.range()[1]||me.x(d.entry + d.value)<=me.x.range()[0]){
                     return "none";
                 }else if(me.x(d.entry + d.value) - me.x(d.entry)<50){
                     return "none";
                 }else{
-                    var l = d3.hsl(me.getColor(d.name)).l;
+                    var l = d3.hsl(me.getColor(d.func_name)).l;
                     return (l<0.7)?'white':'black';
                 }   
             });

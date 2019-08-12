@@ -67,9 +67,18 @@ def get_tree():
             if len(data_manager.forest[tid]['nodes']) == 1: # first request
                 data_manager.generate_tree(tid)
             return jsonify(data_manager.forest[tid])
-        else: # in-situ analysis
-            eid = request.json['eid']
-            return jsonify(data_manager.generate_tree_by_eid(eid))
+        else: # online analysis
+            # eid = request.json['eid']
+            # tree = data_manager.generate_tree_by_eid(eid)
+            # print(tree)
+            # return jsonify(tree)
+            tree = data_manager.construct_tree({
+                'eid': request.json['eid'],
+                'rid': request.json['rid'],
+                'start': request.json['start'],
+                'end': request.json['end']
+            })
+            return jsonify(tree)
 
 @web_app.route('/scatterplot', methods=['POST'])
 def get_scatterplot ():

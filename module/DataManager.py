@@ -7,6 +7,9 @@ from module.BufferManager import BufferManager
 from module.LogManager import LogManager
 from module.OnlineStatManager import OnlineStatManager
 from utils.CommonUtils import log
+from web import web_app
+
+web_app.config.from_object('config.Config')
 
 class DataManager(object):
     
@@ -69,6 +72,7 @@ class DataManager(object):
         self.delta = {} # stores the abs value of the change of the number of anomalies per function from the previous to current
         self.prev = {} # stores the number of anomalies per function in the previous data frame
         self.EXECUTION_ID_DELIMETER = '&&' # <-- will be moved to constant configuration
+        self.tree_id = -1
 
 ##############################################################################################
 # Begin of the deprecated functions:
@@ -86,6 +90,10 @@ class DataManager(object):
 #   set_statistics
 #   update_GRA
 #   remove_old_GRA
+#   generate_tree_recursive
+#   generate_tree
+#   generate_tree_by_eid
+#   create_tree_by_execution
 ##############################################################################################
 
     def set_functions(self, functions):# 
@@ -468,6 +476,98 @@ class DataManager(object):
         for t in remove_list:
             del self.GRA[t]
 
+    def generate_tree(self, treeid):
+        """
+        (deprecated)
+        Invokes generate_tree_recursive given by tree id 
+        """
+        this_tree = self.forest[treeid]
+        execution = self.executions[this_tree['eid']]
+        self.generate_tree_recursive(this_tree, execution, 0)
+    
+    def generate_tree_by_eid(self, eid):
+        """
+        (deprecated)
+        Invokes generate_tree_recursive given by execution id 
+        """
+        if self.EXECUTION_ID_DELIMETER in eid:
+            eid = eid.split(self.EXECUTION_ID_DELIMETER)[1]
+        tree = {}
+        if eid in self.executions:
+            execution = self.executions[eid]
+            tree = self.create_tree_by_execution(eid, execution)
+            self.generate_tree_recursive(tree, execution, 0)
+            return tree
+        else:
+            return tree
+
+    def create_tree_by_execution(self, tid, execution):
+        """
+        (deprecated)
+        Create root of tree given by execution and treeid
+        """
+        if not "messages" in execution:
+            execution["messages"] = []
+        return {
+            "id": tid,
+            "eid": execution['findex'],
+            "prog_name": execution["prog names"],
+            "node_index": execution["comm ranks"],
+            "threads": execution["threads"],
+            "graph_index": execution['findex'],
+            "nodes": [{ # root of the tree
+                    "name": execution['name'], # self.foi,
+                    "id": 0, # parent
+                    "comm ranks": execution["comm ranks"],
+                    "prog_name": execution["prog names"],
+                    "threads": execution["threads"],
+                    "findex": execution["findex"],
+                    "value": (execution["exit"] - execution["entry"]),
+                    "messages": execution["messages"],
+                    "entry": execution["entry"],
+                    "exit": execution["exit"],
+                    "anomaly_score": execution["anomaly_score"]
+                }],
+            "edges": [],
+            "anomaly_score": execution['anomaly_score']
+        }
+
+    def generate_tree_recursive(self, this_tree, pexecution, ptid):
+        """
+        (deprecated)
+        Generates tree recursively given by parent tree id (ptid)
+        """
+        pnode = this_tree['nodes'][ptid]
+        pnode['hide'] = False if pexecution['anomaly_score'] == -1 else True
+        for child_id in pexecution['children']:
+            if not child_id in self.executions:
+                if str(child_id) in self.executions:
+                    child_id = str(child_id)
+                else:
+                    # log("child not in executions") # regular
+                    continue
+            child_node = self.executions[child_id]
+            ctid = len(this_tree['nodes'])
+            if not "messages" in child_node:
+                child_node['messages'] = []
+            this_tree['nodes'].append({ # children of the tree
+                    'name':child_node['name'],
+                    "id": ctid,
+                    "comm ranks": pnode["comm ranks"],
+                    "prog_name": pnode["prog_name"],
+                    "threads": pnode["threads"],
+                    "findex": child_node["findex"],
+                    "value": (child_node["exit"] - child_node["entry"]),
+                    "messages": child_node["messages"],
+                    "entry": child_node["entry"],
+                    "exit": pnode["exit"],
+                    "anomaly_score": child_node["anomaly_score"]
+                })
+            this_tree['edges'].append({'source': ptid,'target': ctid})
+            if not self.generate_tree_recursive(this_tree, child_node, ctid):
+                this_tree['nodes'][ptid]['hide'] = False
+        return this_tree['nodes'][ptid]['hide']
+
 ##############################################################################################
 # End of the deprecated functions 
 ##############################################################################################
@@ -476,10 +576,6 @@ class DataManager(object):
 # Begin of the functions beeing utilized:
 #   remove_old_data
 #   reset
-#   generate_tree_recursive
-#   generate_tree
-#   generate_tree_by_eid
-#   create_tree_by_execution
 #   add_executions
 #   process_executions
 #   calculate_layout
@@ -536,94 +632,6 @@ class DataManager(object):
             self.func_dict.clear()
             self.event_types.clear()
 
-    def generate_tree_recursive(self, this_tree, pexecution, ptid):
-        """
-        Generates tree recursively given by parent tree id (ptid)
-        """
-        pnode = this_tree['nodes'][ptid]
-        pnode['hide'] = False if pexecution['anomaly_score'] == -1 else True
-        for child_id in pexecution['children']:
-            if not child_id in self.executions:
-                if str(child_id) in self.executions:
-                    child_id = str(child_id)
-                else:
-                    # log("child not in executions") # regular
-                    continue
-            child_node = self.executions[child_id]
-            ctid = len(this_tree['nodes'])
-            if not "messages" in child_node:
-                child_node['messages'] = []
-            this_tree['nodes'].append({ # children of the tree
-                    'name':child_node['name'],
-                    "id": ctid,
-                    "comm ranks": pnode["comm ranks"],
-                    "prog_name": pnode["prog_name"],
-                    "threads": pnode["threads"],
-                    "findex": child_node["findex"],
-                    "value": (child_node["exit"] - child_node["entry"]),
-                    "messages": child_node["messages"],
-                    "entry": child_node["entry"],
-                    "exit": pnode["exit"],
-                    "anomaly_score": child_node["anomaly_score"]
-                })
-            this_tree['edges'].append({'source': ptid,'target': ctid})
-            if not self.generate_tree_recursive(this_tree, child_node, ctid):
-                this_tree['nodes'][ptid]['hide'] = False
-        return this_tree['nodes'][ptid]['hide']
-
-    def generate_tree(self, treeid):
-        """
-        Invokes generate_tree_recursive given by tree id 
-        """
-        this_tree = self.forest[treeid]
-        execution = self.executions[this_tree['eid']]
-        self.generate_tree_recursive(this_tree, execution, 0)
-
-    def generate_tree_by_eid(self, eid):
-        """
-        Invokes generate_tree_recursive given by execution id 
-        """
-        if self.EXECUTION_ID_DELIMETER in eid:
-            eid = eid.split(self.EXECUTION_ID_DELIMETER)[1]
-        tree = {}
-        if eid in self.executions:
-            execution = self.executions[eid]
-            tree = self.create_tree_by_execution(eid, execution)
-            self.generate_tree_recursive(tree, execution, 0)
-            return tree
-        else:
-            return tree
-
-    def create_tree_by_execution(self, tid, execution):
-        """
-        Create root of tree given by execution and treeid
-        """
-        if not "messages" in execution:
-            execution["messages"] = []
-        return {
-            "id": tid,
-            "eid": execution['findex'],
-            "prog_name": execution["prog names"],
-            "node_index": execution["comm ranks"],
-            "threads": execution["threads"],
-            "graph_index": execution['findex'],
-            "nodes": [{ # root of the tree
-                    "name": execution['name'], # self.foi,
-                    "id": 0, # parent
-                    "comm ranks": execution["comm ranks"],
-                    "prog_name": execution["prog names"],
-                    "threads": execution["threads"],
-                    "findex": execution["findex"],
-                    "value": (execution["exit"] - execution["entry"]),
-                    "messages": execution["messages"],
-                    "entry": execution["entry"],
-                    "exit": execution["exit"],
-                    "anomaly_score": execution["anomaly_score"]
-                }],
-            "edges": [],
-            "anomaly_score": execution['anomaly_score']
-        }
-
     def process_executions(self, executions):
         """
         Process and update received executions to proper format to be utilized in vis backend & frontend.        
@@ -670,13 +678,13 @@ class DataManager(object):
         execution['exit'] -= self.initial_timestamp
         execution['value'] = execution["exit"] - execution["entry"]
 
-        prefix = str(execution['comm ranks']) + self.EXECUTION_ID_DELIMETER # delimeter
-        execution['findex'] = prefix+str(execution['findex'])
-        execution['parent'] = prefix+str(execution['parent'])
-        new_children = []
-        for cid in execution['children']:
-            new_children.append(prefix+str(cid))
-        execution['children'] = new_children
+        # prefix = str(execution['comm ranks']) + self.EXECUTION_ID_DELIMETER # delimeter
+        # execution['findex'] = prefix+str(execution['findex'])
+        # execution['parent'] = prefix+str(execution['parent'])
+        # new_children = []
+        # for cid in execution['children']:
+        #     new_children.append(prefix+str(cid))
+        # execution['children'] = new_children
         return execution
 
     def add_to_buffer(self, frame):
@@ -764,17 +772,119 @@ class DataManager(object):
             self.prev[rank] = curr
         self.changed = True
 
-    def get_scatterplot(self, rank, start, end):
+    def get_scatterplot(self, rid, start, end):
         """
         Returns data points for scatterplot.
+        Arguments:
+            rid:    rankid
+            start:  starttime
+            end:    endtime
         """
-        # executions = query(rank, start, end) <-- Assumed In-Mem DB exists.
+        # executions = query(rid, start, end) <-- Assumed In-Mem DB exists.
         # result = self.process_executions(executions) 
         return {
             'coordinates': self.pos,
             'func_names': self.func_names,
             'prog_names': self.prog_names,
-            'eid': self.eid
+            'eid': self.eid,
+            'rid': rid
+        }
+
+    def construct_tree(self, params):
+        """
+        Constructs tree by the given parameters
+        Arguments:
+            params: {
+                eid:    execution id, which will be utilized as root id
+                start:  start time
+                end:    end time
+                rid:    rank id
+            }
+        """
+        # executions = query(rid, eid, start, end)  <-- retrieves executions in the particular rank between start_time and end_time
+        #                                               The execution list in an ascending order based on start timestamp is expected.
+        executions = self.executions.values()  # <-- temporally, test purpose
+        tree = self._construct_tree(params['eid'], executions)
+        return tree
+
+    def _construct_tree(self, root_id, executions):
+        """
+        Iterates executions while constructing tree 
+        Assumed the executions are sorted in ascending order based on start timestamp
+        """
+        tree = {}
+        eid2nid = {} 
+        for execution in executions:
+            eid = execution[web_app.config['EXECUTION_ID']]
+            if len(tree.keys()) == 0:
+                tree = self.init_tree(execution)
+                eid2nid[eid] = 0
+            else:
+                eid2nid[eid] = node_id = len(tree['nodes'])
+                try:
+                    tree['edges'].append({
+                        'source': eid2nid[execution[web_app.config['PARENT_ID']]],
+                        'target': node_id
+                    })
+                    tree['nodes'].append(self.create_node(node_id, execution))
+                except:
+                    pass
+                    # raise KeyError('the parent is not in the given interval.')
+                    # the parent of this execution is not in this interval.
+                    # this execution might not be related to this call stack tree.
+                    # print(execution['parent'])
+        return tree
+
+    def init_tree(self, execution):
+        """
+        Intitializes tree structure
+        tree = {
+            tree_id: hold incremental tree id
+            rank_id, thread_id, prog_name: where the root node was executed
+            nodes: [    <-- contains its nodes including root node.
+                {
+                    node_id: node id in the tree (root: 0)
+                    rank_id, thread_id, prog_name, func_name: where the execution was run on
+                    entry, exit: its specific informations
+                }
+            ], 
+            edges: [    <-- specifies which node is linked to which node
+                {
+                    source: parent node id,
+                    target: child node id,
+                }
+            ]
+        }
+        """
+        self.tree_id += 1
+        return {
+            'tree_id': self.tree_id,
+            'rank_id': execution[web_app.config['RANK_ID']],
+            'thread_id': execution[web_app.config['THREAD_ID']],
+            'prog_name': execution[web_app.config['PROG_NAME']],
+            'nodes': [self.create_node(0, execution)],
+            'edges': []
+        }
+
+    def create_node(self, node_id, execution):
+        """
+        Creates node object
+        node = {
+            node_id: node id in the tree (root: 0)
+            rank_id, thread_id, prog_name, func_name: where the execution was run on
+            entry, exit: its specific informations
+        }
+        """
+        return { 
+            'node_id': node_id,
+            'execution_id': execution[web_app.config['EXECUTION_ID']],
+            'rank_id': execution[web_app.config['RANK_ID']],
+            'thread_id': execution[web_app.config['THREAD_ID']],
+            'prog_name': execution[web_app.config['PROG_NAME']],
+            'func_name': execution[web_app.config['FUNC_NAME']],
+            'entry': execution[web_app.config['ENTRY_TIME']],
+            'exit': execution[web_app.config['EXIT_TIME']],
+            'value':  execution[web_app.config['EXIT_TIME']]-execution[web_app.config['ENTRY_TIME']]
         }
 
 

@@ -73,6 +73,7 @@ class DataManager(object):
         self.prev = {} # stores the number of anomalies per function in the previous data frame
         self.EXECUTION_ID_DELIMETER = '&&' # <-- will be moved to constant configuration
         self.tree_id = -1
+        self.history = {} # <-- assumed In-Mem DB
 
 ##############################################################################################
 # Begin of the deprecated functions:
@@ -765,10 +766,14 @@ class DataManager(object):
                 self.delta[rank] = 0
             if rank not in self.prev:
                 self.prev[rank] = 0
+            if rank not in self.history:
+                self.history[rank] = []
             delta = abs(curr - self.prev[rank])
             self.delta[rank] += delta
 
             self.stream[rank].append(curr)
+            self.history[rank].append(curr) # <-- history contains list of # anomalies per rank from begining to the current 
+                                            #     This will be replaced with In-Mem DB                                   
             self.prev[rank] = curr
         self.changed = True
 
@@ -789,6 +794,17 @@ class DataManager(object):
             'eid': self.eid,
             'rid': rid
         }
+    
+    def get_history(self, rid, start, end):
+        """
+        Returns history (frames) from start frame to end frame
+        Arguments:
+            rid:    rankid
+            start:  start frame
+            end:    end frame
+        """
+        # history = query(rid, start, end) <-- Assumed In-Mem DB exists.
+        return self.history[rid]
 
     def construct_tree(self, params):
         """

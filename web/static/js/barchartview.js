@@ -1,19 +1,19 @@
-class DynamicBarChartView extends View {
+class BarChartView extends View {
 
     constructor(data, svg, name) {
         super(data, svg, {
-            'width': componentLayout.DYNAMIC_BAR_CHART_WIDTH,
-            'height': componentLayout.DYNAMIC_BAR_CHART_HIEGHT
+            'width': componentLayout.BAR_CHART_WIDTH,
+            'height': componentLayout.BAR_CHART_HIEGHT
         });
         this.name = name
         this.margin = {
-            top: componentLayout.DYNAMIC_BAR_CHART_MARGIN_TOP, 
-            right: componentLayout.DYNAMIC_BAR_CHART_MARGIN_RIGHT, 
-            bottom: componentLayout.DYNAMIC_BAR_CHART_MARGIN_BOTTOM, 
-            left: componentLayout.DYNAMIC_BAR_CHART_MARGIN_LEFT
+            top: componentLayout.BAR_CHART_MARGIN_TOP, 
+            right: componentLayout.BAR_CHART_MARGIN_RIGHT, 
+            bottom: componentLayout.BAR_CHART_MARGIN_BOTTOM, 
+            left: componentLayout.BAR_CHART_MARGIN_LEFT
         };
-        this.container_width = componentLayout.DYNAMIC_BAR_CHART_WIDTH;
-        this.container_height = componentLayout.DYNAMIC_BAR_CHART_HEIGHT;
+        this.container_width = componentLayout.BAR_CHART_WIDTH;
+        this.container_height = componentLayout.BAR_CHART_HEIGHT;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
         this.svg
@@ -33,6 +33,22 @@ class DynamicBarChartView extends View {
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
         this.legend = d3.select('#'+this.name+'-legend');
         this._legend = d3.select('#'+this.name+'-bottom-legend');
+
+        if (this.name == 'historyview') {
+            var me = this
+            me.dynamic = false;
+            me.rangeStart = 0
+            me.detailed = d3.select("#selected_rank_no");
+            me.rank_no = d3.select("#history_start_no").node()
+            d3.select("#static_btn").on("click", function(d) {
+                me.dynamic = false
+                me._update();
+            });
+            d3.select("#dynamic_btn").on("click", function(d) {
+                me.dynamic = true
+                me._update();
+            });
+        }
     }
 
     stream_update(){
@@ -47,18 +63,30 @@ class DynamicBarChartView extends View {
         /**
          * Renders delta plot after data converting and scales adjustment
         **/
-        this._data = this.processData()
-        this.setAxisLabels();
-        this.adjust_scale();
-        this.draw();
+       if (this.name == 'streamview') {
+            this._data = this.processData()
+            this.setAxisLabels('Ranking', 'Accum. # Anomalies');
+            this.adjust_scale();
+            this.draw();
+       } else if(this.name == 'historyview') {
+            if( this.dynamic && this.data.rankHistoryInfo !== undefined) {
+                var rankInfo = this.data.rankHistoryInfo;
+                this.fillColor = rankInfo.fill
+                this.detailed.text('Selected Rank #: '+rankInfo.rank)
+                this._data = this.getHistoryData(rankInfo.rank)
+                this.setAxisLabels('Frame', '# anomalies');
+                this.adjust_scale();
+                this.draw();
+            }
+       }
     }
 
-    setAxisLabels() {
+    setAxisLabels(xAxis, yAxis) {
         /**
          * Set x, y axis labels 
         **/
-        this.xAxisLabel = 'Rank'; // to be dynamic 
-        this.yAxisLabel = 'Accumulated Delta';
+        this.xAxisLabel = xAxis;
+        this.yAxisLabel = yAxis;
     }
 
     processData() {

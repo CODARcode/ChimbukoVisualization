@@ -14,7 +14,7 @@ class Data {
         this.views.addView(new DynamicGraphView(this, d3.select("#treeview")));
         this.views.addView(new TemporalView(this, d3.select("#temporalview")));
         this.views.addView(new ScatterView(this, d3.select("#overview"), 'scatterview'));
-        this.views.addView(new DynamicBarChartView(this, d3.select("#deltaview"), 'deltaview'));
+        this.views.addView(new BarChartView(this, d3.select("#deltaview"), 'deltaview'));
         this.views.addView(new HistoryView(this, d3.select("#historyview"), 'historyview'));
 
         this.k = visOptions.clusterk;

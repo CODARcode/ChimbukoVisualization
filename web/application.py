@@ -80,6 +80,17 @@ def get_tree():
             })
             return jsonify(tree)
 
+@web_app.route('/history', methods=['POST'])
+def get_history ():
+    '''
+    Returns history(frames) queried by given rank, start, end
+    '''
+    rank = request.json['rank']
+    start = request.json['start']
+    end = request.json['end']
+    history = data_manager.get_history(rank, start, end)
+    return jsonify(history)
+
 @web_app.route('/scatterplot', methods=['POST'])
 def get_scatterplot ():
     '''

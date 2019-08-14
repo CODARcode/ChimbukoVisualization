@@ -34,51 +34,18 @@ class BarChartView extends View {
         this.legend = d3.select('#'+this.name+'-legend');
         this._legend = d3.select('#'+this.name+'-bottom-legend');
 
-        if (this.name == 'historyview') {
-            var me = this
-            me.dynamic = false;
-            me.rangeStart = 0
-            me.detailed = d3.select("#selected_rank_no");
-            me.rank_no = d3.select("#history_start_no").node()
-            d3.select("#static_btn").on("click", function(d) {
-                me.dynamic = false
-                me._update();
-            });
-            d3.select("#dynamic_btn").on("click", function(d) {
-                me.dynamic = true
-                me._update();
-            });
-        }
     }
 
     stream_update(){
         /**
-         * Called whenever data has received from backend.
-         * Invokes rendering process
+         * Overwrittened by child component
         **/
-        this._update()
     }
 
     _update(){
         /**
-         * Renders delta plot after data converting and scales adjustment
+         * Overwrittened by child component
         **/
-       if (this.name == 'streamview') {
-            this._data = this.processData()
-            this.setAxisLabels('Ranking', 'Accum. # Anomalies');
-            this.adjust_scale();
-            this.draw();
-       } else if(this.name == 'historyview') {
-            if( this.dynamic && this.data.rankHistoryInfo !== undefined) {
-                var rankInfo = this.data.rankHistoryInfo;
-                this.fillColor = rankInfo.fill
-                this.detailed.text('Selected Rank #: '+rankInfo.rank)
-                this._data = this.getHistoryData(rankInfo.rank)
-                this.setAxisLabels('Frame', '# anomalies');
-                this.adjust_scale();
-                this.draw();
-            }
-       }
     }
 
     setAxisLabels(xAxis, yAxis) {
@@ -89,46 +56,28 @@ class BarChartView extends View {
         this.yAxisLabel = yAxis;
     }
 
-    processData() {
+    processData(data) {
         /**
-         * Prepares proper format for rendering delta plot --> to be dynamic
+         * 
+         * Overwrittened by child compoennt
+         * 
+         * Dynamically generate/process the given data to proper format
          * 
          * the format is like below:
-         * result == {
-         *      frame_id: {
-         *          'category1': {
-         *              'name': rank_id,
-         *              'value': delta value
-         *          },
-         *           'category2': {
-         *              'name': rank_id,
-         *              'value': delta value
-         *          }
+         * result == [category1, category2, ... ]
+         * category == {
+         *      x: {
+         *          label: str,
+         *          values: [] # list of x values
+         *      },
+         *      y: {
+         *          label: str,
+         *          values: [] # list of y values
          *      }
          * }
-         * 
          */
-        var res = {}
-        var category1 = this.data.selectedRanks[0]
-        var category2 = this.data.selectedRanks[1]
-        var maxLength = Math.max(category1.length, category2.length) 
-        for (var i=0; i<maxLength; i++) {
-            res[i] = {}
-            if(category1[i] !== undefined) {
-                res[i]['category1'] = {
-                    'name': category1[i],
-                    'value': this.data.renderingDelta[category1[i]]
-                }
-            }
-            if(category2[i] !== undefined){
-                res[i]['category2'] = {
-                    'name': category2[i],
-                    'value': this.data.renderingDeltaBottom[category2[i]]
-                }
-            }
-        }
-        return res;
     }
+    
     getX(d) {
         return Number(d)
     }
@@ -205,7 +154,13 @@ class BarChartView extends View {
                 .attr("height", function(d) { 
                     // console.log('content_height: '+me.content_height+', me.yScale(d.value): '+ me.yScale(d.value))
                     return me.content_height - me.yScale(d.value); }
-                );
+                ).on('click', function(d) {
+                    me.getHistory(me.notify.bind(me), {
+                        'rid': d.name,
+                        'start': 0,
+                        'end': 0
+                    });
+                });;
         this.bars = this.content_area.selectAll(this.name+'_bar');
     }
     getBarData() {

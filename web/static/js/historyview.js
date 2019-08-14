@@ -1,4 +1,4 @@
-class HistoryView extends View {
+class HistoryView extends BarChartView {
     constructor(data, svg) {
         super(data, svg, {
             'width': componentLayout.HISTORYVIEW_WIDTH,

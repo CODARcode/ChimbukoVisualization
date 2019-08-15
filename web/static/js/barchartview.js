@@ -1,19 +1,11 @@
 class BarChartView extends View {
 
-    constructor(data, svg, name) {
-        super(data, svg, {
-            'width': componentLayout.BAR_CHART_WIDTH,
-            'height': componentLayout.BAR_CHART_HIEGHT
-        });
+    constructor(data, svg, name, size, margin, callback) {
+        super(data, svg, size);
         this.name = name
-        this.margin = {
-            top: componentLayout.BAR_CHART_MARGIN_TOP, 
-            right: componentLayout.BAR_CHART_MARGIN_RIGHT, 
-            bottom: componentLayout.BAR_CHART_MARGIN_BOTTOM, 
-            left: componentLayout.BAR_CHART_MARGIN_LEFT
-        };
-        this.container_width = componentLayout.BAR_CHART_WIDTH;
-        this.container_height = componentLayout.BAR_CHART_HEIGHT;
+        this.margin = margin;
+        this.container_width = size.width;
+        this.container_height = size.height;
         this.content_width = this.container_width -this.margin.left -this.margin.right;
         this.content_height = this.container_height -this.margin.top -this.margin.bottom;
         this.svg
@@ -31,23 +23,37 @@ class BarChartView extends View {
         this.yAxis = this.svg.append('g')
             .attr('class', this.name+'_y_axis')
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
-        this.legend = d3.select('#'+this.name+'-legend');
-        this._legend = d3.select('#'+this.name+'-bottom-legend');
 
+        this.callback = callback;
     }
-
     stream_update(){
         /**
          * Overwrittened by child component
         **/
     }
-
     _update(){
         /**
          * Overwrittened by child component
         **/
     }
-
+    processData(data) {
+        /**
+         * Overwrittened by child compoennt
+         * Dynamically generate/process the given data to the following expected format:
+         * format == {
+         *      name of category == {
+         *          x: [] # list of x values
+         *          y: [] # list of y values
+         *      }
+         * }
+         */
+    }
+    render(xLabel, yLabel, data) {
+        this.renderData = data
+        this.setAxisLabels(xLabel, yLabel);
+        this.adjust_scale();
+        this.draw();
+    }
     setAxisLabels(xAxis, yAxis) {
         /**
          * Set x, y axis labels 
@@ -55,29 +61,6 @@ class BarChartView extends View {
         this.xAxisLabel = xAxis;
         this.yAxisLabel = yAxis;
     }
-
-    processData(data) {
-        /**
-         * 
-         * Overwrittened by child compoennt
-         * 
-         * Dynamically generate/process the given data to proper format
-         * 
-         * the format is like below:
-         * result == [category1, category2, ... ]
-         * category == {
-         *      x: {
-         *          label: str,
-         *          values: [] # list of x values
-         *      },
-         *      y: {
-         *          label: str,
-         *          values: [] # list of y values
-         *      }
-         * }
-         */
-    }
-    
     getX(d) {
         return Number(d)
     }
@@ -95,10 +78,10 @@ class BarChartView extends View {
         return b;
     }
     adjust_scale() {
-        this.xScale = d3.scaleBand().range([0, this.content_width]).domain(Object.keys(this._data).map(this.getX)).paddingInner(0.05);
-        this.yScale = d3.scaleLinear().range([this.content_height, 0]).domain([0, d3.max(Object.values(this._data).map(this.getYMax))]);
-        this.topColorScale = d3.scaleSequential().domain([0, d3.max(Object.values(this._data).map(this.getTopMax))]).interpolator(d3.interpolateReds); //interpolateReds , interpolateYlOrRd
-        this.bottomColorScale = d3.scaleSequential().domain([0, d3.max(Object.values(this._data).map(this.getBottomMax))]).interpolator(d3.interpolateBlues); //interpolateBlues , interpolateGnBu
+        this.xScale = d3.scaleBand().range([0, this.content_width]).domain(Object.keys(this.renderData).map(this.getX)).paddingInner(0.05);
+        this.yScale = d3.scaleLinear().range([this.content_height, 0]).domain([0, d3.max(Object.values(this.renderData).map(this.getYMax))]);
+        this.topColorScale = d3.scaleSequential().domain([0, d3.max(Object.values(this.renderData).map(this.getTopMax))]).interpolator(d3.interpolateReds); //interpolateReds , interpolateYlOrRd
+        this.bottomColorScale = d3.scaleSequential().domain([0, d3.max(Object.values(this.renderData).map(this.getBottomMax))]).interpolator(d3.interpolateBlues); //interpolateBlues , interpolateGnBu
     }
     draw() {
         this._updateAxis();
@@ -154,99 +137,32 @@ class BarChartView extends View {
                 .attr("height", function(d) { 
                     // console.log('content_height: '+me.content_height+', me.yScale(d.value): '+ me.yScale(d.value))
                     return me.content_height - me.yScale(d.value); }
-                ).on('click', function(d) {
-                    me.getHistory(me.notify.bind(me), {
-                        'rid': d.name,
-                        'start': 0,
-                        'end': 0
-                    });
-                });;
+                ).on('click', d => this.callback(d));
         this.bars = this.content_area.selectAll(this.name+'_bar');
     }
     getBarData() {
         var res = []
-        Object.keys(this._data).forEach(i => {
-            if (this._data[i].category1 !== undefined) {
+        Object.keys(this.renderData).forEach(i => {
+            if (this.renderData[i].category1 !== undefined) {
                 res.push({
                     'class': Number(i),
-                    'name': Number(this._data[i].category1.name),
-                    'value': this._data[i].category1.value,
-                    'fill': this.topColorScale(Number(this._data[i].category1.name)+7.5),
+                    'name': Number(this.renderData[i].category1.name),
+                    'value': this.renderData[i].category1.value,
+                    'fill': this.topColorScale(Number(this.renderData[i].category1.name)+7.5),
                     'type': 0
                 });
             }
-            if (this._data[i].category2 !== undefined) {
+            if (this.renderData[i].category2 !== undefined) {
                 res.push({
                     'class': Number(i),
-                    'name': Number(this._data[i].category2.name),
-                    'value': this._data[i].category2.value,
-                    'fill': this.bottomColorScale(Number(this._data[i].category2.name)+7.5),
+                    'name': Number(this.renderData[i].category2.name),
+                    'value': this.renderData[i].category2.value,
+                    'fill': this.bottomColorScale(Number(this.renderData[i].category2.name)+7.5),
                     'type': 1
                 });
             }
         });
         return res;
-    }
-    getLegendData() {
-        var cat1 = {}
-        var cat2 = {}
-        this.barData.forEach(d => {
-            if (d.type==0) {
-                cat1[d.name] = d
-            } else {
-                cat2[d.name] = d
-            }
-        })
-        return [cat1, cat2];
-    }
-    _drawLegend() {
-        var me = this;
-        me.legend.selectAll('.'+this.name+'-legend-item').remove();
-        me._legend.selectAll('.'+this.name+'-legend-item').remove();
-        this.legendData = this.getLegendData()
-        this.makeLegend(me.legend, this.legendData[0])
-        this.makeLegend(me._legend, this.legendData[1])
-    }
-
-    makeLegend(target, legendData) {
-        var me = this;
-        var ranks = Object.keys(legendData)
-        ranks.sort(function(x, y) {
-            return d3.ascending(legendData[y].value, legendData[x].value);
-        })
-        var legend = target.selectAll('.'+this.name+'-legend-item').data(ranks).enter()
-            .append('div')
-                .attr('class', this.name+'-legend-item')
-                .on('click', function(d) {
-                    var rankno = d
-                    console.log('clicked: '+rankno)
-                    me.selectedRankNo = rankno;
-                    me.data.rankHistoryInfo = {
-                        'rank': rankno,
-                        'fill': legendData[d].fill
-                    }
-                    if (!me.historyview) {
-                        me.historyview = me.data.views.getView('historyview');
-                    }
-                    me.historyview._update();
-                    me.draw();
-                });
-        legend.append('div')
-            .attr('class', this.name+'-legend-item-circle')
-            .style('background', function(d){
-                return legendData[d].fill
-            });
-        legend.append('text')
-            .attr('class', this.name+'-legend-item-text')
-            .style('color', function(d) {
-                return (me.selectedRankNo=== d)? 'black':'gray';
-            })
-            .style('font-weight', function(d) {
-                return (me.selectedRankNo=== d)? 'bold':'';
-            })
-            .text(function(d){
-                return 'MPI Rank ID: '+d+' ('+legendData[d].value+')'
-            })
     }
 }
 d3.selection.prototype.moveToFront = function() {

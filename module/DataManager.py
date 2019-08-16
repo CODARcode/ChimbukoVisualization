@@ -777,15 +777,16 @@ class DataManager(object):
             self.prev[rank] = curr
         self.changed = True
 
-    def get_scatterplot(self, rid, start, end):
+    def get_scatterplot(self, appid, rid, start, end):
         """
         Returns data points for scatterplot.
         Arguments:
+            appid:  application id (TBA)
             rid:    rankid
             start:  starttime
             end:    endtime
         """
-        # executions = query(rid, start, end) <-- Assumed In-Mem DB exists.
+        # executions = query(appid, rid, start, end) <-- Assumed In-Mem DB exists.
         # result = self.process_executions(executions) 
         return {
             'coordinates': self.pos,
@@ -795,15 +796,16 @@ class DataManager(object):
             'rid': rid
         }
     
-    def get_history(self, rid, start, end):
+    def get_history(self, appid, rid, start, end):
         """
         Returns history (frames) from start frame to end frame
         Arguments:
+            appid:  application id (TBA)
             rid:    rankid
             start:  start frame
             end:    end frame
         """
-        # history = query(rid, start, end) <-- Assumed In-Mem DB exists.
+        # history = query(appid, rid, start, end) <-- Assumed In-Mem DB exists.
         return self.history[rid]
 
     def construct_tree(self, params):

@@ -84,19 +84,14 @@ text {
     border: 1px solid black;
 }
 /* Visualization Components */
-.deltaview {
-    width: 900px;
-    height: 500px;
+.streamview {
     display: inline-block;
 }
 .historyview {
-    width: 900px;
-    height: 500px;
     display: inline-block;
 }
 .scatterview {
     display: inline-block;  
-    width: 600px; 
 }
 .legendview {
     width: 200px;
@@ -105,13 +100,9 @@ text {
     display: inline-block;
 }
 .treeview{
-    width: 900px;
-    height: 600px;
     display: inline-block;
 }
 .temporalview {
-    width: 900px;
-    height: 600px;
     display: inline-block;
 }
 

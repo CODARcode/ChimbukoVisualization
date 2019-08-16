@@ -23,8 +23,8 @@ class BarChartView extends View {
         this.yAxis = this.svg.append('g')
             .attr('class', this.name+'_y_axis')
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
-
         this.callback = callback;
+        this.colorTheme = [d3.interpolateReds, d3.interpolateBlues] 
     }
     stream_update(){
         /**
@@ -48,45 +48,49 @@ class BarChartView extends View {
          * }
          */
     }
-    render(xLabel, yLabel, data) {
-        this.renderData = data
-        this.setAxisLabels(xLabel, yLabel);
-        this.adjust_scale();
+    render(params) {
+        this.renderData = params.data;
+        this.callback = params.callback;
+        this.setAxisLabels(params.xLabel, params.yLabel);
+        this.adjustScale(params.color);
         this.draw();
     }
-    setAxisLabels(xAxis, yAxis) {
+    setAxisLabels(xLabel, yLabel) {
         /**
          * Set x, y axis labels 
         **/
-        this.xAxisLabel = xAxis;
-        this.yAxisLabel = yAxis;
+        this.xAxisLabel = xLabel;
+        this.yAxisLabel = yLabel;
     }
     getX(d) {
-        return Number(d)
+        return d.x.length
     }
-    getYMax(d) {
-        var t = d.category1? d.category1.value : 0
-        var b = d.category2? d.category2.value : 0
-        return Math.max(t, b)
+    getY(d) {
+        return d3.max(d.y)
     }
-    getTopMax(d) {
-        var t  = d.category1? (Number(d.category1.name)+20) : 0;
-        return t;
+    getColor(d) {
+        return Number(d);
     }
-    getBottomMax(d) {
-        var b  = d.category2? (Number(d.category2.name)+20) : 0;
-        return b;
-    }
-    adjust_scale() {
-        this.xScale = d3.scaleBand().range([0, this.content_width]).domain(Object.keys(this.renderData).map(this.getX)).paddingInner(0.05);
-        this.yScale = d3.scaleLinear().range([this.content_height, 0]).domain([0, d3.max(Object.values(this.renderData).map(this.getYMax))]);
-        this.topColorScale = d3.scaleSequential().domain([0, d3.max(Object.values(this.renderData).map(this.getTopMax))]).interpolator(d3.interpolateReds); //interpolateReds , interpolateYlOrRd
-        this.bottomColorScale = d3.scaleSequential().domain([0, d3.max(Object.values(this.renderData).map(this.getBottomMax))]).interpolator(d3.interpolateBlues); //interpolateBlues , interpolateGnBu
+    adjustScale(color) { 
+        var me = this;
+        me.xScale = d3.scaleBand().range([0, me.content_width]).domain([1, d3.max(Object.values(me.renderData).map(me.getX))]).paddingInner(0.05);
+        me.yScale = d3.scaleLinear().range([me.content_height, 0]).domain([0, d3.max(Object.values(me.renderData).map(me.getY))]);
+        if(color.colorScales)  {
+            me.colorScaleFuncs = []
+            me.colorScales = color.colorScales;
+            color.colorScales.forEach(function(d, i) {
+                me.colorScaleFuncs.push(d3.scaleSequential()
+                    .domain([0, d3.max(Object.values(d).map(me.getColor))])
+                    .interpolator(me.colorTheme[i]))
+            });
+        } else {
+            me.fillColor = color.fillColor
+        }
     }
     draw() {
         this._updateAxis();
         this._drawBars();
-        this._drawLegend();
+        // this._drawLegend();
     }
     _updateAxis() {
         this.xAxis.selectAll('text.'+this.name+'_xLabel').remove();
@@ -122,45 +126,43 @@ class BarChartView extends View {
             .data(this.barData).enter()
                 .append("rect")
                 .style("fill", d => d.fill)
-                .attr("x", function(d) { 
-                    // console.log('rank #: '+d.rank+', x: '+me.xScale(d.rank))
-                    return (d.type==0)? me.xScale(d.class) : me.xScale(d.class) +15
+                .attr("x", function(d) { // to be side by side
+                    return (d.category==0)? me.xScale(d.x) : me.xScale(d.x) +15
                 })
                 .attr("width", d => {
-                    var width = me.xScale.bandwidth()<50? me.xScale.bandwidth() : 50
-                    return (d.type==0)? width : width -15
+                    var width = me.xScale.bandwidth()<50? me.xScale.bandwidth() : 50 // remove width limit 
+                    return (d.category==0)? width : width -15
                 })
                 .attr("y", function(d) { 
-                    // console.log('value: '+d.value+', y: '+me.yScale(d.value))
-                    return me.yScale(d.value)
+                    return me.yScale(d.y)
                 })
                 .attr("height", function(d) { 
-                    // console.log('content_height: '+me.content_height+', me.yScale(d.value): '+ me.yScale(d.value))
-                    return me.content_height - me.yScale(d.value); }
-                ).on('click', d => this.callback(d));
+                    return me.content_height - me.yScale(d.y); }
+                )
+                .on('click', function(d) {
+                    debugger;
+                });
         this.bars = this.content_area.selectAll(this.name+'_bar');
     }
-    getBarData() {
+    getBarData() { 
         var res = []
-        Object.keys(this.renderData).forEach(i => {
-            if (this.renderData[i].category1 !== undefined) {
+        var me = this;
+        Object.keys(this.renderData).forEach(function(category, i) {
+            var barData = me.renderData[category]
+            barData.x.forEach(function(x, j) {
+                var fillColor;
+                if (me.colorScaleFuncs) {
+                    fillColor = me.colorScaleFuncs[i](Number(me.colorScales[i][j]))
+                } else {
+                    fillColor = me.fillColor;
+                }
                 res.push({
-                    'class': Number(i),
-                    'name': Number(this.renderData[i].category1.name),
-                    'value': this.renderData[i].category1.value,
-                    'fill': this.topColorScale(Number(this.renderData[i].category1.name)+7.5),
-                    'type': 0
+                    'x': x,
+                    'y': barData.y[i],
+                    'fill': fillColor,
+                    'category': Number(i)
                 });
-            }
-            if (this.renderData[i].category2 !== undefined) {
-                res.push({
-                    'class': Number(i),
-                    'name': Number(this.renderData[i].category2.name),
-                    'value': this.renderData[i].category2.value,
-                    'fill': this.bottomColorScale(Number(this.renderData[i].category2.name)+7.5),
-                    'type': 1
-                });
-            }
+            });
         });
         return res;
     }

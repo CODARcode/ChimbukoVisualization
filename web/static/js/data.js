@@ -14,7 +14,7 @@ class Data {
         this.views.addView(new DynamicGraphView(this, d3.select("#treeview")));
         this.views.addView(new TemporalView(this, d3.select("#temporalview")));
         this.views.addView(new ScatterView(this, d3.select("#overview"), 'scatterview'));
-        this.views.addView(new BarChartView(this, d3.select("#deltaview"), 'deltaview'));
+        this.views.addView(new StreamView(this, d3.select("#streamview"), 'streamview'));
         this.views.addView(new HistoryView(this, d3.select("#historyview"), 'historyview'));
 
         this.k = visOptions.clusterk;
@@ -37,12 +37,6 @@ class Data {
         this.frameWindow = 30
         this.frameInterval = this.SECOND * 0.5
         this.frames = {};
-        this.frames_bottom = {};
-        this.renderingFrames = {};
-        this.renderingFramesBottom = {};
-        this.renderingDelta = {};
-        this.renderingDeltaBottom = {};
-        this.selectedFrames = []
         this.date = new Date();
         this.setWait = true;
         this.NUM_SELECTION_RANK = 10;
@@ -102,7 +96,7 @@ class Data {
         }
     }
 
-    getOutlierRanks(delta) {
+    getSortedRanks(delta) {
         /**
          * Sorts delta values per rank 
          * Get top and bottom 5 ranks based on delta values
@@ -122,57 +116,28 @@ class Data {
             top = sortedRanks.slice(0, this.NUM_SELECTION_RANK)
             bottom = sortedRanks.slice(sortedRanks.length-this.NUM_SELECTION_RANK)
         }
-        return [top, bottom] 
+        return {
+            'top': top,
+            'bottom': bottom
+        }
     }
 
     hasReceived() {
         /**
-         * Return true if data has received
-         * If received, prepares rendering data
-         * Gets the first element, the number of anomalies, from each list of rank
-         * Considers only top and bottom selected ranks
+         * Return true if possible to process
+         * If possible, 
+         *      Gets the first element, the number of anomalies, from each list of rank
+         *      Considers only top and bottom sorted ranks
          */
-        var delta = this.updateDelta();
-        this.selectedRanks = this.getOutlierRanks(delta)
+        var curr_delta = this.updateDelta();
+        this.selectedRanks = this.getSortedRanks(curr_delta)
         var res = false;
         for ( var rank in this.frames) {
             var rankData = this.frames[rank]
             if (rankData.length > 0) {
                 var value = rankData.splice(0, 1)[0]
-                if(this.selectedRanks[0].includes(rank)) {
+                if(this.selectedRanks.top.includes(rank) || this.selectedRanks.bottom.includes(rank)) {
                     res = true;
-                    // if (Object.keys(this.renderingFrames).length == this.frameWindow) {
-                    //     delete this.renderingFrames[this.frameID-this.frameWindow] 
-                    // }
-                    // if (Object.keys(this.renderingDelta).length == this.frameWindow) {
-                    //     delete this.renderingDelta[this.frameID-this.frameWindow] 
-                    // }
-                    // if (!this.renderingFrames[this.frameID]) {
-                    //     this.renderingFrames[this.frameID] = {}
-                    // }
-                    // if (!this.renderingDelta[this.frameID]) {
-                    //     this.renderingDelta[this.frameID] = {}
-                    // }
-                    // this.renderingDelta[this.frameID][rank] = this.delta[rank]
-                    // this.renderingFrames[this.frameID][rank] = value;
-                    this.renderingDelta[rank] = delta[rank]
-                } else if(this.selectedRanks[1].includes(rank)) {
-                    res = true;
-                    // if (Object.keys(this.renderingFramesBottom).length == this.frameWindow) {
-                    //     delete this.renderingFramesBottom[this.frameID-this.frameWindow] 
-                    // }
-                    // if (Object.keys(this.renderingDeltaBottom).length == this.frameWindow) {
-                    //     delete this.renderingDeltaBottom[this.frameID-this.frameWindow] 
-                    // }
-                    // if (!this.renderingFramesBottom[this.frameID]) {
-                    //     this.renderingFramesBottom[this.frameID] = {}
-                    // }
-                    // if (!this.renderingDeltaBottom[this.frameID]) {
-                    //     this.renderingDeltaBottom[this.frameID] = {}
-                    // }
-                    // this.renderingDeltaBottom[this.frameID][rank] = this.delta[rank]
-                    // this.renderingFramesBottom[this.frameID][rank] = value;
-                    this.renderingDeltaBottom[rank] = delta[rank]
                 }
                 if (!this.history[this.frameID]) {
                     this.history[this.frameID] = {} 

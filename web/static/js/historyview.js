@@ -3,7 +3,7 @@ class HistoryView extends BarChartView {
     constructor(data, svg, name) {
         super(data, svg, name, {
             'width': componentLayout.HISTORYVIEW_WIDTH,
-            'height': componentLayout.HISTORYVIEW_HIEGHT
+            'height': componentLayout.HISTORYVIEW_HEIGHT
         }, {
             'top': componentLayout.HISTORYVIEW_MARGIN_TOP, 
             'right': componentLayout.HISTORYVIEW_MARGIN_RIGHT, 
@@ -13,7 +13,7 @@ class HistoryView extends BarChartView {
         this.name = name
         this.rangeStart = 0
         this.dynamic = false;
-        this.detailed = d3.select("#selected_rank_no");
+        this.detailed = d3.select("#selected_rank_id");
         this.rank_no = d3.select("#history_start_no").node()
         this.NUM_FRAME = 50
         
@@ -41,10 +41,16 @@ class HistoryView extends BarChartView {
          * Renders delta plot after data converting and scales adjustment
         **/
         
-        this.fillColor = selectedRankInfo.fill
         this.detailed.text('Selected Rank #: '+selectedRankInfo.rank)
         this.processed = this.processData(selectedRankInfo.rank, history)
-        this.render('Frame', '# anomalies', this.processed);
+        this.render({
+            'data': this.processed,
+            'xLabel': 'Frame', 
+            'yLebel': '# anomalies', 
+            'color': {
+                'fillColor': selectedRankInfo.fill
+            }
+        });
     }
     processData(selectedRankID, history) {
         /**

@@ -2,32 +2,40 @@ class StreamView extends BarChartView {
 
     constructor(data, svg, name) {
         super(data, svg, name, {
-            'width': componentLayout.STREMVIEW_WIDTH,
-            'height': componentLayout.STREMVIEW_HIEGHT
+            'width': componentLayout.STREAMVIEW_WIDTH,
+            'height': componentLayout.STREAMVIEW_HEIGHT
         }, {
-            'top': componentLayout.STREMVIEW_MARGIN_TOP, 
-            'right': componentLayout.STREMVIEW_MARGIN_RIGHT, 
-            'bottom': componentLayout.STREMVIEW_MARGIN_BOTTOM, 
-            'left': componentLayout.STREMVIEW_MARGIN_LEFT
-        }, );
+            'top': componentLayout.STREAMVIEW_MARGIN_TOP, 
+            'right': componentLayout.STREAMVIEW_MARGIN_RIGHT, 
+            'bottom': componentLayout.STREAMVIEW_MARGIN_BOTTOM, 
+            'left': componentLayout.STREAMVIEW_MARGIN_LEFT
+        });
         this.name = name
         this.legend = d3.select('#'+this.name+'-legend');
         this.legend2 = d3.select('#'+this.name+'-legend-2');
     }
-    stream_update(data){
+    stream_update(){
         /**
          * If received data, the In-Situ update is invoked.
         **/
-        this._update(data)
+        this._update()
     }
-    _update(data){
+    _update(){
         /**
          * Renders delta plot after data converting and scales adjustment
         **/
-        this.processed = this.processData(data);
-        this.render('Ranking', 'Accum. # anomalies', this.processed);
+        this.processed = this.processData();
+        this.render({
+            'data': this.processed,
+            'xLabel': 'Ranking', 
+            'yLebel': 'Accum. # delta', 
+            'color': {
+                'colorScales': [this.data.selectedRanks.top, this.data.selectedRanks.bottom]
+            },
+            'callback': this.getHistory.bind(this)
+        });
     }
-    processData(data) {
+    processData() {
         /**
          * Process proper format for rendering 
          * Dynamically generate/process the given data to the expected format of barChart
@@ -39,20 +47,20 @@ class StreamView extends BarChartView {
          * }
          */
         var processed = {
-            'top': {'x':[], 'y':[]}, // x: ranking, y: accum. # anomalies
-            'bottom': {'x':[], 'y':[]} // x: ranking, y: accum. # anomalies
+            'top': {'x':[], 'y':[]}, // x: ranking, y: accum. # delta 
+            'bottom': {'x':[], 'y':[]} // x: ranking, y: accum. # delta 
         }
-        var top = data[0]
-        var bottom = data[1]
+        var top = this.data.selectedRanks.top
+        var bottom = this.data.selectedRanks.bottom
         var maxLength = Math.max(top.length, bottom.length) 
         for (var i=0; i<maxLength; i++) {
             if(top[i] !== undefined) {
-                processed.top.x.append(i)
-                processed.top.y.append(this.data.renderingDelta[top[i]])
+                processed.top.x.push(i)
+                processed.top.y.push(this.data.delta[top[i]])
             }
             if(bottom[i] !== undefined) {
-                processed.bottom.x.append(i)
-                processed.bottom.y.append(this.data.renderingDelta[bottom[i]])
+                processed.bottom.x.push(i)
+                processed.bottom.y.push(this.data.delta[bottom[i]])
             }
         }
         return processed;

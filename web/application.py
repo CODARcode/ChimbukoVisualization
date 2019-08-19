@@ -74,7 +74,7 @@ def get_tree():
             # return jsonify(tree)
             tree = data_manager.construct_tree({
                 'eid': request.json['eid'],
-                'rid': request.json['rid'],
+                'rid': request.json['rid'], # may be removed
                 'start': request.json['start'],
                 'end': request.json['end']
             })
@@ -83,12 +83,13 @@ def get_tree():
 @web_app.route('/history', methods=['POST'])
 def get_history ():
     '''
-    Returns history(frames) queried by given rank, start, end
+    Returns history(frames) queried by given app_id, rank_id, start, end
     '''
-    rank = request.json['rank']
+    app_id = request.json['app_id']
+    rank_id = request.json['rank_id']
     start = request.json['start']
     end = request.json['end']
-    history = data_manager.get_history(rank, start, end)
+    history = data_manager.get_history(app_id, rank_id, start, end)
     return jsonify(history)
 
 @web_app.route('/scatterplot', methods=['POST'])
@@ -96,10 +97,11 @@ def get_scatterplot ():
     '''
     Returns executions queried by given time period (start, end)
     '''
-    rank = request.json['rank']
+    app_id = request.json['app_id']
+    rank_id = request.json['rank_id']
     start = request.json['start']
     end = request.json['end']
-    scatterplot = data_manager.get_scatterplot(rank, start, end)
+    scatterplot = data_manager.get_scatterplot(app_id, rank_id, start, end)
     return jsonify(scatterplot)
 
 @web_app.route('/srate', methods=['POST'])

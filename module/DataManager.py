@@ -777,49 +777,49 @@ class DataManager(object):
             self.prev[rank] = curr
         self.changed = True
 
-    def get_scatterplot(self, appid, rid, start, end):
+    def get_scatterplot(self, app_id, rank_id, start, end):
         """
         Returns data points for scatterplot.
         Arguments:
-            appid:  application id (TBA)
-            rid:    rankid
-            start:  starttime
-            end:    endtime
+            app_id:  application id (TBA)
+            rank_id: rankid
+            start:   starttime
+            end:     endtime
         """
-        # executions = query(appid, rid, start, end) <-- Assumed In-Mem DB exists.
+        # executions = query(app_id, rank_id, start, end) <-- Assumed In-Mem DB exists.
         # result = self.process_executions(executions) 
         return {
             'coordinates': self.pos,
             'func_names': self.func_names,
             'prog_names': self.prog_names,
-            'eid': self.eid,
-            'rid': rid
+            'execution_id': self.eid,
+            'rank_id': rank_id
         }
     
-    def get_history(self, appid, rid, start, end):
+    def get_history(self, app_id, rank_id, start, end):
         """
         Returns history (frames) from start frame to end frame
         Arguments:
-            appid:  application id (TBA)
-            rid:    rankid
-            start:  start frame
-            end:    end frame
+            app_id:  application id (TBA)
+            rank_id: rank id
+            start:   start frame
+            end:     end frame
         """
-        # history = query(appid, rid, start, end) <-- Assumed In-Mem DB exists.
-        return self.history[rid]
+        # history = query(app_id, rank_id, start, end) <-- Assumed In-Mem DB exists.
+        return self.history[rank_id]
 
     def construct_tree(self, params):
         """
         Constructs tree by the given parameters
         Arguments:
             params: {
-                eid:    execution id, which will be utilized as root id
-                start:  start time
-                end:    end time
-                rid:    rank id
+                eid:        execution id, which will be utilized as root id
+                start:      start time
+                end:        end time
+                rank_id:    rank id
             }
         """
-        # executions = query(rid, eid, start, end)  <-- retrieves executions in the particular rank between start_time and end_time
+        # executions = query(rank_id, eid, start, end)  <-- retrieves executions in the particular rank between start_time and end_time
         #                                               The execution list in an ascending order based on start timestamp is expected.
         executions = self.executions.values()  # <-- temporally, test purpose
         tree = self._construct_tree(params['eid'], executions)

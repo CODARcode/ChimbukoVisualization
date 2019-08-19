@@ -47,8 +47,8 @@ class StreamView extends BarChartView {
          * }
          */
         var processed = {
-            'top': {'x':[], 'y':[]}, // x: ranking, y: accum. # delta 
-            'bottom': {'x':[], 'y':[]} // x: ranking, y: accum. # delta 
+            'top': {'x':[], 'y':[], 'z':[]}, // x: ranking, y: accum. # delta, z: rank_id
+            'bottom': {'x':[], 'y':[], 'z':[]} // x: ranking, y: accum. # delta, z: rank_id  
         }
         var top = this.data.selectedRanks.top
         var bottom = this.data.selectedRanks.bottom
@@ -57,19 +57,27 @@ class StreamView extends BarChartView {
             if(top[i] !== undefined) {
                 processed.top.x.push(i)
                 processed.top.y.push(this.data.delta[top[i]])
+                processed.top.z.push(top[i])
             }
             if(bottom[i] !== undefined) {
                 processed.bottom.x.push(i)
                 processed.bottom.y.push(this.data.delta[bottom[i]])
+                processed.bottom.z.push(bottom[i])
             }
         }
         return processed;
     }
     getHistory(params) {
+        var _params = {
+            'rank_id': params.z,
+            'app_id': -1, // placeholder
+            'start': -1, // placeholder
+            'end': -1 // placeholder
+        };
         var _callback = this.notify.bind(this)
         fetch('/history', {
             method: "POST",
-            body: JSON.stringify(params),
+            body: JSON.stringify(_params),
             headers: {
                 "Content-Type": "application/json"
             },

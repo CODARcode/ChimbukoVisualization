@@ -62,8 +62,11 @@ class BarChartView extends View {
         this.xAxisLabel = xLabel;
         this.yAxisLabel = yLabel;
     }
-    getX(d) {
-        return d.x.length
+    getXMax(d) {
+        return d3.max(d.x)
+    }
+    getXMin(d) {
+        return d3.min(d.x)
     }
     getY(d) {
         return d3.max(d.y)
@@ -73,7 +76,10 @@ class BarChartView extends View {
     }
     adjustScale(color) { 
         var me = this;
-        me.xScale = d3.scaleBand().range([0, me.content_width]).domain([1, d3.max(Object.values(me.renderData).map(me.getX))]).paddingInner(0.05);
+        // console.log(Object.values(me.renderData))
+        // console.log(Object.values(me.renderData).map(me.getXMax), Object.values(me.renderData).map(me.getXMax))
+        // console.log(d3.range(d3.min(Object.values(me.renderData).map(me.getXMin)), d3.max(Object.values(me.renderData).map(me.getXMax))));
+        me.xScale = d3.scaleBand().range([0, me.content_width]).domain(d3.range(d3.min(Object.values(me.renderData).map(me.getXMin)), d3.max(Object.values(me.renderData).map(me.getXMax))+1)).paddingInner(0.05);
         me.yScale = d3.scaleLinear().range([me.content_height, 0]).domain([0, d3.max(Object.values(me.renderData).map(me.getY))]);
         if(color.colorScales)  {
             me.colorScaleFuncs = []
@@ -122,25 +128,23 @@ class BarChartView extends View {
         me._rank = -1;
         this.content_area.selectAll('rect').remove() 
         this.barData = this.getBarData();
+        this.barWidth = me.xScale.bandwidth()/Object.keys(this.renderData).length;
         this.content_area.selectAll('rect')
             .data(this.barData).enter()
                 .append("rect")
                 .style("fill", d => d.fill)
                 .attr("x", function(d) { // to be side by side
-                    return (d.category==0)? me.xScale(d.x) : me.xScale(d.x) +15
+                    return me.xScale(d.x) + (d.categoryNumber*me.barWidth)
                 })
-                .attr("width", d => {
-                    var width = me.xScale.bandwidth()<50? me.xScale.bandwidth() : 50 // remove width limit 
-                    return (d.category==0)? width : width -15
-                })
+                .attr("width", me.barWidth)
                 .attr("y", function(d) { 
                     return me.yScale(d.y)
                 })
                 .attr("height", function(d) { 
-                    return me.content_height - me.yScale(d.y); }
-                )
+                    return me.content_height - me.yScale(d.y); 
+                })
                 .on('click', function(d) {
-                    debugger;
+                    me.callback(d)
                 });
         this.bars = this.content_area.selectAll(this.name+'_bar');
     }
@@ -149,6 +153,7 @@ class BarChartView extends View {
         var me = this;
         Object.keys(this.renderData).forEach(function(category, i) {
             var barData = me.renderData[category]
+            // console.log(category, me.renderData[category])
             barData.x.forEach(function(x, j) {
                 var fillColor;
                 if (me.colorScaleFuncs) {
@@ -158,9 +163,11 @@ class BarChartView extends View {
                 }
                 res.push({
                     'x': x,
-                    'y': barData.y[i],
+                    'y': barData.y[j],
+                    'z': barData.z[j],
                     'fill': fillColor,
-                    'category': Number(i)
+                    'categoryNumber': Number(i),
+                    'categoryName': category
                 });
             });
         });

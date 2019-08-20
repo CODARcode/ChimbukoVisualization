@@ -11,8 +11,8 @@ class StreamView extends BarChartView {
             'left': componentLayout.STREAMVIEW_MARGIN_LEFT
         });
         this.name = name
-        this.legend = d3.select('#'+this.name+'-legend');
-        this.legend2 = d3.select('#'+this.name+'-legend-2');
+        this.legendTop = new LegendView(this, d3.select('#'+this.name+'-legend'), this.name+'-legend', 'Rank ');
+        this.legendBottom = new LegendView(this, d3.select('#'+this.name+'-legend-2'), this.name+'-legend-2', 'Rank ');
     }
     stream_update(){
         /**
@@ -24,9 +24,9 @@ class StreamView extends BarChartView {
         /**
          * Renders delta plot after data converting and scales adjustment
         **/
-        this.processed = this.processData();
+        var processed = this.processData();
         this.render({
-            'data': this.processed,
+            'data': processed,
             'xLabel': 'Ranking', 
             'yLebel': 'Accum. # delta', 
             'color': {
@@ -34,6 +34,7 @@ class StreamView extends BarChartView {
             },
             'callback': this.getHistory.bind(this)
         });
+        this.updateLegend(processed);
     }
     processData() {
         /**
@@ -67,6 +68,10 @@ class StreamView extends BarChartView {
         }
         return processed;
     }
+    updateLegend(data) {
+        this.legendTop.update(data.top, this.notify.bind(this));
+        this.legendBottom.update(data.bottom, this.notify.bind(this));
+    }
     getHistory(params) {
         var _params = {
             'rank_id': params.z,
@@ -74,6 +79,10 @@ class StreamView extends BarChartView {
             'start': -1, // placeholder
             'end': -1 // placeholder
         };
+        var selectedRank = {
+            'rank_id': params.z,
+            'fill': params.fill
+        }
         var _callback = this.notify.bind(this)
         fetch('/history', {
             method: "POST",
@@ -85,7 +94,7 @@ class StreamView extends BarChartView {
         }).then(response => response.json()
             .then(json => {
                 if (response.ok) {
-                    _callback(json);
+                    _callback(selectedRank, json);
                     return json
                 } else {
                     return Promise.reject(json)
@@ -94,14 +103,14 @@ class StreamView extends BarChartView {
         )
         .catch(error => console.log(error));
     }
-    notify(data) {
+    notify(selectedRank, data) {
         /**
          *  Notify new data to update historyview
          * */
         if (!this.historyview) {
             this.historyview = this.data.views.getView('historyview');
         }
-        this.historyview._update(data)
+        this.historyview._update(selectedRank, data)
     }
 }
 

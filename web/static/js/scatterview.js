@@ -97,15 +97,15 @@ class ScatterView extends View {
             latest_time = Math.max(latest_time, d[me.layout.indexOf('exit')]);// according to server, 3 is exit time
             me._data.push({
                 "tid": -1, // <-- not generated yet
-                "eid": layout.eid[i],
-                "rid": layout.rid,
+                "eid": layout.execution_id[i],
+                "rid": layout.rank_id,
                 "start": d[me.layout.indexOf('entry')],
                 "end": d[me.layout.indexOf('exit')],
                 "pos": d,
                 "prog_name": layout.prog_names[i],
                 "func_name": layout.func_names[i],
                 "tree": null
-            });
+            }); // <-- executions
         });
     }
 

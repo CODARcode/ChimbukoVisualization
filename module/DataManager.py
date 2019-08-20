@@ -806,7 +806,7 @@ class DataManager(object):
             end:     end frame
         """
         # history = query(app_id, rank_id, start, end) <-- Assumed In-Mem DB exists.
-        return self.history[rank_id]
+        return self.history[int(rank_id)]
 
     def construct_tree(self, params):
         """

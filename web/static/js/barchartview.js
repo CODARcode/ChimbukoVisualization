@@ -76,9 +76,6 @@ class BarChartView extends View {
     }
     adjustScale(color) { 
         var me = this;
-        // console.log(Object.values(me.renderData))
-        // console.log(Object.values(me.renderData).map(me.getXMax), Object.values(me.renderData).map(me.getXMax))
-        // console.log(d3.range(d3.min(Object.values(me.renderData).map(me.getXMin)), d3.max(Object.values(me.renderData).map(me.getXMax))));
         me.xScale = d3.scaleBand().range([0, me.content_width]).domain(d3.range(d3.min(Object.values(me.renderData).map(me.getXMin)), d3.max(Object.values(me.renderData).map(me.getXMax))+1)).paddingInner(0.05);
         me.yScale = d3.scaleLinear().range([me.content_height, 0]).domain([0, d3.max(Object.values(me.renderData).map(me.getY))]);
         if(color.colorScales)  {
@@ -96,7 +93,6 @@ class BarChartView extends View {
     draw() {
         this._updateAxis();
         this._drawBars();
-        // this._drawLegend();
     }
     _updateAxis() {
         this.xAxis.selectAll('text.'+this.name+'_xLabel').remove();

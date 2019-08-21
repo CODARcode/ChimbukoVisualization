@@ -129,8 +129,9 @@ class Data {
          *      Gets the first element, the number of anomalies, from each list of rank
          *      Considers only top and bottom sorted ranks
          */
-        var curr_delta = this.updateDelta();
-        this.selectedRanks = this.getSortedRanks(curr_delta)
+        // var curr_delta = this.updateDelta();
+        this.updateDelta();
+        this.selectedRanks = this.getSortedRanks(this.delta)
         var res = false;
         for ( var rank in this.frames) {
             var rankData = this.frames[rank]
@@ -153,22 +154,22 @@ class Data {
          * Calculate delta in the frontend side 
          * so that the delta can be calculated more frequently.
          */
-        var curr_delta = {}
+        // var curr_delta = {}
         for ( var rank in this.frames) {
             var rankData = this.frames[rank];
             if (rankData.length > 0) {
                 var curr = rankData[0];
                 if(this.delta[rank] === undefined) {
                     this.delta[rank] = 0
-                    curr_delta[rank] = 0
+                    // curr_delta[rank] = 0
                 } else {
-                    curr_delta[rank] = this.delta[rank]
+                    // curr_delta[rank] = this.delta[rank]
                 }
                 if (this.prev[rank] === undefined){
                     this.prev[rank] = 0
                 }
                 var value = Math.abs(curr - this.prev[rank])
-                curr_delta[rank] += value
+                // curr_delta[rank] += value
                 this.delta[rank] += value
                 this.prev[rank] = curr
             } 
@@ -176,7 +177,7 @@ class Data {
             //     delete this.delta[rank]
             // }
         }
-        return curr_delta
+        // return curr_delta
     }
 
     fetchWithCallback(data, callback, options) {

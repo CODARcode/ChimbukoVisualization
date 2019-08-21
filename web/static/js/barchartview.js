@@ -25,6 +25,7 @@ class BarChartView extends View {
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
         this.callback = callback;
         this.colorTheme = [d3.interpolateReds, d3.interpolateBlues] 
+        this.globalColorMap = {};
     }
     stream_update(){
         /**
@@ -83,7 +84,7 @@ class BarChartView extends View {
             me.colorScales = color.colorScales;
             color.colorScales.forEach(function(d, i) {
                 me.colorScaleFuncs.push(d3.scaleSequential()
-                    .domain([0, d3.max(Object.values(d).map(me.getColor))])
+                    .domain([-5, d3.max(Object.values(d).map(me.getColor))+5])
                     .interpolator(me.colorTheme[i]))
             });
         } else {
@@ -165,6 +166,7 @@ class BarChartView extends View {
                     'categoryNumber': Number(i),
                     'categoryName': category
                 });
+                me.globalColorMap[Number(barData.z[j])] = fillColor;
             });
         });
         return res;

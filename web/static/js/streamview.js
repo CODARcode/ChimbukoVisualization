@@ -11,6 +11,7 @@ class StreamView extends BarChartView {
             'left': componentLayout.STREAMVIEW_MARGIN_LEFT
         });
         this.name = name
+        this.selectedRankID = -1;
         this.legendTop = new LegendView(this, d3.select('#'+this.name+'-legend'), this.name+'-legend', 'Rank ');
         this.legendBottom = new LegendView(this, d3.select('#'+this.name+'-legend-2'), this.name+'-legend-2', 'Rank ');
     }
@@ -24,9 +25,9 @@ class StreamView extends BarChartView {
         /**
          * Renders delta plot after data converting and scales adjustment
         **/
-        var processed = this.processData();
+        this.processed = this.processData();
         this.render({
-            'data': processed,
+            'data': this.processed,
             'xLabel': 'Ranking', 
             'yLebel': 'Accum. # delta', 
             'color': {
@@ -34,7 +35,7 @@ class StreamView extends BarChartView {
             },
             'callback': this.getHistory.bind(this)
         });
-        this.updateLegend(processed);
+        this.updateLegend();
     }
     processData() {
         /**
@@ -68,10 +69,11 @@ class StreamView extends BarChartView {
         }
         return processed;
     }
-    updateLegend(data) {
-        this.legendTop.update(data.top, this.notify.bind(this));
-        this.legendBottom.update(data.bottom, this.notify.bind(this));
+    updateLegend() {
+        this.legendTop.update(this.processed.top, this.getHistory.bind(this));
+        this.legendBottom.update(this.processed.bottom, this.getHistory.bind(this));
     }
+    
     getHistory(params) {
         var _params = {
             'rank_id': params.z,
@@ -113,65 +115,3 @@ class StreamView extends BarChartView {
         this.historyview._update(selectedRank, data)
     }
 }
-
-// getLegendData() {
-//     var cat1 = {}
-//     var cat2 = {}
-//     this.barData.forEach(d => {
-//         if (d.type==0) {
-//             cat1[d.name] = d
-//         } else {
-//             cat2[d.name] = d
-//         }
-//     })
-//     return [cat1, cat2];
-// }
-// _drawLegend() {
-//     var me = this;
-//     me.legend.selectAll('.'+this.name+'-legend-item').remove();
-//     me._legend.selectAll('.'+this.name+'-legend-item').remove();
-//     this.legendData = this.getLegendData()
-//     this.makeLegend(me.legend, this.legendData[0])
-//     this.makeLegend(me._legend, this.legendData[1])
-// }
-
-// makeLegend(target, legendData) {
-//     var me = this;
-//     var ranks = Object.keys(legendData)
-//     ranks.sort(function(x, y) {
-//         return d3.ascending(legendData[y].value, legendData[x].value);
-//     })
-//     var legend = target.selectAll('.'+this.name+'-legend-item').data(ranks).enter()
-//         .append('div')
-//             .attr('class', this.name+'-legend-item')
-//             .on('click', function(d) {
-//                 var rankno = d
-//                 console.log('clicked: '+rankno)
-//                 me.selectedRankNo = rankno;
-//                 me.data.rankHistoryInfo = {
-//                     'rank': rankno,
-//                     'fill': legendData[d].fill
-//                 }
-//                 if (!me.historyview) {
-//                     me.historyview = me.data.views.getView('historyview');
-//                 }
-//                 me.historyview._update();
-//                 me.draw();
-//             });
-//     legend.append('div')
-//         .attr('class', this.name+'-legend-item-circle')
-//         .style('background', function(d){
-//             return legendData[d].fill
-//         });
-//     legend.append('text')
-//         .attr('class', this.name+'-legend-item-text')
-//         .style('color', function(d) {
-//             return (me.selectedRankNo=== d)? 'black':'gray';
-//         })
-//         .style('font-weight', function(d) {
-//             return (me.selectedRankNo=== d)? 'bold':'';
-//         })
-//         .text(function(d){
-//             return 'MPI Rank ID: '+d+' ('+legendData[d].value+')'
-//         })
-// }

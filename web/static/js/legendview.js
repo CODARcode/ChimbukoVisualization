@@ -10,9 +10,9 @@ class LegendView extends View {
     }
 
     update(data, callback){
-       var processed = this.processData(data);
-       this.draw(processed);
-       this.callback = callback;
+        this.processed = this.processData(data);
+        this.callback = callback;
+        this.draw();
     }
 
     processData(data) {
@@ -23,45 +23,37 @@ class LegendView extends View {
         return processed;
     }
     
-    draw(renderData) {
+    draw() {
         var me = this;
-        
+        var renderData = this.processed;
         var ranks = Object.keys(renderData)
         ranks.sort(function(x, y) {
             return d3.ascending(renderData[y], renderData[x]);
-        })
-
-        me.svg.selectAll('.'+this.name+'-item').remove();
+        });
+        me.svg.selectAll('.legendview-item').remove();
         var legend = me.svg.selectAll('.'+this.name+'-item').data(ranks).enter()
             .append('div')
-                .attr('class', this.name+'-item')
+                .attr('class', 'legendview-item')
                 .on('click', function(d) {
-                    // var rankno = d
-                    // console.log('clicked: '+rankno)
-                    // me.selectedRankNo = rankno;
-                    // me.data.rankHistoryInfo = {
-                    //     'rank': rankno,
-                    //     'fill': renderData[d].fill
-                    // }
-                    // if (!me.historyview) {
-                    //     me.historyview = me.data.views.getView('historyview');
-                    // }
-                    // me.historyview._update();
-                    // me.draw();
-                    me.callback(d);
+                    me.data.selectedRankID = d
+                    me.callback({
+                        'z': d,
+                        'fill': me.data.globalColorMap[Number(d)]
+                    });
+                    me.data.updateLegend();
                 });
         legend.append('div')
-            .attr('class', this.name+'-item-circle')
+            .attr('class', 'legendview-item-circle')
             .style('background', function(d){
-                return renderData[d].fill
+                return me.data.globalColorMap[Number(d)]
             });
         legend.append('text')
-            .attr('class', this.name+'-item-text')
+            .attr('class', 'legendview-item-text')
             .style('color', function(d) {
-                return (me.selectedRankNo=== d)? 'black':'gray';
+                return (me.data.selectedRankID === d)? 'black':'gray';
             })
             .style('font-weight', function(d) {
-                return (me.selectedRankNo=== d)? 'bold':'';
+                return (me.data.selectedRankID === d)? 'bold':'';
             })
             .text(function(d){
                 return me.prefix + d +' ('+renderData[d]+')'

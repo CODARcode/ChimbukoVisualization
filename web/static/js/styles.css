@@ -93,16 +93,34 @@ text {
 .scatterview {
     display: inline-block;  
 }
-.legendview {
-    width: 200px;
-    height: 500px;
-    overflow-y:auto;
-    display: inline-block;
-}
 .treeview{
     display: inline-block;
 }
 .temporalview {
     display: inline-block;
 }
-
+.legendview {
+    width: 200px;
+    height: 500px;
+    overflow-y:auto;
+    display: inline-block;
+}
+.legendview-item {
+    display: table;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+.legendview-item-circle {
+    border-radius: 50%;
+    behavior: url(PIE.htc);
+    width: 20px;
+    height: 20px !important;
+    display: inline-block;
+    vertical-align: middle;
+}
+.legendview-item-text {
+    height: 20px;
+    display: table-cell;
+    vertical-align: middle;
+    padding-left: 5px;
+}

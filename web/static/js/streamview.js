@@ -10,10 +10,26 @@ class StreamView extends BarChartView {
             'bottom': componentLayout.STREAMVIEW_MARGIN_BOTTOM, 
             'left': componentLayout.STREAMVIEW_MARGIN_LEFT
         });
-        this.name = name
-        this.selectedRankID = -1;
-        this.legendTop = new LegendView(this, d3.select('#'+this.name+'-legend'), this.name+'-legend', 'Rank ');
-        this.legendBottom = new LegendView(this, d3.select('#'+this.name+'-legend-2'), this.name+'-legend-2', 'Rank ');
+        var me = this;
+        me.name = name
+        me.selectedRankID = -1;
+        me.legendTop = new LegendView(me, d3.select('#'+me.name+'-legend'), me.name+'-legend', 'Rank ');
+        me.legendBottom = new LegendView(me, d3.select('#'+me.name+'-legend-2'), me.name+'-legend-2', 'Rank ');
+
+        me.streamSize = streamviewLabelMap.DEFAULT_SIZE; // 10 by default
+        me.streamSizeDom = d3.select('#streamview-size').on('change', function() {
+            me.streamSize = me.streamSizeDom.node().value;
+        });
+        me.streamType = streamviewLabelMap.DEFAULT_TYPE; // delta by default
+        me.streamTypeDom = d3.select('#streamview-type').on('change', function() {
+            me.streamType = me.streamTypeDom.node().value;
+        });
+        d3.select('#streamview-apply').on('click', function() {
+            me.apply();
+        });
+    }
+    getYLabel() {
+        return streamviewLabelMap[this.streamType]
     }
     stream_update(){
         /**
@@ -28,8 +44,8 @@ class StreamView extends BarChartView {
         this.processed = this.processData();
         this.render({
             'data': this.processed,
-            'xLabel': 'Ranking', 
-            'yLebel': 'Accum. # delta', 
+            'xLabel': streamviewLabelMap.X_LABEL, 
+            'yLabel': this.getYLabel(), 
             'color': {
                 'colorScales': [this.data.selectedRanks.top, this.data.selectedRanks.bottom]
             },
@@ -113,5 +129,29 @@ class StreamView extends BarChartView {
             this.historyview = this.data.views.getView('historyview');
         }
         this.historyview._update(selectedRank, data)
+    }
+    apply() {
+        var me = this;
+        fetch('/streamview_layout', {
+            method: "POST",
+            body: JSON.stringify({
+                'size': me.streamSize,
+                'type': me.streamType
+            }),
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "same-origin"
+        }).then(response => response.json()
+            .then(json => {
+                if (response.ok) {
+                    console.log('streamview layout was successfully set.')
+                    return json
+                } else {
+                    return Promise.reject(json)
+                }
+            })
+        )
+        .catch(error => console.log(error));
     }
 }

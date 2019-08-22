@@ -24,7 +24,29 @@
     <div class="container-fluid">
         <div class="visrow nopadding">
             <div class="viscol nopadding">
-                <b class="title"> &nbsp; &nbsp; Top & Bottom Dynamic Ranks</b>
+                <b class="title"> &nbsp; Top & Bottom Dynamic Ranks</b>
+                    <div>
+                        &nbsp; Statistics: 
+                        <select id="streamview-type">
+                            <option value="min">Min</option>
+                            <option value="max">Max</option>
+                            <option value="mean">Mean</option>
+                            <option value="std">Standard Devivation</option>
+                            <option value="skn">Skewness</option>
+                            <option value="kts">Kurtosis</option>
+                            <option value="dlt" selected>Cumulative Delta</option>
+                        </select>
+                        &nbsp; Comparison size: 
+                        <select id="streamview-size">
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        &nbsp; <button id="streamview-apply" type="button"> apply </button>
+                    </div>
                 <svg id="streamview" class="streamview"></svg>
                 <div id="streamview-legend" class="legendview nopadding"></div>
                 <div id="streamview-legend-2" class="legendview nopadding"></div>

@@ -100,8 +100,8 @@ text {
     display: inline-block;
 }
 .legendview {
-    width: 200px;
-    height: 500px;
+    width: 150px;
+    height: 370px;
     overflow-y:auto;
     display: inline-block;
 }

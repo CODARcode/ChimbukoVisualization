@@ -74,6 +74,8 @@ class DataManager(object):
         self.EXECUTION_ID_DELIMETER = '&&' # <-- will be moved to constant configuration
         self.tree_id = -1
         self.history = {} # <-- assumed In-Mem DB
+        self.stream_size = 10 # number of ranks to compare in the streamview, default 10 for each top and bottom
+        self.stream_type = 'delta' # type of statistics to visualize, min, max, mean, std, skewness, kurtosis, delta are available.
 
 ##############################################################################################
 # Begin of the deprecated functions:
@@ -905,5 +907,22 @@ class DataManager(object):
             'value':  execution[web_app.config['EXIT_TIME']]-execution[web_app.config['ENTRY_TIME']]
         }
 
+    def set_stream_size(self, stream_size):
+        """
+        Set streaming size (number of ranks of top and bottom sorted ranks) 
+        """
+        self.stream_size = stream_size;
 
+    def set_stream_type(self, stream_type):
+        """
+        Sets kind of statistics for streamview
+            - min: minimum
+            - max: maximum
+            - mean: average
+            - std: standard deviation
+            - skn: skewness
+            - kts: kurtosis
+            - dlt: delta
+        """
+        self.stream_type = stream_type;
 

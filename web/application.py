@@ -104,6 +104,31 @@ def get_scatterplot ():
     scatterplot = data_manager.get_scatterplot(app_id, rank_id, start, end)
     return jsonify(scatterplot)
 
+@web_app.route('/streamview_layout', methods=['POST'])
+def set_streamview_layout ():
+    '''
+    1) Sets number of ranks to compare for streamview
+    2) Sets kind of statistics for streamview
+            - min: minimum
+            - max: maximum
+            - mean: average
+            - std: standard deviation
+            - skn: skewness
+            - kts: kurtosis
+            - dlt: delta
+    '''
+    size = request.json['size']
+    stat_type = request.json['type']
+    print(stat_type, size)
+    success = False
+    try:
+        data_manager.set_stream_size(size)
+        data_manager.set_stream_type(stat_type)
+        success = True
+    except:
+        log('error occured when the layout is set.')
+    return jsonify({'success': success})
+
 @web_app.route('/srate', methods=['POST'])
 def set_sampling_rate():
     """

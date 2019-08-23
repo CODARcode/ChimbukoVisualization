@@ -88,8 +88,8 @@ def get_history ():
     app_id = request.json['app_id']
     rank_id = request.json['rank_id']
     start = request.json['start']
-    end = request.json['end']
-    history = data_manager.get_history(app_id, rank_id, start, end)
+    size = request.json['size']
+    history = data_manager.get_history(app_id, rank_id, start, size)
     return jsonify(history)
 
 @web_app.route('/scatterplot', methods=['POST'])

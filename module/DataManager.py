@@ -798,16 +798,19 @@ class DataManager(object):
             'rank_id': rank_id
         }
     
-    def get_history(self, app_id, rank_id, start, end):
+    def get_history(self, app_id, rank_id, start, size):
         """
         Returns history (frames) from start frame to end frame
         Arguments:
             app_id:  application id (TBA)
             rank_id: rank id
-            start:   start frame
-            end:     end frame
+            start:   start frame id
+            size:    frame size
         """
-        # history = query(app_id, rank_id, start, end) <-- Assumed In-Mem DB exists.
+        # if start == -1 or end == -1: 
+        #    history = query(app_id, rank_id, size) <-- retreive the latest N frames
+        # else:
+        #    history = query(app_id, rank_id, start, size) <-- Assumed In-Mem DB exists.
         return self.history[int(rank_id)]
 
     def construct_tree(self, params):

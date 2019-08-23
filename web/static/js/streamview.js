@@ -16,11 +16,11 @@ class StreamView extends BarChartView {
         me.legendTop = new LegendView(me, d3.select('#'+me.name+'-legend'), me.name+'-legend', 'Rank ');
         me.legendBottom = new LegendView(me, d3.select('#'+me.name+'-legend-2'), me.name+'-legend-2', 'Rank ');
 
-        me.streamSize = streamviewLabelMap.DEFAULT_SIZE; // 10 by default
+        me.streamSize = streamviewValues.DEFAULT_SIZE; // 10 by default
         me.streamSizeDom = d3.select('#streamview-size').on('change', function() {
             me.streamSize = me.streamSizeDom.node().value;
         });
-        me.streamType = streamviewLabelMap.DEFAULT_TYPE; // delta by default
+        me.streamType = streamviewValues.DEFAULT_TYPE; // delta by default
         me.streamTypeDom = d3.select('#streamview-type').on('change', function() {
             me.streamType = me.streamTypeDom.node().value;
         });
@@ -29,7 +29,7 @@ class StreamView extends BarChartView {
         });
     }
     getYLabel() {
-        return streamviewLabelMap[this.streamType]
+        return streamviewValues[this.streamType]
     }
     stream_update(){
         /**
@@ -44,7 +44,7 @@ class StreamView extends BarChartView {
         this.processed = this.processData();
         this.render({
             'data': this.processed,
-            'xLabel': streamviewLabelMap.X_LABEL, 
+            'xLabel': streamviewValues.X_LABEL, 
             'yLabel': this.getYLabel(), 
             'color': {
                 'colorScales': [this.data.selectedRanks.top, this.data.selectedRanks.bottom]
@@ -94,10 +94,10 @@ class StreamView extends BarChartView {
         var _params = {
             'rank_id': params.z,
             'app_id': -1, // placeholder
-            'start': -1, // placeholder
-            'end': -1 // placeholder
+            'start': -1, // if either start or end is not set, then it is dynamic mode. 
+            'size': historyviewValues.WINDOW_SIZE // if dynamic mode, retrive latest frames.
         };
-        var selectedRank = {
+        this.data.selectedRankInfo = {
             'rank_id': params.z,
             'fill': params.fill
         }
@@ -112,7 +112,7 @@ class StreamView extends BarChartView {
         }).then(response => response.json()
             .then(json => {
                 if (response.ok) {
-                    _callback(selectedRank, json);
+                    _callback(json);
                     return json
                 } else {
                     return Promise.reject(json)
@@ -121,14 +121,14 @@ class StreamView extends BarChartView {
         )
         .catch(error => console.log(error));
     }
-    notify(selectedRank, data) {
+    notify(data) {
         /**
          *  Notify new data to update historyview
          * */
         if (!this.historyview) {
             this.historyview = this.data.views.getView('historyview');
         }
-        this.historyview._update(selectedRank, data)
+        this.historyview._update(data)
     }
     apply() {
         var me = this;

@@ -10,20 +10,30 @@ class HistoryView extends BarChartView {
             'bottom': componentLayout.HISTORYVIEW_MARGIN_BOTTOM, 
             'left': componentLayout.HISTORYVIEW_MARGIN_LEFT
         });
-        this.name = name
-        this.rangeStart = 0
-        this.dynamic = false;
-        this.detailed = d3.select("#selected_rank_id");
-        this.NUM_FRAME = 50
-        
         var me = this
+        me.name = name
+        me.dynamic = false;
+        me.startFrameNo = 0
+        me.NUM_FRAME = historyviewValues.WINDOW_SIZE;
+        me.detailed = d3.select("#selected_rank_id");
         d3.select("#static_btn").on("click", function(d) {
             me.dynamic = false
-            me._update();
+            me.update();
         });
         d3.select("#dynamic_btn").on("click", function(d) {
             me.dynamic = true
-            me._update();
+            me.startFrameNo = -1
+            me.update();
+        });
+        d3.select("#historyview_prev").on("click", function(d) {
+            if(me.startFrameNo>0) {
+                me.startFrameNo -= historyviewValues.WINDOW_SIZE;
+                me.update();
+            }
+        });
+        d3.select("#historyview_next").on("click", function(d) {
+            me.startFrameNo += historyviewValues.WINDOW_SIZE;
+            me.update();
         });
     }
     stream_update(){
@@ -31,20 +41,35 @@ class HistoryView extends BarChartView {
          * Called whenever data has received from backend.
          * Invokes rendering process if dynamic is set and the specific rank is selected.
         **/
-        if( this.dynamic && this.data.rankHistoryInfo !== undefined) {
-            this._update(this.data.rankHistoryInfo)
+        if( this.dynamic && this.data.selectedRankInfo.rank_id !== undefined) {
+            this.update()
         }
     }
-    _update(selectedRankInfo, history){
+    update() {
+        if(this.data.selectedRankInfo.rank_id) {
+            var param = {
+                'rank_id': this.data.selectedRankInfo.rank_id,
+                'app_id': -1, // placeholder
+                'start': -1, // if either start or end is not set, then it is dynamic mode. 
+                'size': historyviewValues.WINDOW_SIZE // if dynamic mode, retrive latest frames.
+            }
+            if(!this.dynamic) { // static
+                param.start = this.startFrameNo;
+            }
+            this.fetchHistory(param);
+        }
+    }
+    _update(history){
         /**
          * Renders delta plot after data converting and scales adjustment
         **/
-        this.detailed.text('Selected Rank #: '+selectedRankInfo.rank_id)
+        var selectedRankInfo = this.data.selectedRankInfo;
+        this.detailed.text(historyviewValues.SELECTED_RANK_PREFIX + selectedRankInfo.rank_id)
         this.processed = this.processData(selectedRankInfo.rank_id, history)
         this.render({
             'data': this.processed,
-            'xLabel': 'Frame', 
-            'yLebel': '# anomalies', 
+            'xLabel': historyviewValues.X_LABEL, 
+            'yLabel': historyviewValues.Y_LABEL, 
             'color': {
                 'fillColor': selectedRankInfo.fill
             },
@@ -105,5 +130,26 @@ class HistoryView extends BarChartView {
             this.scatterview = this.data.views.getView('scatterview');
         }
         this.scatterview.update(layout);
+    }
+    fetchHistory(params) {
+        var callback = this._update.bind(this)
+        fetch('/history', {
+            method: "POST",
+            body: JSON.stringify(params),
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "same-origin"
+        }).then(response => response.json()
+            .then(json => {
+                if (response.ok) {
+                    callback(json);
+                    return json
+                } else {
+                    return Promise.reject(json)
+                }
+            })
+        )
+        .catch(error => console.log(error));
     }
 }

@@ -41,7 +41,8 @@ class Data {
         this.setWait = true;
         this.NUM_SELECTION_RANK = 10;
         this.history = {};
-        this.selected_execution = {};
+        this.selectedExecution = {};
+        this.selectedRankInfo = {};
 
         // rendering is invoked as the thread startsd
         this.rendering(); 
@@ -228,7 +229,7 @@ class Data {
             execution.tree.nodes[d.target].level = execution.tree.nodes[d.source].level + 1;
         });
         //add a subtree list        
-        this.selected_execution = execution
+        this.selectedExecution = execution
         callback(execution.tree, execution);
     }
 
@@ -243,7 +244,7 @@ class Data {
     }
 
     getSelectedTree() {// now use the first, will update to the center
-        return this.selected_execution.tree;
+        return this.selectedExecution.tree;
     }
 
     isSelected(index) {

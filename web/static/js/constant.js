@@ -93,7 +93,7 @@ var componentLayout = {
     'STREAMVIEW_MARGIN_LEFT': 50,
 
     'HISTORYVIEW_WIDTH': 700,
-    'HISTORYVIEW_HEIGHT': 400,
+    'HISTORYVIEW_HEIGHT': 370,
     'HISTORYVIEW_MARGIN_TOP': 20,
     'HISTORYVIEW_MARGIN_RIGHT': 50,
     'HISTORYVIEW_MARGIN_BOTTOM': 30,
@@ -115,7 +115,7 @@ var componentLayout = {
     'TEMPORALVIEW_WIDTH': 700,
     'TEMPORALVIEW_HEIGHT': 250,
 }
-var streamviewLabelMap = {
+var streamviewValues = {
     'dlt': 'Cumulative Delta',
     'min': 'Minimum Execution Time',
     'max': 'Maximum Execution Time',
@@ -126,4 +126,11 @@ var streamviewLabelMap = {
     'DEFAULT_TYPE': 'dlt',
     'DEFAULT_SIZE': 10,
     'X_LABEL': 'Ranking'
+}
+
+var historyviewValues = {
+    'SELECTED_RANK_PREFIX': 'Selected Rank #: ',
+    'X_LABEL': 'Frame',
+    'Y_LABEL': '# Anomaly',
+    'WINDOW_SIZE': 100
 }

@@ -14,14 +14,13 @@ class Model {
         this.prev_receive_time = -1
         this.global_rank_anomaly = {}
 
-        this.SECOND = 1000 // ms
         this.delta = {};
         this.prev = {};
         this.frameID = 0;
         this.frameWindow = 30
-        this.frameInterval = this.SECOND * 0.5
+        
         this.frames = {};
-        this.date = new Date();
+        
         this.setWait = true;
         this.NUM_SELECTION_RANK = 10;
         this.history = {};
@@ -29,7 +28,7 @@ class Model {
         this.selectedRankInfo = {};
 
     }
-    _update(stream) {
+    update(stream) {
         /**
          * concat new array to the corresponding array based on the rank
          */

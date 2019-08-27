@@ -1,8 +1,8 @@
 class View {
-    constructor(data, svg, size){
+    constructor(controller, svg, size){
         var me = this;
-        this.data = data;
-        this.vis = this.data.views;
+        this.controller = controller;
+        this.vis = this.controller.views;
         this.svg = svg;
         this.size = size;
         if('width' in size){

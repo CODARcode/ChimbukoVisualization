@@ -35,25 +35,25 @@ class LegendView extends View {
             .append('div')
                 .attr('class', 'legendview-item')
                 .on('click', function(d) {
-                    me.data.selectedRankID = d
+                    me.controller.selectedRankID = d
                     me.callback({
                         'z': d,
-                        'fill': me.data.globalColorMap[Number(d)]
+                        'fill': me.controller.globalColorMap[Number(d)]
                     });
-                    me.data.updateLegend();
+                    me.controller.updateLegend();
                 });
         legend.append('div')
             .attr('class', 'legendview-item-circle')
             .style('background', function(d){
-                return me.data.globalColorMap[Number(d)]
+                return me.controller.globalColorMap[Number(d)]
             });
         legend.append('text')
             .attr('class', 'legendview-item-text')
             .style('color', function(d) {
-                return (me.data.selectedRankID === d)? 'black':'gray';
+                return (me.controller.selectedRankID === d)? 'black':'gray';
             })
             .style('font-weight', function(d) {
-                return (me.data.selectedRankID === d)? 'bold':'';
+                return (me.controller.selectedRankID === d)? 'bold':'';
             })
             .text(function(d){
                 return me.prefix + d +' ('+renderData[d]+')'

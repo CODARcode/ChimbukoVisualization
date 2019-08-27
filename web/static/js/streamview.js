@@ -1,7 +1,7 @@
 class StreamView extends BarChartView {
 
-    constructor(data, svg, name) {
-        super(data, svg, name, {
+    constructor(controller, svg, name) {
+        super(controller, svg, name, {
             'width': componentLayout.STREAMVIEW_WIDTH,
             'height': componentLayout.STREAMVIEW_HEIGHT
         }, {
@@ -47,7 +47,7 @@ class StreamView extends BarChartView {
             'xLabel': streamviewValues.X_LABEL, 
             'yLabel': this.getYLabel(), 
             'color': {
-                'colorScales': [this.data.selectedRanks.top, this.data.selectedRanks.bottom]
+                'colorScales': [this.controller.model.selectedRanks.top, this.controller.model.selectedRanks.bottom]
             },
             'callback': this.getHistory.bind(this)
         });
@@ -68,18 +68,18 @@ class StreamView extends BarChartView {
             'top': {'x':[], 'y':[], 'z':[]}, // x: ranking, y: accum. # delta, z: rank_id
             'bottom': {'x':[], 'y':[], 'z':[]} // x: ranking, y: accum. # delta, z: rank_id  
         }
-        var top = this.data.selectedRanks.top
-        var bottom = this.data.selectedRanks.bottom
+        var top = this.controller.model.selectedRanks.top
+        var bottom = this.controller.model.selectedRanks.bottom
         var maxLength = Math.max(top.length, bottom.length) 
         for (var i=0; i<maxLength; i++) {
             if(top[i] !== undefined) {
                 processed.top.x.push(i)
-                processed.top.y.push(this.data.delta[top[i]])
+                processed.top.y.push(this.controller.model.delta[top[i]])
                 processed.top.z.push(top[i])
             }
             if(bottom[i] !== undefined) {
                 processed.bottom.x.push(i)
-                processed.bottom.y.push(this.data.delta[bottom[i]])
+                processed.bottom.y.push(this.controller.model.delta[bottom[i]])
                 processed.bottom.z.push(bottom[i])
             }
         }
@@ -97,7 +97,7 @@ class StreamView extends BarChartView {
             'start': -1, // if either start or end is not set, then it is dynamic mode. 
             'size': historyviewValues.WINDOW_SIZE // if dynamic mode, retrive latest frames.
         };
-        this.data.selectedRankInfo = {
+        this.controller.model.selectedRankInfo = {
             'rank_id': params.z,
             'fill': params.fill
         }
@@ -126,7 +126,7 @@ class StreamView extends BarChartView {
          *  Notify new data to update historyview
          * */
         if (!this.historyview) {
-            this.historyview = this.data.views.getView('historyview');
+            this.historyview = this.controller.views.getView('historyview');
         }
         this.historyview._update(data)
     }

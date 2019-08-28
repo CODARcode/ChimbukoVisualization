@@ -838,7 +838,7 @@ class DataManager(object):
         tree = {}
         eid2nid = {} 
         for execution in executions:
-            eid = execution[config['EXECUTION_ID']]
+            eid = execution[config.get('EXECUTION_ID')]
             if len(tree.keys()) == 0:
                 tree = self.init_tree(execution)
                 eid2nid[eid] = 0
@@ -846,7 +846,7 @@ class DataManager(object):
                 eid2nid[eid] = node_id = len(tree['nodes'])
                 try:
                     tree['edges'].append({
-                        'source': eid2nid[execution[config['PARENT_ID']]],
+                        'source': eid2nid[execution[config.get('PARENT_ID')]],
                         'target': node_id
                     })
                     tree['nodes'].append(self.create_node(node_id, execution))
@@ -882,9 +882,9 @@ class DataManager(object):
         self.tree_id += 1
         return {
             'tree_id': self.tree_id,
-            'rank_id': execution[config['RANK_ID']],
-            'thread_id': execution[config['THREAD_ID']],
-            'prog_name': execution[config['PROG_NAME']],
+            'rank_id': execution[config.get('RANK_ID')],
+            'thread_id': execution[config.get('THREAD_ID')],
+            'prog_name': execution[config.get('PROG_NAME')],
             'nodes': [self.create_node(0, execution)],
             'edges': []
         }
@@ -900,14 +900,14 @@ class DataManager(object):
         """
         return { 
             'node_id': node_id,
-            'execution_id': execution[config['EXECUTION_ID']],
-            'rank_id': execution[config['RANK_ID']],
-            'thread_id': execution[config['THREAD_ID']],
-            'prog_name': execution[config['PROG_NAME']],
-            'func_name': execution[config['FUNC_NAME']],
-            'entry': execution[config['ENTRY_TIME']],
-            'exit': execution[config['EXIT_TIME']],
-            'value':  execution[config['EXIT_TIME']]-execution[config['ENTRY_TIME']]
+            'execution_id': execution[config.get('EXECUTION_ID')],
+            'rank_id': execution[config.get('RANK_ID')],
+            'thread_id': execution[config.get('THREAD_ID')],
+            'prog_name': execution[config.get('PROG_NAME')],
+            'func_name': execution[config.get('FUNC_NAME')],
+            'entry': execution[config.get('ENTRY_TIME')],
+            'exit': execution[config.get('EXIT_TIME')],
+            'value':  execution[config.get('EXIT_TIME')]-execution[config.get('ENTRY_TIME')]
         }
 
     def set_stream_size(self, stream_size):

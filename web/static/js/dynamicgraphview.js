@@ -84,7 +84,7 @@ class DynamicGraphView extends GraphView {
 
     selected(){
         var me = this;
-    	me._setGraph(me.data.getSelectedTree());
+    	me._setGraph(me.controller.getSelectedTree());
         me.linksvg.selectAll("line").remove();
         me.nodesvg.selectAll("circle").remove();  
         me.drawLegend(20);

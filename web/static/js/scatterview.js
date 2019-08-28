@@ -290,7 +290,7 @@ class ScatterView extends View {
 
         me.dot.on("click", function(d, i) {
             console.log('clicked eid:'+ d.eid);
-                me.data.setSelections(d);
+                me.controller.setSelections(d);
             })
             .append("title")
             .text(function(d, i) {
@@ -418,7 +418,6 @@ class ScatterView extends View {
         names.sort(function(x, y) {
             x = x.replace(/ *\prog#[0-9]-*\ */g, "");
             y = y.replace(/ *\prog#[0-9]-*\ */g, "");
-            // return d3.ascending(me.data.stat[y]['ratio'], me.data.stat[x]['ratio']);
             return d3.ascending(me._data.stat[y]['abnormal'], me._data.stat[x]['abnormal']);
         })
         var legend = me.legend.selectAll(".scatter-legend-item")

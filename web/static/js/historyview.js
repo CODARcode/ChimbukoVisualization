@@ -1,7 +1,7 @@
 class HistoryView extends BarChartView {
 
-    constructor(data, svg, name) {
-        super(data, svg, name, {
+    constructor(controller, svg, name) {
+        super(controller, svg, name, {
             'width': componentLayout.HISTORYVIEW_WIDTH,
             'height': componentLayout.HISTORYVIEW_HEIGHT
         }, {
@@ -41,14 +41,14 @@ class HistoryView extends BarChartView {
          * Called whenever data has received from backend.
          * Invokes rendering process if dynamic is set and the specific rank is selected.
         **/
-        if( this.dynamic && this.data.selectedRankInfo.rank_id !== undefined) {
+        if( this.dynamic && this.controller.model.selectedRankInfo.rank_id !== undefined) {
             this.update()
         }
     }
     update() {
-        if(this.data.selectedRankInfo.rank_id) {
+        if(this.controller.model.selectedRankInfo.rank_id) {
             var param = {
-                'rank_id': this.data.selectedRankInfo.rank_id,
+                'rank_id': this.controller.model.selectedRankInfo.rank_id,
                 'app_id': -1, // placeholder
                 'start': -1, // if either start or end is not set, then it is dynamic mode. 
                 'size': historyviewValues.WINDOW_SIZE // if dynamic mode, retrive latest frames.
@@ -63,7 +63,7 @@ class HistoryView extends BarChartView {
         /**
          * Renders delta plot after data converting and scales adjustment
         **/
-        var selectedRankInfo = this.data.selectedRankInfo;
+        var selectedRankInfo = this.controller.model.selectedRankInfo;
         this.detailed.text(historyviewValues.SELECTED_RANK_PREFIX + selectedRankInfo.rank_id)
         this.processed = this.processData(selectedRankInfo.rank_id, history)
         this.render({
@@ -127,7 +127,7 @@ class HistoryView extends BarChartView {
     }
     notify(layout) {
         if (!this.scatterview) {
-            this.scatterview = this.data.views.getView('scatterview');
+            this.scatterview = this.controller.views.getView('scatterview');
         }
         this.scatterview.update(layout);
     }
@@ -152,4 +152,9 @@ class HistoryView extends BarChartView {
         )
         .catch(error => console.log(error));
     }
+}
+try {
+    module.exports = History.processData;
+} catch(e) {
+    // no test mode.
 }

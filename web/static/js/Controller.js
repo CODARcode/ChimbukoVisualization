@@ -6,7 +6,7 @@ class Controller {
          */
         
         // Controller Properties
-        this.selected_eid = [1];
+        this.selectedExecution = [1];
         this.date = new Date();
         this.SECOND = 1000 // ms
         this.frameInterval = this.SECOND * 0.5
@@ -118,7 +118,7 @@ class Controller {
 
     setSelections(execution) {
         var me = this;
-        this.selected_eid = execution.eid;// now use the first, will update to the center
+        this.selectedExecution = execution.eid;// now use the first, will update to the center
         me._getTree(me.views.selected.bind(me), execution);
     }
 
@@ -131,7 +131,7 @@ class Controller {
     }
 
     isSelected(index) {
-        return this.selected_eid == index;
+        return this.selectedExecution == index;
     }
 
     getScoreByIndex(index) {

@@ -1,5 +1,10 @@
 class Model {
     constructor(main) {
+        /**
+         * Model object based on MCV design pattern
+         * handles overall data processing for frontend view components
+         */
+
         //data
         this.data = [];
         this.selected_eid = [1];
@@ -124,5 +129,10 @@ class Model {
         return Object.keys(this.frames)
     }
 }
-module.exports = Model;
+try {
+    module.exports = Model;
+} catch(e) {
+    // no test mode.
+}
+
 

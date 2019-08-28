@@ -41,7 +41,11 @@ class StreamView extends BarChartView {
         /**
          * Renders delta plot after data converting and scales adjustment
         **/
-        this.processed = this.processData();
+        this.processed = this.processData(
+                this.controller.model.selectedRanks.top, 
+                this.controller.model.selectedRanks.bottom,
+                this.controller.model.delta
+            );
         this.render({
             'data': this.processed,
             'xLabel': streamviewValues.X_LABEL, 
@@ -53,7 +57,7 @@ class StreamView extends BarChartView {
         });
         this.updateLegend();
     }
-    processData() {
+    processData(top, bottom, delta) {
         /**
          * Process proper format for rendering 
          * Dynamically generate/process the given data to the expected format of barChart
@@ -68,18 +72,16 @@ class StreamView extends BarChartView {
             'top': {'x':[], 'y':[], 'z':[]}, // x: ranking, y: accum. # delta, z: rank_id
             'bottom': {'x':[], 'y':[], 'z':[]} // x: ranking, y: accum. # delta, z: rank_id  
         }
-        var top = this.controller.model.selectedRanks.top
-        var bottom = this.controller.model.selectedRanks.bottom
         var maxLength = Math.max(top.length, bottom.length) 
         for (var i=0; i<maxLength; i++) {
             if(top[i] !== undefined) {
                 processed.top.x.push(i)
-                processed.top.y.push(this.controller.model.delta[top[i]])
+                processed.top.y.push(delta[top[i]])
                 processed.top.z.push(top[i])
             }
             if(bottom[i] !== undefined) {
                 processed.bottom.x.push(i)
-                processed.bottom.y.push(this.controller.model.delta[bottom[i]])
+                processed.bottom.y.push(delta[bottom[i]])
                 processed.bottom.z.push(bottom[i])
             }
         }

@@ -33,7 +33,7 @@ class ScatterView extends View {
             .on("click", function(d) {
                 me.axis[0] = me.sbox_x.node().value-0;
                 me.axis[1] = me.sbox_y.node().value-0;
-                me.stream_update();
+                me._update();
             });
 
         me.filter = {};
@@ -43,7 +43,7 @@ class ScatterView extends View {
         me.anomaly_only = false;
         me.cbox = d3.select("#"+this.name+"-cbox").on("click", function(d) {
             me.anomaly_only = me.cbox.node().checked;
-            me.stream_update();
+            me._update();
         });
         
         me.filter_cbox = d3.select("#"+this.name+"-legend-filter").on("click", function(d) {
@@ -51,7 +51,7 @@ class ScatterView extends View {
             if(!me.filter_all) {
                 me.filter = {}
             }
-            me.stream_update();
+            me._update();
         });
         
         me.colorScale = d3.scaleOrdinal(d3.schemeCategory20c).domain(d3.range(0,19));
@@ -70,7 +70,10 @@ class ScatterView extends View {
          * Updates the results from In-Mem DB in the backend (Online Analysis MODE)
          */
         this.processLayout(layout);
+        this._update();
+    }
 
+    _update(){
         this.selections.clear();
         this.clear();
         this._updateAxis();
@@ -123,7 +126,7 @@ class ScatterView extends View {
         var start = Date.now()
         this._drawAxis();
         this._drawDots();
-        // this._drawLegend()
+        this._drawLegend()
         console.log('Scatterplot Rendering Time: '+ ((Date.now()-start)/1000))
         //this._drawPointLabel();
     }
@@ -415,11 +418,11 @@ class ScatterView extends View {
         me.legend.selectAll(".scatter-legend-item").remove();
         
         var names = Object.keys(me.legend_items)
-        names.sort(function(x, y) {
-            x = x.replace(/ *\prog#[0-9]-*\ */g, "");
-            y = y.replace(/ *\prog#[0-9]-*\ */g, "");
-            return d3.ascending(me._data.stat[y]['abnormal'], me._data.stat[x]['abnormal']);
-        })
+        // names.sort(function(x, y) {
+        //     x = x.replace(/ *\prog#[0-9]-*\ */g, "");
+        //     y = y.replace(/ *\prog#[0-9]-*\ */g, "");
+        //     return d3.ascending(me._data.stat[y]['abnormal'], me._data.stat[x]['abnormal']);
+        // })
         var legend = me.legend.selectAll(".scatter-legend-item")
             .data(names)
             .enter()
@@ -453,16 +456,21 @@ class ScatterView extends View {
             .text(function(d){
                 var prefix = (d+"([").match(/.+?(?=[\[\(])/)[0];
                 var displayName = prefix.match(/(.*::)*(.*)/)[2];
-                var stat = me._data.stat[d.replace(/ *\prog#[0-9]-*\ */g, "")];
+                // var stat = me._data.stat[d.replace(/ *\prog#[0-9]-*\ */g, "")];
                 // var ratio = stat['ratio']
                 // if (ratio === undefined) {
                 //     ratio = (stat['abnormal']/(stat['abnormal']+stat['regular'])) * 100
                 // }
                 // ratio = ratio.toFixed(2) + " %";
-                var anomaly = me.formatSuffix(stat['abnormal']);
-                var total = me.formatSuffix(stat['total']).replace('G', 'B') ;
-                return displayName+": "+anomaly+"/"+total; //+ratio
+                // var anomaly = me.formatSuffix(stat['abnormal']);
+                // var total = me.formatSuffix(stat['total']).replace('G', 'B') ;
+                return displayName; //+": "+anomaly+"/"+total; //+ratio
             })
         me.filter_all = (me.filter_all === false)? undefined : me.filter_all;
     }
+}
+try {
+    module.exports = ScatterView.processLayout;
+} catch(e) {
+    // no test mode.
 }

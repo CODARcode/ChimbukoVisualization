@@ -9,6 +9,8 @@ class StreamView extends BarChartView {
             'right': componentLayout.STREAMVIEW_MARGIN_RIGHT, 
             'bottom': componentLayout.STREAMVIEW_MARGIN_BOTTOM, 
             'left': componentLayout.STREAMVIEW_MARGIN_LEFT
+        }, {
+            'xRoate': false
         });
         var me = this;
         me.name = name
@@ -148,7 +150,7 @@ class StreamView extends BarChartView {
             .then(json => {
                 if (response.ok) {
                     console.log('streamview layout was successfully set.')
-                    return json
+                    me.controller.model.setStreamSize(me.streamSize)
                 } else {
                     return Promise.reject(json)
                 }

@@ -128,6 +128,9 @@ class Model {
     getRankIDList () {
         return Object.keys(this.frames)
     }
+    setStreamSize(size) {
+        this.NUM_SELECTION_RANK = size
+    }
 }
 try {
     module.exports = Model;

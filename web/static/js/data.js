@@ -35,7 +35,7 @@ class Data {
         this.prev = {};
         this.frameID = 0;
         this.frameWindow = 30
-        this.frameInterval = this.SECOND * 0.5
+        this.frameInterval = this.SECOND * 0.1
         this.frames = {};
         this.date = new Date();
         this.setWait = true;

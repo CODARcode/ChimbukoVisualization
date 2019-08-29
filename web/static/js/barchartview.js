@@ -1,6 +1,6 @@
 class BarChartView extends View {
 
-    constructor(data, svg, name, size, margin, callback) {
+    constructor(data, svg, name, size, margin, option) {
         super(data, svg, size);
         this.name = name
         this.margin = margin;
@@ -23,7 +23,7 @@ class BarChartView extends View {
         this.yAxis = this.svg.append('g')
             .attr('class', this.name+'_y_axis')
             .attr('transform', 'translate('+this.margin.left+',' + this.margin.top + ')');
-        this.callback = callback;
+        this.option = option;
         this.colorTheme = [d3.interpolateReds, d3.interpolateBlues] 
         this.globalColorMap = {};
     }
@@ -100,10 +100,18 @@ class BarChartView extends View {
         this.yAxis.selectAll('text.'+this.name+'_yLabel').remove();
         this.axisBottom = d3.axisBottom(this.xScale);
         this.axisLeft = d3.axisLeft(this.yScale);
-        this.xAxis.call(this.axisBottom).append('text')
+        if (this.option.xRotate) {
+            this.xAxis.call(this.axisBottom).selectAll('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('x', -15)
+                .attr('y', -5)
+        } else {
+            this.xAxis.call(this.axisBottom)
+        }
+        this.xAxis.append('text')
                 .attr('class', this.name+'_xLabel')
                 .attr('x', this.content_width/2)
-                .attr('y', 30)
+                .attr('y', 27)
                 .style('text-anchor', 'middle')
                 .text(this.xAxisLabel)
                 .attr('fill', 'black')

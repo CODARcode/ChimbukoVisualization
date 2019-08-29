@@ -9,31 +9,39 @@ class HistoryView extends BarChartView {
             'right': componentLayout.HISTORYVIEW_MARGIN_RIGHT, 
             'bottom': componentLayout.HISTORYVIEW_MARGIN_BOTTOM, 
             'left': componentLayout.HISTORYVIEW_MARGIN_LEFT
+        }, {
+            'xRotate': true
         });
         var me = this
         me.name = name
-        me.dynamic = false;
+        me.dynamic = true;
         me.startFrameNo = 0
         me.NUM_FRAME = historyviewValues.WINDOW_SIZE;
         me.detailed = d3.select("#selected_rank_id");
         d3.select("#static_btn").on("click", function(d) {
+            d3.select("#static_btn").style('font-weight', 'bold');
+            d3.select("#dynamic_btn").style('font-weight', '');
             me.dynamic = false
             me.update();
         });
+        d3.select("#dynamic_btn").style('font-weight', 'bold');
         d3.select("#dynamic_btn").on("click", function(d) {
+            d3.select("#dynamic_btn").style('font-weight', 'bold');
+            d3.select("#static_btn").style('font-weight', '');
             me.dynamic = true
-            me.startFrameNo = -1
             me.update();
         });
         d3.select("#historyview_prev").on("click", function(d) {
-            if(me.startFrameNo>0) {
-                me.startFrameNo -= historyviewValues.WINDOW_SIZE;
+            if(!me.dynamic && me.startFrameNo>0) {
+                me.startFrameNo -= historyviewValues.STEP;
                 me.update();
             }
         });
         d3.select("#historyview_next").on("click", function(d) {
-            me.startFrameNo += historyviewValues.WINDOW_SIZE;
-            me.update();
+            if(!me.dynamic) {
+                me.startFrameNo += historyviewValues.STEP;
+                me.update();
+            }
         });
     }
     stream_update(){
@@ -45,27 +53,28 @@ class HistoryView extends BarChartView {
             this.update()
         }
     }
-    update() {
+    update() { 
         if(this.controller.model.selectedRankInfo.rank_id) {
             var param = {
                 'rank_id': this.controller.model.selectedRankInfo.rank_id,
                 'app_id': -1, // placeholder
-                'start': -1, // if either start or end is not set, then it is dynamic mode. 
+                'start': this.startFrameNo, // if either start is not set, then it is dynamic mode. 
                 'size': historyviewValues.WINDOW_SIZE // if dynamic mode, retrive latest frames.
             }
-            if(!this.dynamic) { // static
-                param.start = this.startFrameNo;
+            if(this.dynamic) {
+                param.start = -1
             }
-            this.fetchHistory(param);
+            this.fetchHistory(param);    
         }
+        
     }
-    _update(history){
+    _update(data){
         /**
          * Renders delta plot after data converting and scales adjustment
         **/
         var selectedRankInfo = this.controller.model.selectedRankInfo;
         this.detailed.text(historyviewValues.SELECTED_RANK_PREFIX + selectedRankInfo.rank_id)
-        this.processed = this.processData(selectedRankInfo.rank_id, history)
+        this.processed = this.processData(selectedRankInfo.rank_id, data)
         this.render({
             'data': this.processed,
             'xLabel': historyviewValues.X_LABEL, 
@@ -76,7 +85,7 @@ class HistoryView extends BarChartView {
             'callback': this.getScatterLayout.bind(this)
         });
     }
-    processData(selectedRankID, history) {
+    processData(selectedRankID, data) {
         /**
          * Process proper format for rendering 
          * Dynamically generate/process the given data to the expected format of barChart
@@ -90,9 +99,18 @@ class HistoryView extends BarChartView {
         var processed = {
             selectedRankID: {'x':[], 'y':[], 'z':[]}, // x: frames, y: # anomalies
         }
-        console.log(history)
-        history.forEach(function(numAnomalies, frameID) {
-            processed.selectedRankID.x.push(frameID)
+        // console.log(history)
+        var me = this;
+        data.history.forEach(function(numAnomalies, frameID) {
+            if (me.dynamic) {
+                if (data.latest_id>=historyviewValues.WINDOW_SIZE) {
+                    processed.selectedRankID.x.push(data.latest_id-historyviewValues.WINDOW_SIZE+frameID)
+                } else {
+                    processed.selectedRankID.x.push(me.startFrameNo+frameID)
+                }
+            } else {
+                processed.selectedRankID.x.push(me.startFrameNo+frameID)
+            }
             processed.selectedRankID.y.push(numAnomalies)
             processed.selectedRankID.z.push(selectedRankID)
         });

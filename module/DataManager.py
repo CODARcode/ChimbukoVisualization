@@ -811,7 +811,18 @@ class DataManager(object):
         #    history = query(app_id, rank_id, size) <-- retreive the latest N frames
         # else:
         #    history = query(app_id, rank_id, start, size) <-- Assumed In-Mem DB exists.
-        return self.history[int(rank_id)]
+        history = self.history[int(rank_id)]
+        latest_id = len(history)-1
+        if start == int(-1): 
+            print('dynamic', start, size)
+            history = history[-size:]
+        else:
+            print('static', start, size)
+            history = history[start: start+size]
+        return {
+            'history': history,
+            'latest_id': latest_id
+        }
 
     def construct_tree(self, params):
         """

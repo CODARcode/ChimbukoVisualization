@@ -54,15 +54,16 @@
             <div class='viscol nopadding'>
                 <div>
                     <b class="title" style='display: inline-block'>&nbsp; Selected Rank History </b>
-                    <button id="static_btn" type="button"> Static </button>
-                    <button id="dynamic_btn" type="button"> Dynamic </button>
+                    
                     <div id='selected_rank_id' style='display: inline-block;'></div>
                 </div>
                 <div class="nopadding" >
                     <div>
                         &nbsp;
-                        <button id="historyview-prev" type="button"> prev </button>
-                        <button id="historyview-next" type="button"> next </button>
+                        <button id="dynamic_btn" type="button"> Dynamic </button>
+                        <button id="static_btn" type="button"> Static </button>
+                        <button id="historyview_next" style='float: right; margin-right: 10px' type="button"> next </button>
+                        <button id="historyview_prev" style='float: right; ' type="button"> prev </button>
                     </div>
                     <svg id="historyview" class="historyview"></svg>
                 </div>
@@ -87,10 +88,10 @@
                         <option value="3">Exit</option>
                     </select>
                     <button id="apply" type="button"> apply </button>
-                    &nbsp; &nbsp; <input type="checkbox" id="scatter-legend-filter"> remove all
+                    &nbsp; &nbsp; <input type="checkbox" id="scatterview-legend-filter"> remove all
                     <div class="nopadding">
                         <svg id="overview" class="scatterview"></svg>
-                        <div id="scatterview-legend" class="legendview"></div>
+                        <div id="scatterview-legend" style='width: 300px; height: 510px;' class="legendview"></div>
                     </div>
                 </div>
                 <div class="viscol nopadding">

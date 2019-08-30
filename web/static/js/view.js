@@ -3,6 +3,7 @@ class View {
         var me = this;
         this.controller = controller;
         this.vis = this.controller.views;
+        this.model = this.controller.model;
         this.svg = svg;
         this.size = size;
         if('width' in size){

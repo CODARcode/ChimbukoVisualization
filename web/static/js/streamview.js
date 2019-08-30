@@ -43,7 +43,7 @@ class StreamView extends BarChartView {
         /**
          * Renders delta plot after data converting and scales adjustment
         **/
-        this.processed = this.processData(
+        this.processed = this.model.processStreamViewData(
                 this.controller.model.selectedRanks.top, 
                 this.controller.model.selectedRanks.bottom,
                 this.controller.model.delta
@@ -59,36 +59,7 @@ class StreamView extends BarChartView {
         });
         this.updateLegend();
     }
-    processData(top, bottom, delta) {
-        /**
-         * Process proper format for rendering 
-         * Dynamically generate/process the given data to the expected format of barChart
-         * format == {
-         *      name of category == {
-         *          x: [] # list of x values
-         *          y: [] # list of y values
-         *      }
-         * }
-         */
-        var processed = {
-            'top': {'x':[], 'y':[], 'z':[]}, // x: ranking, y: accum. # delta, z: rank_id
-            'bottom': {'x':[], 'y':[], 'z':[]} // x: ranking, y: accum. # delta, z: rank_id  
-        }
-        var maxLength = Math.max(top.length, bottom.length) 
-        for (var i=0; i<maxLength; i++) {
-            if(top[i] !== undefined) {
-                processed.top.x.push(i)
-                processed.top.y.push(delta[top[i]])
-                processed.top.z.push(top[i])
-            }
-            if(bottom[i] !== undefined) {
-                processed.bottom.x.push(i)
-                processed.bottom.y.push(delta[bottom[i]])
-                processed.bottom.z.push(bottom[i])
-            }
-        }
-        return processed;
-    }
+    
     updateLegend() {
         this.legendTop.update(this.processed.top, this.getHistory.bind(this));
         this.legendBottom.update(this.processed.bottom, this.getHistory.bind(this));

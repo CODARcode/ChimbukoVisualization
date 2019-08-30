@@ -131,6 +131,36 @@ class Model {
     setStreamSize(size) {
         this.NUM_SELECTION_RANK = size
     }
+    processStreamViewData(top, bottom, delta) {
+        /**
+         * Process proper format for rendering 
+         * Dynamically generate/process the given data to the expected format of barChart
+         * format == {
+         *      name of category == {
+         *          x: [] # list of x values
+         *          y: [] # list of y values
+         *      }
+         * }
+         */
+        var processed = {
+            'top': {'x':[], 'y':[], 'z':[]}, // x: ranking, y: accum. # delta, z: rank_id
+            'bottom': {'x':[], 'y':[], 'z':[]} // x: ranking, y: accum. # delta, z: rank_id  
+        }
+        var maxLength = Math.max(top.length, bottom.length) 
+        for (var i=0; i<maxLength; i++) {
+            if(top[i] !== undefined) {
+                processed.top.x.push(i)
+                processed.top.y.push(delta[top[i]])
+                processed.top.z.push(top[i])
+            }
+            if(bottom[i] !== undefined) {
+                processed.bottom.x.push(i)
+                processed.bottom.y.push(delta[bottom[i]])
+                processed.bottom.z.push(bottom[i])
+            }
+        }
+        return processed;
+    }
 }
 try {
     module.exports = Model;

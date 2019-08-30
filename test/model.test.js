@@ -1,12 +1,11 @@
-let data = require("../web/static/js/Model");
-let ranks = require('./data/frontend/10_ranks.json');
+let Model = require("../web/static/js/Model");
+let model = new Model();
 
 describe('Ensuring data receiving from backend', () => {
     it('receives 10 ranks from backend', () => {
-        console.log(data);
-        let dataObject = new data();
-        dataObject.update(ranks)
-        expect(dataObject.getRankIDList().length).toBe(10);
+        let ranks = require('./data/frontend/10_ranks.json');
+        model.update(ranks)
+        expect(model.getRankIDList().length).toBe(10);
     });
 });
  

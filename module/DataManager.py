@@ -673,12 +673,12 @@ class DataManager(object):
         execution['anomaly_score'] = int(execution['anomaly_score'])
         execution['comm ranks'] = int(execution['comm ranks'])
         
-        if self.initial_timestamp == -1: 
-            self.initial_timestamp = execution['entry']
-            print("Initial time: ", self.initial_timestamp)
+        # if self.initial_timestamp == -1: 
+        #     self.initial_timestamp = int(execution['entry'])
+        #     print("Initial time: ", self.initial_timestamp)
         
-        execution['entry'] -= self.initial_timestamp
-        execution['exit'] -= self.initial_timestamp
+        # execution['entry'] = execution['entry'] - self.initial_timestamp
+        # execution['exit']  = execution['exit'] -self.initial_timestamp
         execution['value'] = execution["exit"] - execution["entry"]
 
         # prefix = str(execution['comm ranks']) + self.EXECUTION_ID_DELIMETER # delimeter

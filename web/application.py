@@ -60,25 +60,18 @@ def get_tree():
         by execution_id (eid) after creating based on the current executions
         (deprecated) by tree_id (tid) if 'forest' is already generated 
     """
-    if request.json['type'] == 'tree':
-        if len(data_manager.forest) > 0: # we no longer generate forest.
-            tid = request.json['tid']
-            log("select tree #{}".format(tid))
-            if len(data_manager.forest[tid]['nodes']) == 1: # first request
-                data_manager.generate_tree(tid)
-            return jsonify(data_manager.forest[tid])
-        else: # online analysis
-            # eid = request.json['eid']
-            # tree = data_manager.generate_tree_by_eid(eid)
-            # print(tree)
-            # return jsonify(tree)
-            tree = data_manager.construct_tree({
-                'eid': request.json['eid'],
-                'rid': request.json['rid'], # may be removed
-                'start': request.json['start'],
-                'end': request.json['end']
-            })
-            return jsonify(tree)
+    # old specification
+    eid = request.json['eid']
+    tree = data_manager.generate_tree_by_eid(eid)
+
+    # Online Analysis mode (new specification)
+    # tree = data_manager.construct_tree({
+    #     'eid': request.json['eid'],
+    #     'rid': request.json['rid'], # may be removed
+    #     'start': request.json['start'],
+    #     'end': request.json['end']
+    # })
+    return jsonify(tree)
 
 @web_app.route('/history', methods=['POST'])
 def get_history ():

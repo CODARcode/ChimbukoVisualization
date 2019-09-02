@@ -143,7 +143,7 @@ class ScatterView extends View {
         this.textlabel
             .attr("x", d => me.x(d.pos[me.axis[0]]))
             .attr("y", d => me.y(d.pos[me.axis[1]]));
-        if(this.data.projectionMethod==1){
+        if(this.controller.projectionMethod==1){
             me.svg.selectAll('.dotName').remove();
         }else{
             this._drawPointLabel();
@@ -152,12 +152,12 @@ class ScatterView extends View {
 
     rightClick(){
         d3.event.preventDefault();
-        this.data.clearHight();
+        this.controller.clearHight();
     }
 
     selected(){
     	this.dot
-	    	.classed('selected',(d, i) => this.data.isSelected(i));
+	    	.classed('selected',(d, i) => this.controller.isSelected(i));
     }
     unselected(){
         this.path.attr("d", "");

@@ -127,6 +127,7 @@ class Controller {
     }
 
     getSelectedTree() {// now use the first, will update to the center
+        console.log(this.selectedExecution.tree);
         return this.selectedExecution.tree;
     }
 
@@ -136,7 +137,7 @@ class Controller {
 
     getScoreByIndex(index) {
         index-=this.idx_offset;
-        return (this.data[index].relabel == 0) ? (this.data[index].anomaly_score) : this.data[index].relabel;
+        return (this.model.data[index].relabel == 0) ? (this.model.data[index].anomaly_score) : this.model.data[index].relabel;
     }
 
 }

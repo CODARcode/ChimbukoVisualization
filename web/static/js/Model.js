@@ -161,6 +161,35 @@ class Model {
         }
         return processed;
     }
+    processHistoryViewData(params) {
+        /**
+         * Process proper format for rendering 
+         * Dynamically generate/process the given data to the expected format of barChart
+         * format == {
+         *      name of category == {
+         *          x: [] # list of x values
+         *          y: [] # list of y values
+         *      }
+         * }
+         */
+        var processed = {
+            selected: {'x':[], 'y':[], 'z':[]} // x: frames, y: # anomalies
+        }
+        params.history.forEach(function(numAnomalies, frameID) {
+            if (params.dynamic) {
+                if (params.latest_id>=params.WINDOW_SIZE) {
+                    processed.selected.x.push(params.latest_id-params.WINDOW_SIZE+frameID+1)
+                } else {
+                    processed.selected.x.push(params.startFrameNo+frameID)
+                }
+            } else {
+                processed.selected.x.push(params.startFrameNo+frameID)
+            }
+            processed.selected.y.push(numAnomalies)
+            processed.selected.z.push(params.selectedRankID)
+        });
+        return processed;
+    }
 }
 try {
     module.exports = Model;

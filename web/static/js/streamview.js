@@ -43,7 +43,7 @@ class StreamView extends BarChartView {
         /**
          * Renders delta plot after data converting and scales adjustment
         **/
-        this.processed = this.model.processStreamViewData(
+        this.processed = this.controller.model.processStreamViewData(
                 this.controller.model.selectedRanks.top, 
                 this.controller.model.selectedRanks.bottom,
                 this.controller.model.delta

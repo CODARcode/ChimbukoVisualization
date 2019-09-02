@@ -74,7 +74,14 @@ class HistoryView extends BarChartView {
         **/
         var selectedRankInfo = this.controller.model.selectedRankInfo;
         this.detailed.text(historyviewValues.SELECTED_RANK_PREFIX + selectedRankInfo.rank_id)
-        this.processed = this.processData(selectedRankInfo.rank_id, data)
+        this.processed = this.controller.model.processHistoryViewData({
+            'selectedRankID': selectedRankInfo.rank_id, 
+            'history': data.history,
+            'latest_id': data.latest_id,
+            'WINDOW_SIZE': historyviewValues.WINDOW_SIZE,
+            'dynamic': this.dynamic,
+            'startFrameNo': this.startFrameNo
+        });
         this.render({
             'data': this.processed,
             'xLabel': historyviewValues.X_LABEL, 
@@ -85,37 +92,7 @@ class HistoryView extends BarChartView {
             'callback': this.getScatterLayout.bind(this)
         });
     }
-    processData(selectedRankID, data) {
-        /**
-         * Process proper format for rendering 
-         * Dynamically generate/process the given data to the expected format of barChart
-         * format == {
-         *      name of category == {
-         *          x: [] # list of x values
-         *          y: [] # list of y values
-         *      }
-         * }
-         */
-        var processed = {
-            selectedRankID: {'x':[], 'y':[], 'z':[]}, // x: frames, y: # anomalies
-        }
-        // console.log(history)
-        var me = this;
-        data.history.forEach(function(numAnomalies, frameID) {
-            if (me.dynamic) {
-                if (data.latest_id>=historyviewValues.WINDOW_SIZE) {
-                    processed.selectedRankID.x.push(data.latest_id-historyviewValues.WINDOW_SIZE+frameID)
-                } else {
-                    processed.selectedRankID.x.push(me.startFrameNo+frameID)
-                }
-            } else {
-                processed.selectedRankID.x.push(me.startFrameNo+frameID)
-            }
-            processed.selectedRankID.y.push(numAnomalies)
-            processed.selectedRankID.z.push(selectedRankID)
-        });
-        return processed;
-    }
+    
     getScatterLayout(params) {
         var _params = {
             'rank_id': params.z,

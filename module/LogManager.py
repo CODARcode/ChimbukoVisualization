@@ -2,7 +2,9 @@ from utils.CommonUtils import log
 import time
 
 class LogManager:
-    
+    """
+    Class that records targeted event time
+    """
     def __init__(self):
         self.reset()
 

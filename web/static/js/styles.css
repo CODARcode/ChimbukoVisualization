@@ -63,24 +63,54 @@ text {
     background-color: white;
     border: thin rgba(0, 0, 0, .25) solid;
 }
-        
 .title {
     font-size: 20px;
+    display: block;
+}
+.title-inline {
+    font-size: 20px;
+    display: inline-block;
 }
 .label {
     font-weight: bold;
 }
-.scatter-legend {
-    display: inline-block; 
-    vertical-align: top; 
-    width: 185px;
+.visrow {
+    margin: 2px;
+    display: block;
+    /* border: 1px solid black; */
 }
-.scatter-legend-item {
+.viscol {
+    display: inline-block;
+    border: 1px solid black;
+}
+/* Visualization Components */
+.streamview {
+    display: inline-block;
+}
+.historyview {
+    display: inline-block;
+}
+.scatterview {
+    display: inline-block;  
+}
+.treeview{
+    display: inline-block;
+}
+.temporalview {
+    display: inline-block;
+}
+.legendview {
+    width: 150px;
+    height: 370px;
+    overflow-y:auto;
+    display: inline-block;
+}
+.legendview-item {
     display: table;
     margin-bottom: 5px;
     cursor: pointer;
 }
-.scatter-legend-item-circle {
+.legendview-item-circle {
     border-radius: 50%;
     behavior: url(PIE.htc);
     width: 20px;
@@ -88,33 +118,9 @@ text {
     display: inline-block;
     vertical-align: middle;
 }
-.scatter-legend-item-text {
+.legendview-item-text {
     height: 20px;
     display: table-cell;
     vertical-align: middle;
     padding-left: 5px;
 }
-.scatterplot {
-    display: inline-block;  
-    width: 550px; 
-    height: 550px;
-}
-.srate_container {
-    display: inline;
-}
-.sampling-rate-slider {
-    width: 100px;
-}
-.treeview{
-    width: 800px;
-    height: 300px;
-}
-.baselineview{
-    width: 800px;
-    height: 300px;
-}
-.baseline_cell {
-    border: 1px solid black;
-}
-
-

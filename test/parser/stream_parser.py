@@ -6,13 +6,14 @@ import time
 from threading import Thread, current_thread
 import sys
 import os
+from read_execdata import ExecDataParser
 
-AD_SEND_TYPE = 'MULTI_STREAM' # AGGREGATED or MULTI_STREAM
+AD_SEND_TYPE = 'BINARY' # BINARY, AGGREGATED or MULTI_STREAM
 DATA_TYPE = 'EXECUTIONS' # EVENTS or EXECUTIONS
-DATA_PATH = '../../data/sc19/' #  ../../data/rank_200/   ../../data/per_rank/ # ../../data/nwchem_executions_rank/ # ../../data/nwchem_events_rank/ # ../../data/aggregated/executions/ # ../../data/sc19/
+DATA_PATH = '../../data/execdata' # '../../data/rank_1000/'  #   '../../data/sc19/' '../../data/rank_200/'  #  ../../data/rank_200/   ../../data/per_rank/ # ../../data/nwchem_executions_rank/ # ../../data/nwchem_events_rank/ # ../../data/aggregated/executions/ # ../../data/sc19/
 VIS_URL = 'http://0.0.0.0:5000/'
-TRACE_FRAME_LIMIT = 500
-NUM_RANK = 20
+NUM_FRAME = 10
+NUM_RANK = 10
 
 def check_data():
 	cnt = 0
@@ -30,7 +31,7 @@ def send_data(rank):
 		global_time = 0
 		tot = len(global_data[rank])
 		# while len(global_data[rank])>0:
-		for cnt in range(TRACE_FRAME_LIMIT):
+		for cnt in range(NUM_FRAME):
 			
 				d = global_data[rank].pop(0)
 				start = time.time()
@@ -120,10 +121,44 @@ def send_multiple_stream_by_rank_frame():
 				global_data_frame[i][path] = data
 		
 	try:
-		for frame_no in range(TRACE_FRAME_LIMIT):
+		for frame_no in range(NUM_FRAME):
 			threads = []
 			for rank_no in range(NUM_RANK):
 				thrd = Thread(target=send_data_frame, args=[rank_no, frame_no])
+				threads.append(thrd)
+			for thrd in threads:
+				thrd.start() 
+			for thrd in threads:
+				thrd.join()
+	except:
+		print ('Threading Error')
+	print('Done')
+
+def _send_binary_data(rank_no, frame_no):
+	try: 
+		parser = ExecDataParser()
+		parser.load(DATA_PATH, 'execdata', rank_no)
+		frame = parser.getFrame(frame_no)
+		if frame is None:
+			print('['+current_thread().name+'] frame not exist (rank:', rank_no, 'frame:', frame_no,')')
+		else:
+			executions = {d.to_dict()['findex']:d.to_dict() for d in frame}
+			res = requests.post(VIS_URL+DATA_TYPE.lower(), json={
+				'executions': executions,
+				'stat': {}
+			})
+			print('['+current_thread().name+'] frame sent (rank:', rank_no, 'frame:', frame_no,')')
+	except:
+		print('Bin Parser Error (rank:', rank_no, 'frame:', frame_no,')')
+
+def send_binary_data():
+	# initialize server
+	requests.post(VIS_URL, json={'type':'reset'})
+	try:
+		for frame_no in range(NUM_FRAME):
+			threads = []
+			for rank_no in range(NUM_RANK):
+				thrd = Thread(target=_send_binary_data, args=[rank_no, frame_no])
 				threads.append(thrd)
 			for thrd in threads:
 				thrd.start() 
@@ -150,7 +185,7 @@ def send_aggregated_data():
 	num_data = 0
 	global_time = 0
 	for i in range(len(path_list)):
-		if i < TRACE_FRAME_LIMIT:
+		if i < NUM_FRAME:
 			data = []
 			with open(path_list[i], 'r') as f:
 				data = json.load(f)
@@ -195,4 +230,8 @@ if __name__ == "__main__":
 		# get_data_size()
 	elif AD_SEND_TYPE == 'AGGREGATED':
 		send_aggregated_data()
+	elif AD_SEND_TYPE == 'BINARY':
+		send_binary_data()
+
+
 	

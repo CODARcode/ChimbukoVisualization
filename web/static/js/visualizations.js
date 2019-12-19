@@ -169,4 +169,14 @@ class Visualizations {
         })
         return fid;
     }
+
+    getView(name) {
+        var view;
+        this.views.forEach(d => {
+            if (d.name == name) {
+                view = d;
+            }
+        })
+        return view;
+    }
 }

@@ -5,56 +5,104 @@ import numpy as np
 from threading import Lock
 from module.BufferManager import BufferManager
 from module.LogManager import LogManager
+from module.OnlineStatManager import OnlineStatManager
 from utils.CommonUtils import log
+from config import Config
+
+config = Config()
 
 class DataManager(object):
     
     def __init__(self):
-        self.events = {} # store the event list by the rank ID {0:[...],1:[...],2:[...] ...}
+        """
+        Initializes DataManager
+        """
+        # Deprecated Variables
+        self.events = {} # (deprecated) store the event list by the rank ID {0:[...],1:[...],2:[...] ...}
         self.executions = {} # the paired function executions from event list
-        self.forest = [] # the forest of call stack tree, roots are foi
-        self.pos = [] # the positions of the call stak tree in the scatter plot
-        self.labels = [] # the passed labels of the lineid of functions
-        self.forest_labels = [] # the learned label, for now I simulated
-        self.prog = [] # the program names of the tree in scatter plot
-        self.tidx = []
-        self.eidx = []
-        self.func_names = [] # the function name of interest in scatter plot
-        self.func_dict = {} # all the names of the functions
-        self.foi = [] # function of interest
-        self.event_types = {} # set the indices indicating event types in the event list
+        self.forest = [] # (deprecated) the forest of call stack tree, roots are foi
+        self.labels = [] # (deprecated) the passed labels of the lineid of functions
+        self.forest_labels = [] # (deprecated) the learned label, for now I simulated
+        self.prog_names = [] # (deprecated) the program names of the tree in scatter plot
+        self.func_names = [] # (deprecated) the function name of interest in scatter plot
+        self.func_dict = {} # (deprecated) all the names of the functions
+        self.foi = [] # (deprecated) function of interest
+        self.event_types = {} # (deprecated) set the indices indicating event types in the event list
         self.changed = False # if there are new data come in
-        self.lineid2treeid = {} # indicates which line in events stream is which function
-        # self.line_num = 0 # number of events from the very beggining of streaming
-        self.initial_timestamp = -1
-        self.msgs = [] # debug only for messages
-        self.func_idx = 0 # global function index for each entry function
-        self.stacks = {} # one stack for one program under the same rankId
-        self.idx_holder = {
-            "fidx": [],
-            "tidx": 0,
-            "eidx": 0
-        }
-        self.sampling_rate = 1
-        self.sampling_strategy = ["uniform"]
-        self.layout = ["entry", "value", "comm ranks", "exit"] # feild no.1, 2, ..
-        self.log = []
-        self.lock = Lock()
-        self.time_window = 3600000000 # one hour
-        self.window_start = 0
-        self.clean_count = 0
-        self.stat = {}
-        self.anomaly_cnt = 0
-        self.filecnt = -1
-        self.buffer_manager = BufferManager(self.process_frame) # MAX_BUFFER_SIZE
-        self.log_manager = LogManager() # MAX_BUFFER_SIZE
+        self.lineid2treeid = {} # (deprecated) indicates which line in events stream is which function
+        self.msgs = [] # (deprecated) debug only for messages
+        self.log = [] # (deprecated) debug only for messages
+        self.filecnt = -1 # (deprecated) debug only for messages
+        self.func_idx = 0 # (deprecated) global function index for each entry function
+        self.stacks = {} # (deprecated) one stack for one program under the same rankId
+        self.GRA = {} # (deprecated) holds data for Global Rank Anomaly analysis
+        self.GRA_temp = {} # (deprecated) for GRA processing
+        self.GRA_time_bound = 0 # (deprecated) for GRA time bouding, starting from 0
+        self.SECOND_IN_MICROSECOND = 1000000 # (deprecated) microsecond by default
+        self.GRA_interval = self.SECOND_IN_MICROSECOND * 10 #  (deprecated) interval for # anomalies calculation
+        self.GRA_time_window = self.SECOND_IN_MICROSECOND * 60 #(deprecated)  interval for removal of rank stat
+        self.GRA_sampling_interval = self.SECOND_IN_MICROSECOND * 60 # (deprecated) interval for stratified sampling
+        self.GRA_outliers = set() # (deprecated) holds outliers by GRA
+        self.frames = {} # (deprecated) processed frames obj
+        self.frame_temp = { 'total': 0 } # (deprecated) used for frame processing
+        self.frame_id = -1 # (deprecated) frame id 
+        self.FRAME_WINDOW = 100 # (deprecated) frame window
+        self.FRAME_INTERVAL = 0.001 # (deprecated) second
+        self.frame_time_bound = -1 # (deprecated) 
+        # self.line_num = 0 # (deprecated) number of events from the very beggining of streaming
 
-        # entry - entry time
-        # value - execution time
-        # comm ranks
-        # exit - exit time
+        # Variables beeing utilized 
+        self.initial_timestamp = -1 # holds initial timestamp
+        self.pos = [] # the positions of the call stak tree in the scatter plot
+        self.tid = [] # holds tree indices for tree processing
+        self.eid = [] # holds execution indices for execution processing
+        self.idx_holder = { "fidx": [], "tidx": 0, "eidx": 0} # holds a set of indices for processing
+        self.sampling_rate = 1 # downsampling rate, default is 1
+        self.layout = ["entry", "value", "comm ranks", "exit"] # 0: entry, 1: value, ... correspond to plot layout 
+        self.time_window = 3600000000 # one hour in microsec.
+        self.window_start = 0 # holds timestamp of the begin of the current window time in backend app
+        self.clean_count = 0 # being used for old data removing
+        self.stat = {} # holds stats per functions
+        self.anomaly_cnt = 0 # holds the accumulated number of anomalies 
+        self.lock = Lock() # manages locks among flask threads 
+        self.buffer_manager = BufferManager(self.process_frame) # synchronized buffer utilized in producer & consumer design.
+        self.log_manager = LogManager() # utilized for system logging and times reporting.
+        self.online_stat_manager = OnlineStatManager() # processes mean and std values for execution time in online fashion.
+        self.stream = {} # stores the number of anomalies per function in the current data frame
+        self.delta = {} # stores the abs value of the change of the number of anomalies per function from the previous to current
+        self.prev = {} # stores the number of anomalies per function in the previous data frame
+        self.EXECUTION_ID_DELIMETER = '&&' # <-- will be moved to constant configuration
+        self.tree_id = -1
+        self.history = {} # <-- assumed In-Mem DB
+        self.stream_size = 10 # number of ranks to compare in the streamview, default 10 for each top and bottom
+        self.stream_type = 'delta' # type of statistics to visualize, min, max, mean, std, skewness, kurtosis, delta are available.
 
-    def set_functions(self, functions):# set function dictionary
+##############################################################################################
+# Begin of the deprecated functions:
+#   set_functions
+#   set_FOI
+#   set_event_types
+#   set_labels
+#   add_events
+#   _exections2forest
+#   _events2executions
+#   _events2executionsByRank
+#   generate_forest
+#   reset_forest
+#   write_file
+#   set_statistics
+#   update_GRA
+#   remove_old_GRA
+#   generate_tree_recursive
+#   generate_tree
+#   generate_tree_by_eid
+#   create_tree_by_execution
+##############################################################################################
+
+    def set_functions(self, functions):# 
+        """
+        (Deprecated) set function map 
+        """
         with self.lock:
             if type(functions) == list: # make sure if functions is given as dict
                 for i in range(len(functions)):
@@ -63,23 +111,34 @@ class DataManager(object):
                 self.func_dict = functions
 
     def set_FOI(self, functions):
+        """
+        (Deprecated) set function of interest
+        """
         with self.lock:
             self.foi = functions     
             #self.changed = True
 
     def set_event_types(self, types):
+        """
+        (Deprecated) set event types
+        """
         with self.lock:
             for i, e in enumerate(types):
                 self.event_types[e] = i
 
     def set_labels(self, labels):
+        """
+        (Deprecated) set lablels
+        """
         with self.lock:
             self.labels = labels
             #print("received %d anomaly" % len(labels))
             #self.changed = True
 
     def add_events(self, events):
-        # convert events to json events
+        """
+        (Deprecated) convert events to json events
+        """
         with self.lock:
             count = 0
             prev = None
@@ -136,52 +195,55 @@ class DataManager(object):
 
             log('processed', self.anomaly_cnt, 'anomalies.')
             #self.changed = True
-
-    def remove_old_data(self):
-        # clean executions every time_window
-        if self.window_start // self.time_window < self.clean_count:
-            return
-        self.clean_count += 1
-        log("clean old executions before {}".format(self.window_start))
-        remove_list = []
-        for findex, exe in self.executions.items():
-            if(exe['exit']<self.window_start):
-                remove_list.append(findex)
-        for findex in remove_list:
-            del self.executions[findex]
-        
-        for i, t in enumerate(self.forest):
-            if('nodes' in t and t['nodes'][0]['exit'] < self.window_start):
-                self.forest[i] = {}
-
-    def reset(self):
-        # when new application launches, everything needs to reset
-        with self.lock: 
-            self.func_idx = 0
-            self.clean_count = 0
-            self.window_start = 0
-            self.anomaly_cnt = 0
-            self.initial_timestamp = -1
-            self.idx_holder = {
-                "fidx": [],
-                "tidx": 0,
-                "eidx": 0
-            }
-            self.stat = {}
-            self.events.clear()
-            self.executions.clear()
-            self.forest.clear()
-            self.lineid2treeid.clear()
-            self.msgs.clear()
-            self.func_dict.clear()
-            self.event_types.clear()
-            self.stacks.clear()
-            self.log.clear()
-            self.changed = False
-            self.eidx = []
-            self.tidx = []
-
+    
+    def _exections2forest(self):
+        """
+        (Deprecated) convert executions to forest
+        """
+        # get tree based on foi
+        # self.forest = []
+        self.lineid2treeid = {}
+        count = 0
+        while len(self.idx_holder['fidx']) >0:
+            fidx = self.idx_holder['fidx'].pop(0)
+            if fidx in self.executions:
+                execution = self.executions[fidx]    
+                if execution['name'] in self.foi:
+                    if execution["comm ranks"] == 0: #debug
+                        count+=1
+                    self.lineid2treeid[execution["lineid"]] = len(self.forest)
+                    if not "messages" in execution:
+                        execution["messages"] = []
+                    if (execution["exit"]-execution["entry"]) < 0:
+                        log('negative run time detected.')
+                    self.forest.append({
+                        "id": len(self.forest),
+                        "eid": fidx,
+                        "prog_name": execution["prog names"],
+                        "node_index": execution["comm ranks"],
+                        "threads": execution["threads"],
+                        "graph_index": len(self.forest),
+                        "nodes": [{ # root of the tree
+                                "name": execution['name'], # self.foi,
+                                "id": 0,
+                                "comm ranks": execution["comm ranks"],
+                                "prog_name": execution["prog names"],
+                                "threads": execution["threads"],
+                                "findex": execution["findex"],
+                                "value": (execution["exit"] - execution["entry"]),
+                                "messages": execution["messages"],
+                                "entry": execution["entry"],
+                                "exit": execution["exit"],
+                                "anomaly_score": execution["anomaly_score"]
+                            }],
+                        "edges": [],
+                        "anomaly_score": execution['anomaly_score'] #-1 if str(int(execution["lineid"])) in self.labels else 1
+                    })
+        #print("generate {} trees".format(len(self.forest)))
     def _events2executions(self):
+        """
+        (Deprecated) convert events to executions per rank
+        """
         #print("event 2 executions...")
         # self.executions = {}
         # self.func_idx = 0
@@ -199,7 +261,9 @@ class DataManager(object):
         # print("\n")
 
     def _events2executionsByRank(self, rankId):
-        # convert event to execution entities
+        """
+        (Deprecated) convert event to execution entities
+        """
         #print("for rank: ", rankId)
         events = self.events[rankId]
         #function_index = len(self.executions)
@@ -282,119 +346,10 @@ class DataManager(object):
         # events = []
         del self.events[rankId][:]
 
-    def generate_tree_recursive(self, this_tree, pexecution, ptid):
-        pnode = this_tree['nodes'][ptid]
-        pnode['hide'] = False if pexecution['anomaly_score'] == -1 else True
-        for child_id in pexecution['children']:
-            if not child_id in self.executions:
-                if str(child_id) in self.executions:
-                    child_id = str(child_id)
-                else:
-                    # log("child not in executions") # regular
-                    continue
-            child_node = self.executions[child_id]
-            ctid = len(this_tree['nodes'])
-            if not "messages" in child_node:
-                child_node['messages'] = []
-            this_tree['nodes'].append({ # children of the tree
-                    'name':child_node['name'],
-                    "id": ctid,
-                    "comm ranks": pnode["comm ranks"],
-                    "prog_name": pnode["prog_name"],
-                    "threads": pnode["threads"],
-                    "findex": child_node["findex"],
-                    "value": (child_node["exit"] - child_node["entry"]),
-                    "messages": child_node["messages"],
-                    "entry": child_node["entry"],
-                    "exit": pnode["exit"],
-                    "anomaly_score": child_node["anomaly_score"]
-                })
-            this_tree['edges'].append({'source': ptid,'target': ctid})
-            if not self.generate_tree_recursive(this_tree, child_node, ctid):
-                this_tree['nodes'][ptid]['hide'] = False
-        return this_tree['nodes'][ptid]['hide']
-
-    def generate_tree(self, treeid):
-        this_tree = self.forest[treeid]
-        execution = self.executions[this_tree['eid']]
-        self.generate_tree_recursive(this_tree, execution, 0)
-
-    def generate_tree_by_eid(self, tid, eid):
-        execution = self.executions[eid]
-        this_tree = self.create_tree_by_execution(tid, execution)
-        self.generate_tree_recursive(this_tree, execution, 0)
-        return this_tree
-
-    def create_tree_by_execution(self, tid, execution):
-        if not "messages" in execution:
-            execution["messages"] = []
-        return {
-            "id": tid,
-            "eid": execution['findex'],
-            "prog_name": execution["prog names"],
-            "node_index": execution["comm ranks"],
-            "threads": execution["threads"],
-            "graph_index": execution['findex'],
-            "nodes": [{ # root of the tree
-                    "name": execution['name'], # self.foi,
-                    "id": 0, # parent
-                    "comm ranks": execution["comm ranks"],
-                    "prog_name": execution["prog names"],
-                    "threads": execution["threads"],
-                    "findex": execution["findex"],
-                    "value": (execution["exit"] - execution["entry"]),
-                    "messages": execution["messages"],
-                    "entry": execution["entry"],
-                    "exit": execution["exit"],
-                    "anomaly_score": execution["anomaly_score"]
-                }],
-            "edges": [],
-            "anomaly_score": execution['anomaly_score']
-        }
-
-    def _exections2forest(self):
-        # get tree based on foi
-        # self.forest = []
-        self.lineid2treeid = {}
-        count = 0
-        while len(self.idx_holder['fidx']) >0:
-            fidx = self.idx_holder['fidx'].pop(0)
-            if fidx in self.executions:
-                execution = self.executions[fidx]    
-                if execution['name'] in self.foi:
-                    if execution["comm ranks"] == 0: #debug
-                        count+=1
-                    self.lineid2treeid[execution["lineid"]] = len(self.forest)
-                    if not "messages" in execution:
-                        execution["messages"] = []
-                    if (execution["exit"]-execution["entry"]) < 0:
-                        log('negative run time detected.')
-                    self.forest.append({
-                        "id": len(self.forest),
-                        "eid": fidx,
-                        "prog_name": execution["prog names"],
-                        "node_index": execution["comm ranks"],
-                        "threads": execution["threads"],
-                        "graph_index": len(self.forest),
-                        "nodes": [{ # root of the tree
-                                "name": execution['name'], # self.foi,
-                                "id": 0,
-                                "comm ranks": execution["comm ranks"],
-                                "prog_name": execution["prog names"],
-                                "threads": execution["threads"],
-                                "findex": execution["findex"],
-                                "value": (execution["exit"] - execution["entry"]),
-                                "messages": execution["messages"],
-                                "entry": execution["entry"],
-                                "exit": execution["exit"],
-                                "anomaly_score": execution["anomaly_score"]
-                            }],
-                        "edges": [],
-                        "anomaly_score": execution['anomaly_score'] #-1 if str(int(execution["lineid"])) in self.labels else 1
-                    })
-        #print("generate {} trees".format(len(self.forest)))
-
     def generate_forest(self):
+        """
+        (Deprecated) generate forest given by current executions
+        """
         with self.lock:
             self._events2executions()
             self.remove_old_data()
@@ -412,9 +367,9 @@ class DataManager(object):
                     rnk_thd = root[self.layout[2]] + root['threads']*0.1
                     ext = root[self.layout[3]]
 
-                    self.tidx.append(t["id"])
+                    self.tid.append(t["id"]) # hold tree index
                     self.forest_labels.append(t["anomaly_score"])
-                    self.prog.append(root['prog_name'])
+                    self.prog_names.append(root['prog_name'])
                     self.func_names.append(root['name'])  
                     self.pos.append([
                         ent, val, rnk_thd, ext
@@ -423,16 +378,22 @@ class DataManager(object):
             self.changed = True
     
     def reset_forest(self):
+        """
+        (Deprecated) discards forest-related variables
+        """
         self.pos = []
-        self.prog = []
+        self.prog_names = []
         self.func_names = []
         self.forest_labels = []
-        self.tidx = []
-        self.eidx = []
+        self.tid = [] # hold tree index
+        self.eid = []
         log("reset forest data")
         self.changed = False
         
     def write_file(self):
+        """
+        (Deprecated) write dump files for testing
+        """
         self.filecnt += 1
         execs = {}
         for fidx in self.idx_holder['fidx']:
@@ -446,51 +407,10 @@ class DataManager(object):
         f.write(j)
         f.close()
 
-    def add_executions(self, executions):
-        with self.lock:
-            _executions = self.calculate_layout(executions)
-            self.executions.update(_executions)
-            self.remove_old_data()
-
-    def calculate_layout(self, executions):
-        new_executions = {}
-        for i, (eidx, execution) in enumerate(executions.items()):
-            execution = self.update_id(execution)
-            execution['entry'] = int(execution['entry'])
-            execution['exit'] = int(execution['exit'])
-            execution['anomaly_score'] = int(execution['anomaly_score'])
-            if execution['anomaly_score'] == -1 or i%int(1/self.sampling_rate)==0: # Sampling
-                execution['value'] = (execution["exit"] - execution["entry"])
-                self.eidx.append(execution['findex'])
-                self.tidx.append(self.idx_holder['tidx'])
-                self.idx_holder['tidx'] += 1
-                self.forest_labels.append(execution["anomaly_score"])
-                self.prog.append(execution['prog names'])
-                self.func_names.append(execution['name'])  
-                self.pos.append([
-                    execution[self.layout[0]], # entry 
-                    execution[self.layout[1]], # value (execution time)
-                    execution[self.layout[2]], # rank and thread
-                    execution[self.layout[3]] # exit
-                ])
-                if execution['anomaly_score'] == -1:
-                    self.anomaly_cnt += 1
-            new_executions[execution['findex']] = execution
-        log("added {} positions".format(len(self.pos)))
-        self.changed = True
-        return new_executions
-
-    def update_id(self, execution):
-        prefix = str(execution['comm ranks']) + '&&' # delimeter
-        execution['findex'] = prefix+str(execution['findex'])
-        execution['parent'] = prefix+str(execution['parent'])
-        new_children = []
-        for cid in execution['children']:
-            new_children.append(prefix+str(cid))
-        execution['children'] = new_children
-        return execution
-
     def set_statistics(self, stat):
+        """
+        (deprecated) set stats from AD
+        """
         with self.lock:
             for func, temp in stat.items():
                 if 'factor' not in temp:
@@ -532,14 +452,258 @@ class DataManager(object):
                     #     func_stat['ratio'] = (func_stat['abnormal']/(func_stat['abnormal']+func_stat['regular']))*100
                 else:
                     self.stat[func] = temp
+    def update_GRA(self, execution):
+        """
+        (deprecated) Update Global Rank Anomaly analysis given by each execution. 
+        """
+        if execution['exit'] > self.GRA_time_bound:
+            self.GRA[int(self.GRA_time_bound/1000000)] = self.GRA_temp
+            self.online_stat_manager.compute(self.GRA_temp)
+            self.GRA_temp = {} # initialize GRA info
+            self.GRA_time_bound += self.GRA_interval
+        # count anomaly per rank
+        if execution['comm ranks'] not in self.GRA_temp:
+            self.GRA_temp[execution['comm ranks']] = 0
+        self.GRA_temp[execution['comm ranks']] += 1
+        # remove old data
+        self.remove_old_GRA()
+
+    def remove_old_GRA(self):
+        """
+        (deprecated) Remove old Global Rank Anomaly if time window has passed
+        """
+        remove_list = []
+        for t in self.GRA.keys():
+            if t < ((self.GRA_time_bound - self.GRA_time_window)/1000000):
+                remove_list.append(t)
+        for t in remove_list:
+            del self.GRA[t]
+
+    def generate_tree(self, treeid):
+        """
+        (deprecated)
+        Invokes generate_tree_recursive given by tree id 
+        """
+        this_tree = self.forest[treeid]
+        execution = self.executions[this_tree['eid']]
+        self.generate_tree_recursive(this_tree, execution, 0)
+    
+    def generate_tree_by_eid(self, eid):
+        """
+        (deprecated)
+        Invokes generate_tree_recursive given by execution id 
+        """
+        if self.EXECUTION_ID_DELIMETER in eid:
+            eid = eid.split(self.EXECUTION_ID_DELIMETER)[1]
+        tree = {}
+        if eid in self.executions:
+            execution = self.executions[eid]
+            tree = self.create_tree_by_execution(eid, execution)
+            self.generate_tree_recursive(tree, execution, 0)
+            return tree
+        else:
+            return tree
+
+    def create_tree_by_execution(self, tid, execution):
+        """
+        (deprecated)
+        Create root of tree given by execution and treeid
+        """
+        if not "messages" in execution:
+            execution["messages"] = []
+        return {
+            "id": tid,
+            "eid": execution['findex'],
+            "prog_name": execution["prog names"],
+            "node_index": execution["comm ranks"],
+            "threads": execution["threads"],
+            "graph_index": execution['findex'],
+            "nodes": [{ # root of the tree
+                    "name": execution['name'], # self.foi,
+                    "id": 0, # parent
+                    "comm ranks": execution["comm ranks"],
+                    "prog_name": execution["prog names"],
+                    "threads": execution["threads"],
+                    "findex": execution["findex"],
+                    "value": (execution["exit"] - execution["entry"]),
+                    "messages": execution["messages"],
+                    "entry": execution["entry"],
+                    "exit": execution["exit"],
+                    "anomaly_score": execution["anomaly_score"]
+                }],
+            "edges": [],
+            "anomaly_score": execution['anomaly_score']
+        }
+
+    def generate_tree_recursive(self, this_tree, pexecution, ptid):
+        """
+        (deprecated)
+        Generates tree recursively given by parent tree id (ptid)
+        """
+        pnode = this_tree['nodes'][ptid]
+        pnode['hide'] = False if pexecution['anomaly_score'] == -1 else True
+        for child_id in pexecution['children']:
+            if not child_id in self.executions:
+                if str(child_id) in self.executions:
+                    child_id = str(child_id)
+                else:
+                    # log("child not in executions") # regular
+                    continue
+            child_node = self.executions[child_id]
+            ctid = len(this_tree['nodes'])
+            if not "messages" in child_node:
+                child_node['messages'] = []
+            this_tree['nodes'].append({ # children of the tree
+                    'name':child_node['name'],
+                    "id": ctid,
+                    "comm ranks": pnode["comm ranks"],
+                    "prog_name": pnode["prog_name"],
+                    "threads": pnode["threads"],
+                    "findex": child_node["findex"],
+                    "value": (child_node["exit"] - child_node["entry"]),
+                    "messages": child_node["messages"],
+                    "entry": child_node["entry"],
+                    "exit": pnode["exit"],
+                    "anomaly_score": child_node["anomaly_score"]
+                })
+            this_tree['edges'].append({'source': ptid,'target': ctid})
+            if not self.generate_tree_recursive(this_tree, child_node, ctid):
+                this_tree['nodes'][ptid]['hide'] = False
+        return this_tree['nodes'][ptid]['hide']
+
+##############################################################################################
+# End of the deprecated functions 
+##############################################################################################
+
+##############################################################################################
+# Begin of the functions beeing utilized:
+#   remove_old_data
+#   reset
+#   add_executions
+#   process_executions
+#   calculate_layout
+#   update_execution
+#   add_to_buffer
+#   process_frame
+#   _process_frame
+#   refresh
+#   record_response_time
+#   record_push_time
+#   refresh
+##############################################################################################
+
+    def remove_old_data(self):
+        """
+        clean executions every time_window
+        """
+        if self.window_start // self.time_window < self.clean_count:
+            return
+        self.clean_count += 1
+        log("clean old executions before {}".format(self.window_start))
+        remove_list = []
+        for findex, exe in self.executions.items():
+            if(exe['exit']<self.window_start):
+                remove_list.append(findex)
+        for findex in remove_list:
+            del self.executions[findex]
+        
+        for i, t in enumerate(self.forest):
+            if('nodes' in t and t['nodes'][0]['exit'] < self.window_start):
+                self.forest[i] = {}
+
+    def reset(self):
+        """
+        When new application launches, below variables need to be reset
+        """
+        with self.lock: 
+            self.func_idx = 0
+            self.clean_count = 0
+            self.window_start = 0
+            self.anomaly_cnt = 0
+            self.initial_timestamp = -1
+            self.idx_holder = {
+                "fidx": [],
+                "tidx": 0,
+                "eidx": 0
+            }
+            self.stat = {}
+            self.events.clear()
+            self.executions.clear()
+            self.forest.clear()
+            self.lineid2treeid.clear()
+            self.msgs.clear()
+            self.func_dict.clear()
+            self.event_types.clear()
+
+    def process_executions(self, executions):
+        """
+        Process and update received executions to proper format to be utilized in vis backend & frontend.        
+        """
+        _executions = {}
+        with self.lock:
+            for i, (eid, execution) in enumerate(executions.items()):
+                execution = self._process_execution(execution)
+                self.calculate_layout(execution)
+                _executions[eid] = execution
+            self.executions.update(_executions)
+            self.changed = True
+
+    def calculate_layout(self, execution):
+        """
+        Calculate position for frontend plot given by each execution. 
+        """
+        self.eid.append(execution['findex'])
+        self.prog_names.append(execution['prog names'])
+        self.func_names.append(execution['name'])  
+        self.pos.append([
+            execution[self.layout[0]], # entry 
+            execution[self.layout[1]], # value (execution time)
+            execution[self.layout[2]], # rank and thread
+            execution[self.layout[3]]  # exit
+        ])
+        if execution['anomaly_score'] == -1:
+            self.anomaly_cnt += 1
+
+    def _process_execution(self, execution):
+        """
+        Update execution information given by each execution. 
+        """
+        execution['entry'] = int(execution['entry'])
+        execution['exit'] = int(execution['exit'])
+        execution['anomaly_score'] = int(execution['anomaly_score'])
+        execution['comm ranks'] = int(execution['comm ranks'])
+        
+        # if self.initial_timestamp == -1: 
+        #     self.initial_timestamp = int(execution['entry'])
+        #     print("Initial time: ", self.initial_timestamp)
+        
+        # execution['entry'] = execution['entry'] - self.initial_timestamp
+        # execution['exit']  = execution['exit'] -self.initial_timestamp
+        execution['value'] = execution["exit"] - execution["entry"]
+
+        # prefix = str(execution['comm ranks']) + self.EXECUTION_ID_DELIMETER # delimeter
+        # execution['findex'] = prefix+str(execution['findex'])
+        # execution['parent'] = prefix+str(execution['parent'])
+        # new_children = []
+        # for cid in execution['children']:
+        #     new_children.append(prefix+str(cid))
+        # execution['children'] = new_children
+        return execution
 
     def add_to_buffer(self, frame):
+        """
+        Add received frame to the buffer 
+        """
         if not self.log_manager.is_set():
             self.log_manager.start_recording(time.time())
         self.buffer_manager.add(frame)
 
     def process_frame(self, frame):
-        if 'type' in frame: # Raw trace events
+        """
+        Callback function of BufferManager, which is invoked by BufferManager
+        Considers the way of processing (old or new types) 
+        """
+        if 'type' in frame: # deprecated methods
             value = frame['value']
             self.set_event_types(value['event_types'])
             self.set_functions(value['functions'])
@@ -547,17 +711,232 @@ class DataManager(object):
             self.set_labels(value['labels'])
             self.add_events(value['events'])
             self.generate_forest()
-        else: # Executions
-            self.set_statistics(frame['stat'])
-            self.add_executions(frame['executions'])
+        else: # executions
+            self.process_executions(frame['executions']) # Temporally added. Testing puporse assuming In-Mem DB exists. 
+            self._process_frame(frame['executions'])
     
     def record_response_time(self, time):
+        """
+        record response time as a part of the series of the responses
+        """
         self.log_manager.add_response_time(time)
 
     def record_push_time(self, time):
+        """
+        record response time as a part of the series of the pushes
+        """
         self.log_manager.add_push_time(time)
 
     def get_recording(self, time):
+        """
+        get the summary of the current recordings
+        """
         self.log_manager.pin_recording(time)
         self.log_manager.get_avg_response_time()
         log('NUM ANOMALIES: ', self.anomaly_cnt)
+
+    def refresh(self):
+        """
+        refresh delta and stream structure for the next calculation
+        """
+        self.delta = {k: self.delta[k] for k in self.delta if k in self.stream.keys()} # exclude ranks incontinous
+        self.stream = {}
+
+    def _process_frame(self, executions):
+        """
+        aggregates the current frame, such that:
+            stream = {
+                rank_id: the_number_of_anomalies
+            }
+        calculate the accumulated change of the summary, compared to the previous one:
+            delta = {
+                rank_id: absolute_value_of_the_change
+            }
+        memorize the current summary as the previous for the next calculation.
+        """
+        stream = {}
+        for i, execution in executions.items():
+            execution = self._process_execution(execution)
+            if execution['comm ranks'] not in stream:
+                stream[execution['comm ranks']] = 0
+            stream[execution['comm ranks']] += 1
+            self.anomaly_cnt += 1
+        for rank, curr in stream.items():
+            if rank not in self.stream:
+                self.stream[rank] = []
+            if rank not in self.delta:
+                self.delta[rank] = 0
+            if rank not in self.prev:
+                self.prev[rank] = 0
+            if rank not in self.history:
+                self.history[rank] = []
+            delta = abs(curr - self.prev[rank])
+            self.delta[rank] += delta
+
+            self.stream[rank].append(curr)
+            self.history[rank].append(curr) # <-- history contains list of # anomalies per rank from begining to the current 
+                                            #     This will be replaced with In-Mem DB                                   
+            self.prev[rank] = curr
+        self.changed = True
+
+    def get_scatterplot(self, app_id, rank_id, start, end):
+        """
+        Returns data points for scatterplot.
+        Arguments:
+            app_id:  application id (TBA)
+            rank_id: rankid
+            start:   starttime
+            end:     endtime
+        """
+        # executions = query(app_id, rank_id, start, end) <-- Assumed In-Mem DB exists.
+        # result = self.process_executions(executions) 
+        return {
+            'coordinates': self.pos,
+            'func_names': self.func_names,
+            'prog_names': self.prog_names,
+            'execution_id': self.eid,
+            'rank_id': rank_id
+        }
+    
+    def get_history(self, app_id, rank_id, start, size):
+        """
+        Returns history (frames) from start frame to end frame
+        Arguments:
+            app_id:  application id (TBA)
+            rank_id: rank id
+            start:   start frame id
+            size:    frame size
+        """
+        # if start == -1 or end == -1: 
+        #    history = query(app_id, rank_id, size) <-- retreive the latest N frames
+        # else:
+        #    history = query(app_id, rank_id, start, size) <-- Assumed In-Mem DB exists.
+        history = self.history[int(rank_id)]
+        latest_id = len(history)-1
+        if start == int(-1): 
+            print('dynamic', start, size)
+            history = history[-size:]
+        else:
+            print('static', start, size)
+            history = history[start: start+size]
+        return {
+            'history': history,
+            'latest_id': latest_id
+        }
+
+    def construct_tree(self, params):
+        """
+        Constructs tree by the given parameters
+        Arguments:
+            params: {
+                eid:        execution id, which will be utilized as root id
+                start:      start time
+                end:        end time
+                rank_id:    rank id
+            }
+        """
+        # executions = query(rank_id, eid, start, end)  <-- retrieves executions in the particular rank between start_time and end_time
+        #                                               The execution list in an ascending order based on start timestamp is expected.
+        executions = self.executions.values()  # <-- temporally, test purpose
+        tree = self._construct_tree(params['eid'], executions)
+        return tree
+
+    def _construct_tree(self, root_id, executions):
+        """
+        Iterates executions while constructing tree 
+        Assumed the executions are sorted in ascending order based on start timestamp
+        """
+        tree = {}
+        eid2nid = {} 
+        for execution in executions:
+            eid = execution[config.get('EXECUTION_ID')]
+            if len(tree.keys()) == 0:
+                tree = self.init_tree(execution)
+                eid2nid[eid] = 0
+            else:
+                eid2nid[eid] = node_id = len(tree['nodes'])
+                try:
+                    tree['edges'].append({
+                        'source': eid2nid[execution[config.get('PARENT_ID')]],
+                        'target': node_id
+                    })
+                    tree['nodes'].append(self.create_node(node_id, execution))
+                except:
+                    pass
+                    # raise KeyError('the parent is not in the given interval.')
+                    # the parent of this execution is not in this interval.
+                    # this execution might not be related to this call stack tree.
+                    # print(execution['parent'])
+        return tree
+
+    def init_tree(self, execution):
+        """
+        Intitializes tree structure
+        tree = {
+            tree_id: hold incremental tree id
+            rank_id, thread_id, prog_name: where the root node was executed
+            nodes: [    <-- contains its nodes including root node.
+                {
+                    node_id: node id in the tree (root: 0)
+                    rank_id, thread_id, prog_name, func_name: where the execution was run on
+                    entry, exit: its specific informations
+                }
+            ], 
+            edges: [    <-- specifies which node is linked to which node
+                {
+                    source: parent node id,
+                    target: child node id,
+                }
+            ]
+        }
+        """
+        self.tree_id += 1
+        return {
+            'tree_id': self.tree_id,
+            'rank_id': execution[config.get('RANK_ID')],
+            'thread_id': execution[config.get('THREAD_ID')],
+            'prog_name': execution[config.get('PROG_NAME')],
+            'nodes': [self.create_node(0, execution)],
+            'edges': []
+        }
+
+    def create_node(self, node_id, execution):
+        """
+        Creates node object
+        node = {
+            node_id: node id in the tree (root: 0)
+            rank_id, thread_id, prog_name, func_name: where the execution was run on
+            entry, exit: its specific informations
+        }
+        """
+        return { 
+            'node_id': node_id,
+            'execution_id': execution[config.get('EXECUTION_ID')],
+            'rank_id': execution[config.get('RANK_ID')],
+            'thread_id': execution[config.get('THREAD_ID')],
+            'prog_name': execution[config.get('PROG_NAME')],
+            'func_name': execution[config.get('FUNC_NAME')],
+            'entry': execution[config.get('ENTRY_TIME')],
+            'exit': execution[config.get('EXIT_TIME')],
+            'value':  execution[config.get('EXIT_TIME')]-execution[config.get('ENTRY_TIME')]
+        }
+
+    def set_stream_size(self, stream_size):
+        """
+        Set streaming size (number of ranks of top and bottom sorted ranks) 
+        """
+        self.stream_size = stream_size;
+
+    def set_stream_type(self, stream_type):
+        """
+        Sets kind of statistics for streamview
+            - min: minimum
+            - max: maximum
+            - mean: average
+            - std: standard deviation
+            - skn: skewness
+            - kts: kurtosis
+            - dlt: delta
+        """
+        self.stream_type = stream_type;
+

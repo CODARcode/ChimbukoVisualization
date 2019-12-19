@@ -1,0 +1,8 @@
+{
+    "selectedRankID": 1,
+    "history": [10, 30, 24, 33, 12, 35, 77, 33, 22, 11, 44, 55, 33, 11, 44],
+    "latest_id": 99,
+    "WINDOW_SIZE": 15,
+    "dynamic": false,
+    "startFrameNo": 0
+}

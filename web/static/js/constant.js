@@ -82,3 +82,56 @@ var functionColors = {
     "MPI_Group_rank()":"black",
     "MD_FCLASS [{md_main.F} {2330,7}-{2496,9}]":"#98df8a"
 };
+
+// Manages view component layouts
+var componentLayout = {
+    'STREAMVIEW_WIDTH': 550,
+    'STREAMVIEW_HEIGHT': 370,
+    'STREAMVIEW_MARGIN_TOP': 20,
+    'STREAMVIEW_MARGIN_BOTTOM': 30,
+    'STREAMVIEW_MARGIN_RIGHT': 50,
+    'STREAMVIEW_MARGIN_LEFT': 50,
+
+    'HISTORYVIEW_WIDTH': 850,
+    'HISTORYVIEW_HEIGHT': 370,
+    'HISTORYVIEW_MARGIN_TOP': 20,
+    'HISTORYVIEW_MARGIN_RIGHT': 50,
+    'HISTORYVIEW_MARGIN_BOTTOM': 30,
+    'HISTORYVIEW_MARGIN_LEFT': 50,
+
+    'SCATTERVIEW_WIDTH': 550,
+    'SCATTERVIEW_HEIGHT': 510,
+    'SCATTERVIEW_MARGIN_TOP': 0,
+    'SCATTERVIEW_MARGIN_BOTTOM': 20,
+    'SCATTERVIEW_MARGIN_RIGHT': 20,
+    'SCATTERVIEW_MARGIN_LEFT': 60,
+
+    'LEGENDVIEW_WIDTH': 200,
+    'LEGENDVIEW_HEIGHT': 370,
+    
+    'DYNAMIC_GRAPH_VIEW_WIDTH': 850,
+    'DYNAMIC_GRAPH_VIEW_HEIGHT': 250,
+
+    'TEMPORALVIEW_WIDTH': 850,
+    'TEMPORALVIEW_HEIGHT': 250,
+}
+var streamviewValues = {
+    'dlt': 'Cumulative Delta',
+    'min': 'Minimum Execution Time',
+    'max': 'Maximum Execution Time',
+    'mean': 'Average Execution Time',
+    'std': 'Standard Deviation',
+    'skn': 'Skewness',
+    'kts': 'Kurtosis',
+    'DEFAULT_TYPE': 'dlt',
+    'DEFAULT_SIZE': 10,
+    'X_LABEL': 'Ranking'
+}
+
+var historyviewValues = {
+    'SELECTED_RANK_PREFIX': 'Selected Rank #: ',
+    'X_LABEL': 'Frame',
+    'Y_LABEL': '# Anomaly',
+    'WINDOW_SIZE': 100,
+    'STEP': 5
+}

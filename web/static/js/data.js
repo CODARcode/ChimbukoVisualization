@@ -2,7 +2,7 @@ class Data {
     constructor(main) {
         //data
         this.data = [];
-        this.selectedIds = [1];
+        this.selected_eid = [1];
         this.streaming();
         this.idx_offset = 0;//how many has poped out
 
@@ -13,8 +13,9 @@ class Data {
         this.views.init(this);
         this.views.addView(new DynamicGraphView(this, d3.select("#treeview")));
         this.views.addView(new TemporalView(this, d3.select("#temporalview")));
-        this.views.addView(new ScatterView(this, d3.select("#overview")));
-        this.views.addView(new GlobalView(this, d3.select("#globalview")));
+        this.views.addView(new ScatterView(this, d3.select("#overview"), 'scatterview'));
+        this.views.addView(new StreamView(this, d3.select("#streamview"), 'streamview'));
+        this.views.addView(new HistoryView(this, d3.select("#historyview"), 'historyview'));
 
         this.k = visOptions.clusterk;
         this.eps = visOptions.clustereps;
@@ -28,92 +29,156 @@ class Data {
         this.initial_timestamp = -1
         this.prev_receive_time = -1
         this.global_rank_anomaly = {}
-        this.rank_of_interest = new Set(); // by default
+
+        this.SECOND = 1000 // ms
+        this.delta = {};
+        this.prev = {};
+        this.frameID = 0;
+        this.frameWindow = 30
+        this.frameInterval = this.SECOND * 0.1
+        this.frames = {};
+        this.date = new Date();
+        this.setWait = true;
+        this.NUM_SELECTION_RANK = 10;
+        this.history = {};
+        this.selectedExecution = {};
+        this.selectedRankInfo = {};
+
+        // rendering is invoked as the thread startsd
+        this.rendering(); 
+    }
+
+    rendering() {
+        /**
+         * Keep watching if the data has received,
+         *  if so, renders view components every 0.5 sec.
+         *  else, wait next 2 sec.
+         */
+        console.log('['+this.date.toLocaleTimeString()+'] rendering() ');
+        if(this.hasReceived()){
+            this.views.stream_update();
+            this.frameID += 1; // maintains frame id for frontend
+            this.frameInterval = this.SECOND * 0.5
+        } else {
+            this.frameInterval = this.SECOND * 2
+        }
+        setTimeout(this.rendering.bind(this), this.frameInterval);
     }
 
     streaming(){
+        /**
+         * If data has pushed from backend, the callback of EventSource is invoked
+         * Receives delta and processed data
+         *  stream == {
+         *      rank_id = list of the number of anomalies per rank
+         *   }
+         * 
+         *  "delta" from backend is deprecated (currently calculated in frontend side)
+         *  to reflect the changes at the moment whenever the plot is drawed.
+         */
         var me = this;
         var sse = new EventSource('/stream');
         sse.onmessage = function (message) {
-            console.log('----------------------------------------------')
-            var date = new Date()
-            
-            if (me.prev_receive_time == -1) {
-                me.prev_receive_time = date.getTime()
-                console.log('First Data Arrival: ', date.toLocaleTimeString())
-            } else {
-                var now = date.getTime()
-                console.log('Data Arrival: ', date.toLocaleTimeString())
-                console.log('Interval of Data Arrival: '+ ((now-me.prev_receive_time)/1000))
-                me.prev_receive_time = now
-            }
-            
-            var _json = jQuery.parseJSON(message.data);  
-            me.stat = _json['stat']
-            me.scatterLayout = _json['layout'];
-            me.global_rank_anomaly = _json['global_rank']; 
-            var latest_time = -1;
-            var _start_time = -1;
-            var _end_time = -1;
-            _json['pos'].forEach(function(d, i) { //load data to front end (scatter plot view)
-                // if (me.initial_timestamp == -1) {
-                //     me.initial_timestamp = d[_json['layout'].indexOf('entry')] // this will be moved to backend
-                //     // console.log('initial_timestamp: '+me.initial_timestamp)
-                // } 
-                // d[_json['layout'].indexOf('entry')] = d[_json['layout'].indexOf('entry')] - me.initial_timestamp;
-                // d[_json['layout'].indexOf('exit')] = d[_json['layout'].indexOf('exit')] - me.initial_timestamp;
-                // if (d[_json['layout'].indexOf('entry')]<0) {
-                //     return 
-                // }
-                if(_start_time == -1) {
-                    _start_time = d[_json['layout'].indexOf('entry')]
-                } else {
-                    _start_time = Math.min(_start_time, d[_json['layout'].indexOf('entry')]);
-                } 
-
-                if(_end_time == -1) {
-                    _end_time = d[_json['layout'].indexOf('exit')]
-                } else {
-                    _end_time = Math.max(_end_time, d[_json['layout'].indexOf('exit')]);
-                }
-
-                latest_time = Math.max(latest_time, d[_json['layout'].indexOf('exit')]);// according to server, 3 is exit time
-                me.data.push({
-                    "id": _json['tidx'][i],
-                    "eid": _json['eidx'][i],
-                    "weight": 1,
-                    "pos": d,
-                    "anomaly_score": _json['labels'][i],
-                    "prog_name": _json['prog'][i],
-                    "func_name": _json['func'][i],
-                    "cluster_label": -1,
-                    "tree": null
-                });
-                if(!(_json['prog'][i] in me.prog_names)) {
-                    me.prog_names.push(_json['prog'][i]);
-                }
-                if(!(_json['func'][i] in me.func_names)) {
-                    me.func_names.push(_json['func'][i]);
-                }
-            });
-            var time_window = 60000000;//1 min
-            //pop data
-            while(me.data.length>0&&latest_time-time_window>me.data[0]['pos'][3]){//#
-                me.data.shift();
-            }
-            me.idx_offset = me.data.length==0?0:me.data[0]['id'];
-            // console.log("refresh scatter plot, remove points exit before "+(latest_time-time_window)+", num of points: "+me.data.length);
-            console.log('Amount of Data: '+ _json['pos'].length)
-            console.log('Time Range of Data: ' + ((_end_time - _start_time)/1000000) + ' (Start: '+ (_start_time/1000000) + ', end: ' + (_end_time/1000000)+')')
-            console.log('Data Preparation Time: ' + ((Date.now()-me.prev_receive_time)/1000))
-            me.views.stream_update();
-            if (_json["percent"] >= 1.0) {
-                sse.close();
-                sse = null;
-                console.log("sse closed");            
-            }
-            console.log('Overall Processing Time: '+ ((Date.now()-me.prev_receive_time)/1000))
+            console.log('['+me.date.toLocaleTimeString()+'] received data');
+            var d = jQuery.parseJSON(message.data);  
+            me._update(d['stream']);
         };
+    }
+
+    _update(stream) {
+        /**
+         * concat new array to the corresponding array based on the rank
+         */
+        for(var rank in stream) { 
+            if(!this.frames[rank]) {
+                this.frames[rank] = []
+            }
+            this.frames[rank] = this.frames[rank].concat(stream[rank]) 
+        }
+    }
+
+    getSortedRanks(delta) {
+        /**
+         * Sorts delta values per rank 
+         * Get top and bottom 5 ranks based on delta values
+         */
+        var ranks = Object.keys(delta)
+        var deltaValues = Object.values(delta);
+        var sortedRanks = deltaValues.map((d, i) => [ranks[i], d]) 
+                        .sort(([r1, d1], [r2, d2]) => d2 - d1) 
+                        .map(([r, d]) => r); 
+        var top;
+        var bottom;
+        if( sortedRanks.length < (this.NUM_SELECTION_RANK*2) ) {
+            var m = Math.floor((sortedRanks.length)/2) // adjust the number of ranks is under 10
+            top = sortedRanks.slice(0, m)
+            bottom = sortedRanks.slice(m)
+        } else {
+            top = sortedRanks.slice(0, this.NUM_SELECTION_RANK)
+            bottom = sortedRanks.slice(sortedRanks.length-this.NUM_SELECTION_RANK)
+        }
+        return {
+            'top': top,
+            'bottom': bottom
+        }
+    }
+
+    hasReceived() {
+        /**
+         * Return true if possible to process
+         * If possible, 
+         *      Gets the first element, the number of anomalies, from each list of rank
+         *      Considers only top and bottom sorted ranks
+         */
+        // var curr_delta = this.updateDelta();
+        this.updateDelta();
+        this.selectedRanks = this.getSortedRanks(this.delta)
+        var res = false;
+        for ( var rank in this.frames) {
+            var rankData = this.frames[rank]
+            if (rankData.length > 0) {
+                var value = rankData.splice(0, 1)[0]
+                if(this.selectedRanks.top.includes(rank) || this.selectedRanks.bottom.includes(rank)) {
+                    res = true;
+                }
+                if (!this.history[this.frameID]) {
+                    this.history[this.frameID] = {} 
+                }
+                this.history[this.frameID][rank] = value;
+            }
+        }
+        return res;
+    }
+
+    updateDelta() {
+        /**
+         * Calculate delta in the frontend side 
+         * so that the delta can be calculated more frequently.
+         */
+        // var curr_delta = {}
+        for ( var rank in this.frames) {
+            var rankData = this.frames[rank];
+            if (rankData.length > 0) {
+                var curr = rankData[0];
+                if(this.delta[rank] === undefined) {
+                    this.delta[rank] = 0
+                    // curr_delta[rank] = 0
+                } else {
+                    // curr_delta[rank] = this.delta[rank]
+                }
+                if (this.prev[rank] === undefined){
+                    this.prev[rank] = 0
+                }
+                var value = Math.abs(curr - this.prev[rank])
+                // curr_delta[rank] += value
+                this.delta[rank] += value
+                this.prev[rank] = curr
+            } 
+            // else {
+            //     delete this.delta[rank]
+            // }
+        }
+        // return curr_delta
     }
 
     fetchWithCallback(data, callback, options) {
@@ -138,45 +203,40 @@ class Data {
             .catch(error => console.log(error));
     }
 
-    _getTree(callback, options) {
+    _getTree(callback, execution) {
         var me = this;
-        var index = options.id-me.idx_offset;
-        if (me.data[index].tree) {
-            callback(me.data[index].tree, options);
+        if (execution.tree) {
+            callback(execution.tree, execution);
         } else {
-            options.callback = callback;
+            execution.callback = callback;
             me.fetchWithCallback({
-                'data': 'tree',
-                'value': options.id,
-                'eid': options.eid
-            }, me._saveTree.bind(me), options);
+                'type': 'tree',
+                'tid': execution.tid,
+                'eid': execution.eid,
+                'rid': execution.rid,
+                'start': execution.start,
+                'end': execution.end
+            }, me._saveTree.bind(me), execution);
         }
     }
 
-    _saveTree(json, options) {
-        var me = this;
-        var index = options.id-me.idx_offset;
-        var callback = options.callback;
-
-        var tree = me.data[index];
-        tree.tree = json;
-        tree.tree.id = options.id;
-        tree.tree.nodes[0].level = 0;
-        tree.tree.edges.forEach(function(d){
-            tree.tree.nodes[d.target].level = tree.tree.nodes[d.source].level + 1;
+    _saveTree(json, execution) {
+        var callback = execution.callback;
+        execution.tree = json;
+        execution.tree.id = execution.eid;
+        execution.tree.nodes[0].level = 0;
+        execution.tree.edges.forEach(function(d){
+            execution.tree.nodes[d.target].level = execution.tree.nodes[d.source].level + 1;
         });
         //add a subtree list        
-        callback(tree.tree, options);
+        this.selectedExecution = execution
+        callback(execution.tree, execution);
     }
-    setSelections(indices) {
+
+    setSelections(execution) {
         var me = this;
-        this.selectedIds = indices;// now use the first, will update to the center
-        if(this.selectedIds.length>0){
-            me._getTree(me.views.selected.bind(me), {
-                'id':me.selectedIds[0],
-                'eid': me.selectedIds[1]
-            });
-        }
+        this.selected_eid = execution.eid;// now use the first, will update to the center
+        me._getTree(me.views.selected.bind(me), execution);
     }
 
     clearHight() {
@@ -184,11 +244,11 @@ class Data {
     }
 
     getSelectedTree() {// now use the first, will update to the center
-        return this.data[this.selectedIds[0]-this.idx_offset].tree;
+        return this.selectedExecution.tree;
     }
 
     isSelected(index) {
-        return this.selectedIds.indexOf(index+this.idx_offset) != -1;
+        return this.selected_eid == index;
     }
 
     getScoreByIndex(index) {

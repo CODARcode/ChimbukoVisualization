@@ -4,7 +4,7 @@ import time
 
 class OnlineStatManager:
     """
-        Welford's algorithm is used on number of anomalies among ranks
+    Welford's algorithm is used on number of anomalies among ranks
     """
     def __init__(self, ddof=1):
         self.ddof = ddof # Delta Degrees of Freedom

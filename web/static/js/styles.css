@@ -65,57 +65,52 @@ text {
 }
 .title {
     font-size: 20px;
+    display: block;
+}
+.title-inline {
+    font-size: 20px;
+    display: inline-block;
 }
 .label {
     font-weight: bold;
 }
-.leftpanel {
-    display: inline-block;
-}
-.rightpanel {
-    display: inline-block;
-}
 .visrow {
+    margin: 2px;
+    display: block;
+    /* border: 1px solid black; */
+}
+.viscol {
+    display: inline-block;
     border: 1px solid black;
-    width: 100%;
-    margin: 0px;
 }
 /* Visualization Components */
-.globalview {
-    width: 100%;
-    height: 300px;
+.streamview {
+    display: inline-block;
+}
+.historyview {
+    display: inline-block;
 }
 .scatterview {
     display: inline-block;  
-    width: 900px; 
 }
 .treeview{
-    width: 100%;
-    height: 600px;
-}
-.baselineview{
-    width: 100%;
-    height: 285px;
+    display: inline-block;
 }
 .temporalview {
-    width: 100%;
-    height: 500px
+    display: inline-block;
 }
-
-/* Subcomponents */
-.scatter-legend {
-    display: inline-block; 
-    vertical-align: top; 
-    width: 300px;
-    height: 600px; 
-    overflow-y: auto;
+.legendview {
+    width: 150px;
+    height: 370px;
+    overflow-y:auto;
+    display: inline-block;
 }
-.scatter-legend-item {
+.legendview-item {
     display: table;
     margin-bottom: 5px;
     cursor: pointer;
 }
-.scatter-legend-item-circle {
+.legendview-item-circle {
     border-radius: 50%;
     behavior: url(PIE.htc);
     width: 20px;
@@ -123,18 +118,9 @@ text {
     display: inline-block;
     vertical-align: middle;
 }
-.scatter-legend-item-text {
+.legendview-item-text {
     height: 20px;
     display: table-cell;
     vertical-align: middle;
     padding-left: 5px;
-}
-.srate_container {
-    display: inline;
-}
-.sampling-rate-slider {
-    width: 100px;
-}
-.baseline_cell {
-    border: 1px solid black;
 }

@@ -22,68 +22,111 @@
 
 <body>
     <div class="container-fluid">
-        <div class="row nopadding">
-            <div class="leftpanel col-lg-6 well nopadding" id="leftpanel" ><!-- style='background-color: blue' -->
-                <div class="row visrow">
-                    <b class="title" > &nbsp; &nbsp; Global Rank Anomaly</b>
-                    <svg id="globalview" class="globalview"></svg>
-                </div>
-                <div class="row visrow">
-                    <b class="title">&nbsp; &nbsp; Projection of Function Executions</b><br/> 
+        <div class="visrow nopadding">
+            <div class="viscol nopadding">
+                <b class="title"> &nbsp; Top & Bottom Dynamic Ranks</b>
                     <div>
-                        &nbsp; &nbsp; x axis:
-                        <select id="sbox_x">
-                            <option value="0" selected>Entry</option>
-                            <option value="1">Execution Time</option>
-                            <option value="2">Rank#.Thread#</option>
-                            <option value="3">Exit</option>
+                        &nbsp; Statistics: 
+                        <select id="streamview-type">
+                            <option value="min">Min</option>
+                            <option value="max">Max</option>
+                            <option value="mean">Mean</option>
+                            <option value="std">Standard Devivation</option>
+                            <option value="skn">Skewness</option>
+                            <option value="kts">Kurtosis</option>
+                            <option value="dlt" selected>Cumulative Delta</option>
                         </select>
-                        &nbsp; y axis:
-                        <select id="sbox_y">
-                            <option value="0">Entry</option>
-                            <option value="1" selected>Execution Time</option>
-                            <option value="2">Rank#.Thread#</option>
-                            <option value="3">Exit</option>
+                        &nbsp; Comparison size: 
+                        <select id="streamview-size">
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
                         </select>
-                        <div class="srate_container">
-                            &nbsp; &nbsp; Call Depth: 
-                            <input type="range" min="0.01" max="1" value="1" step="0.01" class="sampling-rate-slider" id="srate">
-                            <span id="srate_val">1</span>
-                        </div>
-                        &nbsp; &nbsp; <button id="apply" type="button"> apply </button>
-                        <!-- &nbsp; &nbsp; <input type="checkbox" id="scatter-cbox"> anomaly -->
-                        <!-- &nbsp; &nbsp; <input type="checkbox" id="scatter-legend-filter"> filter all -->
+                        &nbsp; <button id="streamview-apply" type="button"> apply </button>
                     </div>
-                    <div class="nopadding" >
+                <svg id="streamview" class="streamview"></svg>
+                <div id="streamview-legend" class="legendview nopadding"></div>
+                <div id="streamview-legend-2" class="legendview nopadding"></div>
+            </div>
+            <div class='viscol nopadding'>
+                <div>
+                    <b class="title" style='display: inline-block'>&nbsp; Selected Rank History </b>
+                    
+                    <div id='selected_rank_id' style='display: inline-block;'></div>
+                </div>
+                <div class="nopadding" >
+                    <div>
+                        &nbsp;
+                        <button id="dynamic_btn" type="button"> Dynamic </button>
+                        <button id="static_btn" type="button"> Static </button>
+                        <button id="historyview_next" style='float: right; margin-right: 10px' type="button"> next </button>
+                        <button id="historyview_prev" style='float: right; ' type="button"> prev </button>
+                    </div>
+                    <svg id="historyview" class="historyview"></svg>
+                </div>
+            </div>
+        </div>
+        <div class="visrow nopadding">
+            <div class="visrow">
+                <div class="viscol nopadding">
+                    <b class="title">&nbsp; &nbsp; Projection of Function Executions</b>
+                    &nbsp; &nbsp; x axis:
+                    <select id="sbox_x">
+                        <option value="0" selected>Entry</option>
+                        <option value="1">Execution Time</option>
+                        <option value="2">Rank#.Thread#</option>
+                        <option value="3">Exit</option>
+                    </select>
+                    &nbsp; y axis:
+                    <select id="sbox_y">
+                        <option value="0">Entry</option>
+                        <option value="1" selected>Execution Time</option>
+                        <option value="2">Rank#.Thread#</option>
+                        <option value="3">Exit</option>
+                    </select>
+                    <button id="apply" type="button"> apply </button>
+                    &nbsp; &nbsp; <input type="checkbox" id="scatterview-legend-filter"> remove all
+                    <div class="nopadding">
                         <svg id="overview" class="scatterview"></svg>
-                        <!-- <div id="scatter-legend" class="scatter-legend nopadding"></div> -->
+                        <div id="scatterview-legend" style='width: 300px; height: 510px;' class="legendview"></div>
+                    </div>
+                </div>
+                <div class="viscol nopadding">
+                    <div class="row visrow">
+                        <div >
+                            <b class="title">&nbsp; &nbsp; Selected Call Stack Tree</b>
+                            <svg id="treeview" class='treeview'></svg>
+                        </div>
+                    </div>
+                    <div class="row visrow">
+                        <div>
+                            <b class="title">&nbsp; &nbsp; Timeline and Message Visualization</b>
+                            <svg id="temporalview" class='temporalview'></svg>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="rightpanel col-lg-6 well nopadding" id = "rightpanel" > <!-- style='background-color: red' -->
-                <div class="row visrow">
-                    <b class="title">&nbsp; &nbsp; Selected Call Stack Tree</b></br>
-                    <svg id="treeview" class='treeview'></svg>
-                    <svg id="baselineview" class='baselineview'></svg>
-                </div>
-                <div class="row visrow">
-                    <b class="title">&nbsp; &nbsp; Timeline and Message Visualization</b></br>
-                    <svg id="temporalview" class="temporalview"></svg>
-                </div>
-            </div>
+            
         </div>
     </div>
     <script src="/static/js/constant.js"></script>
     <script src="/static/js/view.js"></script>
-    <script src="/static/js/globalview.js"></script>
+    <script src="/static/js/legendview.js"></script>
+    <script src="/static/js/barchartview.js"></script>
+    <script src="/static/js/streamview.js"></script>
+    <script src="/static/js/historyview.js"></script>
     <script src="/static/js/scatterview.js"></script>
     <script src="/static/js/graphview.js"></script>
     <script src="/static/js/dynamicgraphview.js"></script>
     <script src="/static/js/temporalview.js"></script>
     <script src="/static/js/visualizations.js"></script>
-    <script src="/static/js/data.js"></script>
+    <script src="/static/js/Model.js"></script>
+    <script src="/static/js/Controller.js"></script>
     <script>
-        var data = new Data(this);
+        var controller = new Controller(this);
     </script>
 </body>
 

@@ -1,6 +1,9 @@
 class TemporalView extends View {
 	constructor(data, svg){
-		super(data, svg, {});
+		super(data, svg, {
+            'width': componentLayout.TEMPORALVIEW_WIDTH,
+            'height': componentLayout.TEMPORALVIEW_HEIGHT
+        });
         var me = this;
 
         me.graph = null;
@@ -177,7 +180,7 @@ class TemporalView extends View {
     }
 
     selected(){
-        this._setGraph(this.data.getSelectedTree());
+        this._setGraph(this.controller.getSelectedTree());
         this.draw();
     }
 
